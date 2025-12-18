@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+
+  <title>REDCLX | 전쟁터 같은 교육현장을 위한 학급 문제상황 대응 전략 시뮬레이터</title>
+  <meta name="description" content="REDCLX는 민원·학폭·갈등 대응을 '상황+데이터+전략 시뮬레이션'으로 표준화하고, 증거 중심 기록으로 교사의 법적·행정적 리스크를 줄이는 Classroom OS입니다." />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#0b0f14" />
+
+  <!-- Canonical (도메인으로 교체) -->
+  <link rel="canonical" href="https://redclx.example/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta property="og:title" content="REDCLX | 학급 문제상황 대응 전략 시뮬레이터" />
+  <meta property="og:description" content="민원·학폭·갈등 대응을 전략 시뮬레이션과 증거 중심 기록으로 표준화하는 Classroom OS." />
+  <meta property="og:url" content="https://redclx.example/" />
+  <meta property="og:image" content="https://redclx.example/assets/og.png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="REDCLX | 학급 문제상황 대응 전략 시뮬레이터" />
+  <meta name="twitter:description" content="전략 시뮬레이션 + 방어적 기록 + 규정 준수: 교실 운영 체제(Classroom OS)." />
+  <meta name="twitter:image" content="https://redclx.example/assets/og.png" />
+
+  <link rel="preload" href="./styles.css" as="style" />
+  <link rel="stylesheet" href="./styles.css" />
+
+  <!-- JSON-LD: Organization + SoftwareApplication + WebSite -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@graph":[
+      {
+        "@type":"Organization",
+        "name":"REDCLX",
+        "url":"https://redclx.example/",
+        "logo":"https://redclx.example/assets/logo.png",
+        "sameAs":[]
+      },
+      {
+        "@type":"WebSite",
+        "name":"REDCLX",
+        "url":"https://redclx.example/",
+        "inLanguage":"ko-KR"
+      },
+      {
+        "@type":"SoftwareApplication",
+        "name":"REDCLX",
+        "applicationCategory":"EducationalApplication",
+        "operatingSystem":"Web",
+        "description":"민원·학폭·갈등 대응을 전략 시뮬레이션과 증거 중심 기록으로 표준화하는 Classroom OS",
+        "offers":{
+          "@type":"Offer",
+          "price":"0",
+          "priceCurrency":"KRW"
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- JSON-LD: FAQPage (요약형) -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"FAQPage",
+    "mainEntity":[
+      {
+        "@type":"Question",
+        "name":"REDCLX는 에듀테크 앱인가요?",
+        "acceptedAnswer":{
+          "@type":"Answer",
+          "text":"REDCLX는 단순 학습 앱이 아니라, 사건 탐지→판단→조치→기록을 표준화하는 교실 운영 체제(Classroom OS)입니다."
+        }
+      },
+      {
+        "@type":"Question",
+        "name":"학폭/민원 대응에서 무엇이 달라지나요?",
+        "acceptedAnswer":{
+          "@type":"Answer",
+          "text":"상황·당사자·시점·증거를 구조화하고, 단계별 액션과 기한/근거/산출물을 함께 제시해 절차 누락과 리스크를 줄입니다."
+        }
+      },
+      {
+        "@type":"Question",
+        "name":"기록은 왜 중요한가요?",
+        "acceptedAnswer":{
+          "@type":"Answer",
+          "text":"기록되지 않은 헌신은 방어 수단이 되기 어렵습니다. REDCLX는 증거 중심 산출물(상담록/보고/캡처 등)을 남겨 사후 감사·분쟁 대응을 돕습니다."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+
+<body>
+  <a class="skip-link" href="#main">본문 바로가기</a>
+
+  <header class="site-header" role="banner">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="REDCLX 홈">
+        <span class="brand-mark" aria-hidden="true">
+          <!-- 간단한 방패+선(로고 대체, 실제 로고 있으면 img로 교체) -->
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M7 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M10 9l4 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="brand-text">
+          <strong>REDCLX</strong>
+          <span class="muted">CLASS EXPERIENCE</span>
+        </span>
+      </a>
+
+      <nav class="nav" aria-label="주요 메뉴">
+        <a href="#why">WHY</a>
+        <a href="#how">HOW</a>
+        <a href="#product">제품</a>
+        <a href="#tech">기술</a>
+        <a href="#roadmap">로드맵</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+
+      <div class="header-cta">
+        <a class="btn btn-ghost" href="#contact">문의</a>
+        <a class="btn btn-primary" href="#waitlist">데모/베타 신청</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section id="top" class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Class Operational Intelligence Platform</p>
+          <h1>
+            전쟁터 같은 교육현장을 위한<br />
+            <span class="accent">학급 문제상황 대응 전략 시뮬레이터</span>
+          </h1>
+          <p class="lead">
+            민원·학폭·갈등 대응을 <strong>상황 + 데이터 + 최적화 전략</strong>으로 표준화하고,<br />
+            <strong>증거 중심 기록</strong>으로 교사의 법적·행정적 리스크를 줄이는 <strong>Classroom OS</strong>.
+          </p>
+
+          <ul class="hero-bullets">
+            <li>사건 진행 단계별 액션·기한·근거·산출물 자동 정리</li>
+            <li>관계(학생/학부모/교사) & 기록 통합 → 전략 시뮬레이션</li>
+            <li>규정 준수(Policy) 기반의 “검증 가능한 액션 그래프” 생성</li>
+          </ul>
+
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#waitlist">데모/베타 신청</a>
+            <a class="btn btn-ghost" href="#product">제품 미리보기</a>
+          </div>
+
+          <p class="micro muted">
+            * REDCLX는 조언을 ‘글’로 끝내지 않습니다. 방어 가능한 <strong>기록 구조</strong>와 <strong>절차</strong>를 남깁니다.
+          </p>
+        </div>
+
+        <div class="hero-media" aria-label="REDCLX 소개 이미지">
+          <div class="media-frame">
+            <img
+              src="./assets/slide-why-how.png"
+              width="1200"
+              height="675"
+              loading="eager"
+              alt="REDCLX 소개: WHY/HOW, 데이터 통합과 전략 시뮬레이션 흐름"
+            />
+          </div>
+          <div class="floating-badges" aria-hidden="true">
+            <div class="badge"><span class="dot"></span> Strategy Simulation</div>
+            <div class="badge"><span class="dot"></span> Decision Archiving</div>
+            <div class="badge"><span class="dot"></span> Verified Actions</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-bottom">
+        <div class="container trust-row" aria-label="키 메시지">
+          <div class="trust-item">
+            <strong>Detect → Decide → Act → Archive</strong>
+            <span class="muted">사건 대응 전 과정을 구조화</span>
+          </div>
+          <div class="trust-item">
+            <strong>Evidence-first</strong>
+            <span class="muted">증거물/산출물 중심 설계</span>
+          </div>
+          <div class="trust-item">
+            <strong>Policy-aware</strong>
+            <span class="muted">규정·지침 기반 제약/검증</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHY -->
+    <section id="why" class="section">
+      <div class="container">
+        <header class="section-head">
+          <h2>WHY: 교사의 고충은 ‘능력’이 아니라 ‘시스템 부재’의 문제</h2>
+          <p class="muted">
+            교실은 감정의 지뢰밭입니다. 사건의 맥락은 파편화되어 있고, 기록은 흩어져 있으며, 규정 리스크는 높습니다.
+          </p>
+        </header>
+
+        <div class="cards grid-3">
+          <article class="card">
+            <h3>비대칭적 정보</h3>
+            <p>사건 맥락이 파편화되어 교사는 늘 정보 열세에 놓입니다.</p>
+            <ul class="mini">
+              <li>누가/언제/무엇을/어떻게</li>
+              <li>증거 유무, 위험 신호</li>
+              <li>관계 역학(학생·학부모)</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>방어 수단의 부재</h3>
+            <p>기록되지 않은 헌신은 법적·행정적 방어가 되기 어렵습니다.</p>
+            <ul class="mini">
+              <li>상담록/통지/보고 산출물</li>
+              <li>시점·근거·책임 추적</li>
+              <li>사후 감사/분쟁 대비</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>절차의 누락 리스크</h3>
+            <p>단 한 번의 실수(누락/순서 오류)가 큰 피해를 만들 수 있습니다.</p>
+            <ul class="mini">
+              <li>필수 보고/기한</li>
+              <li>금지 행위(PII 등)</li>
+              <li>선후관계/의존성</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW -->
+    <section id="how" class="section section-alt">
+      <div class="container">
+        <header class="section-head">
+          <h2>HOW: 상황 + 데이터 + 최적화 전략 알고리즘</h2>
+          <p class="muted">데이터 기반 최적의 ACTION을 추천하고, 케이스를 바탕으로 학급 관리 시스템(OS)을 구축합니다.</p>
+        </header>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>데이터 통합</h3>
+              <p>교사·학생·학부모의 관계와 기록을 케이스 단위로 묶어 관리합니다.</p>
+              <p class="muted small">관계 & 기록 → 케이스 아카이빙</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>전략 분석 엔진</h3>
+              <p>“지금 연락하면 어떤 리스크가 있는가?” 같은 What-if 시뮬레이션으로 최적 전략을 도출합니다.</p>
+              <p class="muted small">시뮬레이션 → 최적 전략</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h3>실행 및 방어</h3>
+              <p>대응 실행과 동시에 방어 기록(근거·기한·산출물)을 남깁니다.</p>
+              <p class="muted small">방어 기록 → 대응 실행</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h3>케이스 관리</h3>
+              <p>사건/상황별 케이스를 분류하고, 이력 관리로 재발 방지 인사이트를 확보합니다.</p>
+              <p class="muted small">케이스 분류 → 기록 아카이빙 → 이력 관리</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <h3>관계·패턴 분석 & 시스템 구축</h3>
+              <p>케이스간 역학 관계를 시각화하고, 패턴을 식별해 운영 시스템을 정밀화합니다.</p>
+              <p class="muted small">역학 관계 분석 → 패턴 식별 → 시스템 구축</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRODUCT -->
+    <section id="product" class="section">
+      <div class="container">
+        <header class="section-head">
+          <h2>제품 미리보기: 단계·액션·기록이 한 화면에</h2>
+          <p class="muted">
+            케이스별 관리 / 스텝 관리 / 최적 액션 추천 / 기록 관리 / 교사 액션 기반 자동 스텝 생성
+          </p>
+        </header>
+
+        <div class="product-grid">
+          <div class="media-frame">
+            <img
+              src="./assets/prototype.png"
+              width="1200"
+              height="675"
+              loading="lazy"
+              alt="REDCLX 프로토타입 화면: 케이스별 진행 단계, 기록, 추천 액션"
+            />
+          </div>
+
+          <div class="product-points">
+            <div class="point">
+              <h3>케이스별 관리</h3>
+              <p>각 사건/상황을 하나의 묶음으로 관리. 이후 케이스간 역학관계 분석으로 정밀 시스템 구축.</p>
+            </div>
+            <div class="point">
+              <h3>스텝 관리</h3>
+              <p>사건 진행 단계 및 교사의 액션 단위로 관리하여 누락과 혼선을 최소화.</p>
+            </div>
+            <div class="point">
+              <h3>온디바이스 AI 기반 액션 추천</h3>
+              <p>기록·상황 흐름·지침 기반으로 다음 액션을 최적화하여 리스크를 관리.</p>
+            </div>
+            <div class="point">
+              <h3>증거/산출물 중심 기록</h3>
+              <p>상담록·보고·통지·캡처 등 증거물을 단계별로 저장/관리해 감사 가능성을 강화.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TECH -->
+    <section id="tech" class="section section-alt">
+      <div class="container">
+        <header class="section-head">
+          <h2>핵심 기술: Neuro-Symbolic Compliance Engine</h2>
+          <p class="muted">
+            LLM(Neural)의 생성 능력 + 규정 논리(Symbolic)의 엄격함 결합.
+            “검증 가능한 행동 추천(Verified Action Graph)”을 목표로 합니다.
+          </p>
+        </header>
+
+        <div class="cards grid-3">
+          <article class="card">
+            <h3>Policy Compilation</h3>
+            <p>법령/지침을 If–Then–Must/Must-Not, 기한·선후관계 제약식으로 컴파일.</p>
+            <ul class="mini">
+              <li>MUST / MUST-NOT</li>
+              <li>MUST_BEFORE</li>
+              <li>Timebound constraints</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Action Graph Generation</h3>
+            <p>자유 텍스트 대신 구조화된 Action Graph만 생성(제약 디코딩/후보 생성).</p>
+            <ul class="mini">
+              <li>{action_type, 대상, 기한}</li>
+              <li>근거 조항, 리스크</li>
+              <li>필수 산출물/증거</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3>Verifier + Self-Repair</h3>
+            <p>제약 위반/누락/순서 오류를 반례로 보고 → LLM이 최소 수정으로 자가 복구.</p>
+            <ul class="mini">
+              <li>missing_obligations</li>
+              <li>violations / ordering_errors</li>
+              <li>info_gaps → 질문/보류</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="codebox" role="region" aria-label="검증 루프 요약">
+          <pre><code>Input: 사건 서술 + (선택) 구조화 필드 + 정책 문서
+1) Policy Compilation → 규칙 DSL (MUST / MUST-NOT / BEFORE / DEADLINE)
+2) Candidate Action Graphs 생성 (JSON 스키마 강제)
+3) Formal Verifier → 반례 리포트 생성
+4) Self-Repair → 위반 0 또는 보류/추가 질문으로 안전 전환</code></pre>
+          <p class="muted small">
+            고위험 도메인에서는 “정답처럼 말하기”보다 “검증·기록·보류”가 안전합니다.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROADMAP -->
+    <section id="roadmap" class="section">
+      <div class="container">
+        <header class="section-head">
+          <h2>로드맵</h2>
+          <p class="muted">현장 교사 커뮤니티 → 학교/교육청(B2B/B2G) 확장 → 인접 영역 확장</p>
+        </header>
+
+        <div class="timeline">
+          <div class="tl">
+            <div class="tl-title">1단계: 현직교사 커뮤니티(개인)</div>
+            <p class="muted">민원·기록 대응 킷(Free/Pro), 개인 방어/정리, 바이럴 확산</p>
+          </div>
+          <div class="tl">
+            <div class="tl-title">2단계: 학교/교육청(B2B/G)</div>
+            <p class="muted">표준화/협업/리스크 관리(School/District), 관리자 보고, 감사 추적</p>
+          </div>
+          <div class="tl">
+            <div class="tl-title">3단계: 인접 영역 확장</div>
+            <p class="muted">상담/특수/아동보호 연계, ‘기록·책임’ 영역 솔루션</p>
+          </div>
+        </div>
+
+        <div class="cards grid-3">
+          <article class="card">
+            <h3>맞춤형 대응 추천</h3>
+            <p>데이터 수집/분석 기반으로 상황별 다음 액션을 정밀화.</p>
+          </article>
+          <article class="card">
+            <h3>관계 분석 & 운영 시스템</h3>
+            <p>복합 관계를 분석해 학교 운영 시스템을 체계화.</p>
+          </article>
+          <article class="card">
+            <h3>AI 에이전트/자동화</h3>
+            <p>고도화된 AI 비서, 자동화된 솔루션 제공으로 교사 부담 감소.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- WAITLIST / CONTACT -->
+    <section id="waitlist" class="section cta-section">
+      <div class="container cta">
+        <h2>데모/베타 신청</h2>
+        <p class="muted">
+          “현장 리스크를 줄이는 표준 절차+기록 시스템”을 함께 검증할 학교/교사를 찾습니다.
+        </p>
+
+        <div class="cta-grid">
+          <form class="form" action="mailto:team@redclx.example" method="post" enctype="text/plain">
+            <label>
+              <span>이름 / 소속</span>
+              <input name="name" autocomplete="name" placeholder="예) 홍길동 / OO중학교" required />
+            </label>
+            <label>
+              <span>이메일</span>
+              <input type="email" name="email" autocomplete="email" placeholder="name@example.com" required />
+            </label>
+            <label>
+              <span>관심 주제</span>
+              <select name="interest">
+                <option>민원 대응</option>
+                <option>학폭/갈등 대응</option>
+                <option>기록/감사 대응</option>
+                <option>학교/교육청 운영</option>
+              </select>
+            </label>
+            <label>
+              <span>메시지</span>
+              <textarea name="message" rows="4" placeholder="현재 겪는 문제/원하는 기능을 간단히 적어주세요."></textarea>
+            </label>
+            <button class="btn btn-primary" type="submit">신청 보내기</button>
+            <p class="muted small">* 위 폼은 메일 발송 방식입니다. 실제 운영 시 서버 엔드포인트로 교체하세요.</p>
+          </form>
+
+          <div class="cta-side">
+            <div class="card">
+              <h3>Proof Pack(준비중)</h3>
+              <ul class="mini">
+                <li>탐지→판단→조치→기록 데모 플로우</li>
+                <li>정책(지침/법규) 컴파일 규칙셋</li>
+                <li>시나리오 합성 벤치마크 & 지표</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>연락</h3>
+              <p class="muted">team@redclx.example</p>
+              <p class="muted small">B2G/B2B 파일럿, 현장 검증, 공동 연구/논문화 협업 환영</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="section">
+      <div class="container">
+        <header class="section-head">
+          <h2>FAQ</h2>
+          <p class="muted">자주 묻는 질문을 모았습니다.</p>
+        </header>
+
+        <div class="faq">
+          <details>
+            <summary>REDCLX는 어떤 학교/교사에게 가장 유용한가요?</summary>
+            <p>민원·학폭·갈등 이슈가 잦고, 기록·보고·조치의 표준화가 필요한 현장에 특히 유용합니다. 사건을 “케이스”로 묶어 단계별로 관리하는 팀(담임/부장/관리자) 구조에서 효과가 커집니다.</p>
+          </details>
+          <details>
+            <summary>정보가 부족한 상황에서도 액션을 추천하나요?</summary>
+            <p>조건 판정에 필요한 정보가 부족하면 “추가 질문/보류”로 안전 전환하도록 설계합니다. 최소 안전 절차(기록/에스컬레이션 등)만 우선 제안하고 나머지는 확인 후 진행합니다.</p>
+          </details>
+          <details>
+            <summary>규정/지침은 어떻게 반영하나요?</summary>
+            <p>자연어 정책을 MUST/MUST-NOT/기한/선후관계 제약으로 컴파일하고, 생성된 액션 그래프를 검증합니다. 위반·누락·순서 오류는 반례 리포트로 만들어 자가 수정 루프를 돌립니다.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="section section-alt">
+      <div class="container footer-top">
+        <h2>“교실을 데이터로 구조화해, 리스크를 줄입니다.”</h2>
+        <p class="muted">
+          REDCLX는 차가운 기술로 뜨거운 교육현장을 지키는 Classroom OS를 지향합니다.
+        </p>
+        <div class="footer-actions">
+          <a class="btn btn-primary" href="#waitlist">데모/베타 신청</a>
+          <a class="btn btn-ghost" href="mailto:team@redclx.example">이메일 문의</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <strong>REDCLX</strong>
+        <span class="muted">Class Experience · Classroom OS</span>
+      </div>
+      <div class="footer-meta">
+        <span class="muted">© <span id="y">2025</span> REDCLX. All rights reserved.</span>
+        <span class="muted">·</span>
+        <a class="muted" href="#top">Back to top</a>
+      </div>
+    </div>
+    <script>
+      // SEO 영향 없는 초경량(연도 표기만)
+      document.getElementById("y").textContent = new Date().getFullYear();
+    </script>
+  </footer>
+
+  <noscript>
+    <div class="noscript">
+      이 사이트는 자바스크립트 없이도 대부분의 콘텐츠를 볼 수 있습니다.
+    </div>
+  </noscript>
+</body>
+</html>
