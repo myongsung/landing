@@ -529,3 +529,193 @@ details p{
   html{ scroll-behavior:auto; }
   .btn{ transition:none; }
 }
+
+
+/* ===== Palantir-ish Typography & Header Refinement Patch ===== */
+
+/* 1) 전체 폰트 스케일을 살짝 낮추고 가독성(행간/자간) 정리 */
+:root{
+  --radius:12px;
+  --radius2:16px;
+}
+
+body{
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+/* 2) Header를 더 컴팩트하게 */
+.header-inner{
+  padding: 10px 0;
+  gap: 14px;
+}
+
+.brand-mark{
+  width:32px;
+  height:32px;
+  border-radius: 10px;
+}
+
+.brand-text strong{
+  font-size: .98rem;
+}
+.brand-text .muted{
+  font-size: .72rem;
+  letter-spacing: .16em;
+}
+
+/* 헤더 메뉴 글씨/패딩 줄이기 */
+.nav{
+  padding: 6px 12px;
+  gap: 14px;
+}
+.nav a{
+  font-size: .88rem;
+}
+
+/* 3) 헤더 CTA(문의/데모) 버튼 글씨/패딩 줄이기 */
+.header-cta{
+  gap: 8px;
+}
+.header-cta .btn{
+  padding: 8px 12px;
+  font-size: .88rem;
+}
+
+/* 버튼 전체도 살짝 컴팩트 */
+.btn{
+  padding: 9px 12px;
+  font-size: .92rem;
+}
+.btn-primary{
+  box-shadow: 0 14px 46px rgba(86,194,255,.10);
+}
+
+/* 4) Hero 메인 타이틀(H1) 크기 확 낮추고 더 '프로' 느낌으로 */
+.hero{
+  padding: 44px 0 20px;
+}
+.hero h1{
+  font-size: clamp(1.55rem, 1.6vw + 1rem, 2.35rem);
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+/* accent 밑줄도 더 얇고 짧게 */
+.accent::after{
+  height: 1px;
+  width: min(180px, 62%);
+  margin-top: 8px;
+  opacity: .75;
+}
+
+/* 부제/리드 텍스트 크기 다운 */
+.lead{
+  font-size: 1.0rem;
+  line-height: 1.7;
+}
+
+/* Hero bullet도 너무 튀지 않게 */
+.hero-bullets{
+  font-size: .95rem;
+  color: rgba(242,246,255,.64);
+}
+.hero-bullets li{
+  margin: 7px 0;
+}
+
+/* Hero 버튼 영역 더 타이트 */
+.hero-actions{
+  margin: 14px 0 8px;
+}
+
+/* 5) 섹션 타이틀/카드 타이포도 단계 정리 */
+.section{
+  padding: 48px 0;
+}
+
+.section-head h2{
+  font-size: clamp(1.18rem, .9vw + 1rem, 1.55rem);
+  line-height: 1.25;
+  margin-bottom: 10px;
+}
+
+.card h3{
+  font-size: 1.0rem;
+  margin-bottom: 8px;
+}
+.card p{
+  font-size: .95rem;
+}
+.mini{
+  font-size: .93rem;
+}
+
+/* 6) Trust row/카드 간격 미세 조정(덜 “두껍게”) */
+.trust-row{
+  gap: 12px;
+  padding: 14px 0;
+}
+.trust-item{
+  padding: 12px 12px;
+}
+.trust-item strong{
+  font-size: .98rem;
+}
+.trust-item span{
+  font-size: .92rem;
+}
+
+/* 7) Steps/Point 컴팩트 */
+.step{
+  padding: 14px 14px;
+  grid-template-columns: 40px 1fr;
+}
+.step-num{
+  width:40px; height:40px;
+  border-radius: 12px;
+  font-size: .95rem;
+}
+.step-body h3{
+  font-size: 1.0rem;
+}
+.step-body p{
+  font-size: .95rem;
+}
+
+.point{
+  padding: 12px 12px;
+}
+.point h3{
+  font-size: 1.0rem;
+}
+
+/* 8) CTA 섹션도 ‘덩치’ 줄이기 */
+.cta{
+  padding: 20px 18px;
+}
+.cta h2{
+  font-size: 1.35rem;
+}
+label span{
+  font-size: .88rem;
+}
+input, textarea, select{
+  padding: 11px 11px;
+  border-radius: 11px;
+}
+
+/* 9) FAQ summary 폰트 조금 낮추기 */
+summary{
+  font-size: .98rem;
+}
+
+/* 10) 모바일에서 헤더 버튼 더 작게 */
+@media (max-width: 980px){
+  .header-cta .btn{
+    padding: 8px 10px;
+    font-size: .86rem;
+  }
+}
