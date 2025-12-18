@@ -1,3 +1,5 @@
 User-agent: *
 Allow: /
-Sitemap: https://redclx.example/sitemap.xml
+
+Sitemap: https://www.redclexperice.com/sitemap.xml
+
