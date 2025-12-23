@@ -65,19 +65,26 @@ img{ display:block; max-width:100%; height:auto; }
 
 strong{ font-weight:850; }
 
-/* ===== Top Bar ===== */
+/* ===== Top Bar (FIX: mobile cut + more transparent bg) ===== */
 .topbar{
   position:fixed;
-  left:14px; right:14px; top:14px;
+  /* safe-area 대응: 노치/상단바 있는 기기에서 짤림 방지 */
+  top: calc(14px + env(safe-area-inset-top));
+  left: calc(14px + env(safe-area-inset-left));
+  right: calc(14px + env(safe-area-inset-right));
+
   z-index:50;
   border-radius: var(--radius2);
-  background: linear-gradient(180deg, rgba(47,53,61,.92), rgba(33,38,45,.88));
+
+  /* 더 투명하게 */
+  background: linear-gradient(180deg, rgba(47,53,61,.42), rgba(33,38,45,.30));
   border: 1px solid rgba(255,255,255,.10);
-  box-shadow: 0 10px 50px rgba(0,0,0,.35);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 50px rgba(0,0,0,.30);
+  backdrop-filter: blur(14px);
 }
+
 .topbar-inner{
-  height:62px;
+  min-height:62px;
   padding:0 14px;
   display:flex;
   align-items:center;
@@ -85,22 +92,26 @@ strong{ font-weight:850; }
   gap:14px;
 }
 
+/* 핵심: 고정 min-width로 인한 오버플로우 방지 */
 .topbar-brand{
   display:flex;
   align-items:center;
   gap:10px;
-  min-width: 160px;
+  min-width: 0;            /* ✅ */
+  flex: 0 1 auto;          /* ✅ */
 }
 .brand-mark{
   width:34px; height:34px;
   border-radius: 12px;
   display:grid; place-items:center;
-  background: rgba(0,0,0,.20);
+  background: rgba(0,0,0,.18);
   border: 1px solid rgba(255,255,255,.12);
+  flex: 0 0 auto;
 }
 .brand-name{
   font-weight:850;
   letter-spacing:.02em;
+  white-space:nowrap;
 }
 
 .topbar-nav{
@@ -121,6 +132,7 @@ strong{ font-weight:850; }
   display:flex;
   align-items:center;
   gap:10px;
+  flex: 0 0 auto;
 }
 
 .btn-outline{
@@ -135,6 +147,7 @@ strong{ font-weight:850; }
   color: var(--text);
   font-weight:750;
   min-width: 152px;
+  white-space:nowrap;
 }
 .btn-outline:hover{ border-color: rgba(255,255,255,.85); }
 
@@ -146,12 +159,40 @@ strong{ font-weight:850; }
   color: var(--text);
   display:grid; place-items:center;
   cursor:pointer;
+  flex: 0 0 auto;
 }
 .icon-btn:hover{ border-color: rgba(255,255,255,.85); }
 
+/* 980px 아래: nav 숨김 (기존 유지) */
 @media (max-width: 980px){
   .topbar-nav{ display:none; }
   .btn-outline{ min-width: 132px; padding:0 14px; }
+}
+
+/* ✅ 추가: 모바일에서 헤더 '짤림/오버플로우' 방지 */
+@media (max-width: 520px){
+  .topbar{
+    top: calc(10px + env(safe-area-inset-top));
+    left: calc(10px + env(safe-area-inset-left));
+    right: calc(10px + env(safe-area-inset-right));
+  }
+  .topbar-inner{
+    padding: 0 10px;
+    gap:10px;
+  }
+  .btn-outline{
+    min-width: 0;
+    padding: 0 12px;
+    height: 38px;
+    font-size: .92rem;
+  }
+  .icon-btn{
+    width:40px;
+    height:38px;
+  }
+  /* 가장 작은 폭에서 잘리는 원인 1순위 = 아이콘 2개 + CTA.
+     검색 버튼은 모바일에서 숨겨 공간 확보 */
+  .icon-btn[aria-label="검색"]{ display:none; }
 }
 
 /* ===== Left Chapters (A/B/C/D) ===== */
@@ -200,7 +241,7 @@ strong{ font-weight:850; }
   padding-top: 96px; /* topbar offset */
   padding-bottom: 64px;
 }
-.scene-a{ padding-top: 112px; } /* more breathing room */
+.scene-a{ padding-top: 112px; }
 
 .scene-title{
   margin:0;
@@ -332,9 +373,7 @@ strong{ font-weight:850; }
   overflow:hidden;
   border-radius: 14px;
 }
-.ui-frame-hero{
-  border-radius: 18px;
-}
+.ui-frame-hero{ border-radius: 18px; }
 .ui-frame img{
   width:100%;
   height:auto;
@@ -410,7 +449,7 @@ strong{ font-weight:850; }
   .panel-grid{ grid-template-columns: 1fr; }
 }
 
-/* ===== PRODUCT (big typography + huge UI images) ===== */
+/* ===== PRODUCT ===== */
 .scene-product{
   padding-top: 84px;
   background:
@@ -484,10 +523,8 @@ strong{ font-weight:850; }
   padding: 8px 10px;
   background: rgba(0,0,0,.12);
 }
+.ui-frame-block{ border-radius: 18px; }
 
-.ui-frame-block{
-  border-radius: 18px;
-}
 @media (max-width: 980px){
   .pblock-top{ grid-template-columns: 1fr; }
 }
@@ -746,41 +783,9 @@ textarea{ resize:vertical; }
   font-size: .95rem;
 }
 
-.team-cards{
-  margin-top: 14px;
-  display:grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  padding-top: 10px;
-}
-.tcard{
-  background:#fff;
-  border: 1px solid rgba(0,0,0,.10);
-  padding: 18px 18px 16px;
-}
-.tcard-k{
-  font-family: var(--mono);
-  font-size:.84rem;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  color: rgba(0,0,0,.55);
-}
-.tcard-h{
-  margin-top: 10px;
-  font-weight: 850;
-  letter-spacing:-0.02em;
-  color: rgba(0,0,0,.88);
-}
-.tcard-p{
-  margin: 10px 0 0;
-  color: rgba(0,0,0,.62);
-  line-height: 1.9;
-}
-
 @media (max-width: 980px){
   .team-hero{ grid-template-columns: 1fr; gap: 18px; }
   .spec-row{ grid-template-columns: 1fr; gap: 6px; }
-  .team-cards{ grid-template-columns: 1fr; }
 }
 
 /* ===== Noscript ===== */
