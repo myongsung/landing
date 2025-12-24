@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" class="no-js">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
@@ -19,6 +19,7 @@
   <meta property="og:url" content="https://www.redclexperice.com/" />
   <meta property="og:image" content="https://www.redclexperice.com/assets/og.png" />
 
+  <script>document.documentElement.classList.remove("no-js");document.documentElement.classList.add("js");</script>
   <link rel="preload" href="./styles.css" as="style" />
   <link rel="stylesheet" href="./styles.css" />
 
@@ -112,50 +113,51 @@
       <div class="container">
         <div class="hero">
           <div class="hero-left">
-            <div class="hudline">
+            <div class="hudline" data-reveal="fade-up">
               <span class="hud-tag">EDUCATION RISK INTELLIGENCE</span>
               <span class="hud-sep">/</span>
               <span class="hud-quote">최고를 위한 교육리스크 전략무기</span>
             </div>
 
-            <h1 class="hero-title">
+            <h1 class="hero-title" data-reveal="clip-up">
               Powering the<br/>
               <span class="hero-strong">Risk Chain</span>
             </h1>
 
-            <p class="hero-lead">
+            <p class="hero-lead" data-reveal="fade-up" data-delay="120">
               민원·학폭·갈등 대응을 <strong>방어 가능한 의사결정 체인</strong>으로 표준화합니다.<br/>
               <strong>Risk posture</strong>를 정의하고, <strong>Countermeasure</strong>를 실행하며, <strong>Audit trail</strong>로 끝까지 남깁니다.
             </p>
 
-            <div class="hero-metrics">
-              <div class="metric">
+            <div class="hero-metrics" data-stagger="90">
+              <div class="metric" data-reveal="fade-up">
                 <div class="mk">OPERATING SYSTEM FOR</div>
                 <div class="mv">Classroom Decision-Making</div>
               </div>
-              <div class="metric">
+              <div class="metric" data-reveal="fade-up">
                 <div class="mk">MODEL</div>
                 <div class="mv">Evidence-first · Policy-aware</div>
               </div>
-              <div class="metric">
+              <div class="metric" data-reveal="fade-up">
                 <div class="mk">OUTPUT</div>
                 <div class="mv">Verified Actions · Evidence Pack</div>
               </div>
             </div>
 
-            <div class="hero-actions">
+            <div class="hero-actions" data-reveal="fade-up" data-delay="180">
               <a class="btn-solid" href="#d">데모/베타 신청</a>
               <a class="btn-ghost" href="#product">제품 UI 보기</a>
             </div>
 
-            <p class="hero-foot">
+            <p class="hero-foot" data-reveal="fade-up" data-delay="240">
               * “조언”이 아니라, <strong>절차·근거·기록</strong>으로 리스크를 내려놓는 시스템입니다.
             </p>
           </div>
 
           <div class="hero-right" aria-label="제품 UI: Tactical Dashboard">
-            <div class="ui-frame ui-frame-hero">
+            <div class="ui-frame ui-frame-hero" data-reveal="zoom" data-parallax="0.22" data-range="90">
               <img
+                class="parallax-img"
                 src="./assets/ui-01-tactical.png"
                 alt="REDCLX Tactical Dashboard UI"
                 loading="eager"
@@ -164,7 +166,7 @@
                 height="900"
               />
             </div>
-            <div class="ui-caption">
+            <div class="ui-caption" data-reveal="fade-up" data-delay="140">
               <span class="cap-k">01 / TACTICAL DASHBOARD</span>
               <span class="cap-v">Threat feed · Stress metrics · Class dynamics</span>
             </div>
@@ -176,7 +178,7 @@
     <!-- TEAM -->
     <section id="team" class="scene scene-team" aria-label="TEAM">
       <div class="container">
-        <div class="team-indexbar" aria-hidden="true">
+        <div class="team-indexbar" aria-hidden="true" data-reveal="fade">
           <span class="tidx">[0.1]</span>
           <span class="tline"></span>
           <span class="tghost">0.2 — 0.3</span>
@@ -184,27 +186,27 @@
 
         <div class="team-hero">
           <div class="team-left">
-            <div class="team-path">REDCLX / TEAM</div>
+            <div class="team-path" data-reveal="fade-up">REDCLX / TEAM</div>
 
-            <h2 class="team-display">
+            <h2 class="team-display" data-reveal="clip-up">
               Career-grade<br/>
               risk officers
             </h2>
 
-            <p class="team-sublead">
+            <p class="team-sublead" data-reveal="fade-up" data-delay="120">
               REDCLX는 일반적인 “프로덕트 팀”이 아닙니다.
               <strong>리스크 포지션을 설계하고, 카운터메저를 집행하며, 사후 감사까지 방어해온</strong>
               최고수준의 두뇌가 모인 <strong>전술·전략 컨설팅형 개발팀</strong>입니다.
             </p>
 
-            <div class="team-actions">
+            <div class="team-actions" data-reveal="fade-up" data-delay="180">
               <a class="btn-black" href="#d">Get Started</a>
               <a class="btn-outline-black" href="#product">Product UI</a>
             </div>
           </div>
 
           <div class="team-right">
-            <p class="team-copy">
+            <p class="team-copy" data-reveal="fade-up">
               사건 대응은 “좋은 말”이 아니라 <strong>결정(Decision)</strong>과 <strong>근거(Evidence)</strong>와
               <strong>감사추적(Audit trail)</strong>로 성패가 갈립니다.
               REDCLX 팀은 교육·기술·경영의 교차점에서,
@@ -212,8 +214,8 @@
               변환하는 데 집중합니다.
             </p>
 
-            <div class="team-spec" aria-label="Team capabilities">
-              <div class="spec-row">
+            <div class="team-spec" aria-label="Team capabilities" data-stagger="90">
+              <div class="spec-row" data-reveal="fade-up">
                 <div class="spec-k">RISK POSTURE DESIGN</div>
                 <div class="spec-v">
                   상황을 “사건”이 아니라 <strong>리스크 포지션</strong>으로 정의합니다.
@@ -222,7 +224,7 @@
                 </div>
               </div>
 
-              <div class="spec-row">
+              <div class="spec-row" data-reveal="fade-up">
                 <div class="spec-k">COUNTERMEASURE PLAYBOOK</div>
                 <div class="spec-v">
                   대응은 옵션이 아니라 <strong>프로토콜</strong>로 내려옵니다.
@@ -231,7 +233,7 @@
                 </div>
               </div>
 
-              <div class="spec-row">
+              <div class="spec-row" data-reveal="fade-up">
                 <div class="spec-k">AUDIT-READY DEFENSE</div>
                 <div class="spec-v">
                   제출 가능한 형태로 남기지 않으면 방어가 아닙니다.
@@ -240,7 +242,7 @@
                 </div>
               </div>
 
-              <div class="spec-row">
+              <div class="spec-row" data-reveal="fade-up">
                 <div class="spec-k">DECISION INTELLIGENCE</div>
                 <div class="spec-v">
                   그럴듯한 조언을 생성하지 않습니다.
@@ -250,7 +252,7 @@
               </div>
             </div>
 
-            <p class="team-note">
+            <p class="team-note" data-reveal="fade-up" data-delay="120">
               * REDCLX는 특정 기관/회사와의 제휴·소속을 의미하지 않습니다.
               다만 동일한 수준의 <strong>법무·전략·운영 품질 기준</strong>을 제품 설계 원칙으로 적용합니다.
             </p>
@@ -263,27 +265,27 @@
     <section id="b" class="scene scene-b" data-scene="b" aria-label="WHY">
       <div class="container">
         <div class="why-head">
-          <h2 class="scene-title">WHY</h2>
-          <p class="scene-lead">
+          <h2 class="scene-title" data-reveal="clip-up">WHY</h2>
+          <p class="scene-lead" data-reveal="fade-up" data-delay="120">
             문제는 ‘의지’가 아니라 ‘시스템’입니다. 사건은 복잡하고 기록은 흩어지며,
             <strong>한 번의 누락</strong>이 리스크가 됩니다.
           </p>
         </div>
 
-        <div class="panel-grid">
-          <article class="panel">
+        <div class="panel-grid" data-stagger="90">
+          <article class="panel" data-reveal="fade-up">
             <div class="panel-h">정보가 흩어짐</div>
             <p class="panel-p">대화/면담/문서/첨부가 분산되어 맥락이 끊깁니다.</p>
             <div class="panel-tag">CONTEXT LOSS</div>
           </article>
 
-          <article class="panel">
+          <article class="panel" data-reveal="fade-up">
             <div class="panel-h">기록이 방어가 됨</div>
             <p class="panel-p">근거·시점·산출물이 없으면 사후 분쟁에 취약합니다.</p>
             <div class="panel-tag">EVIDENCE FIRST</div>
           </article>
 
-          <article class="panel">
+          <article class="panel" data-reveal="fade-up">
             <div class="panel-h">절차 누락 리스크</div>
             <p class="panel-p">기한/순서/금지행위(PII 등)에서 실수가 납니다.</p>
             <div class="panel-tag">COMPLIANCE</div>
@@ -292,95 +294,111 @@
       </div>
     </section>
 
-    <!-- PRODUCT -->
+    <!-- PRODUCT (Sticky + Crossfade) -->
     <section id="product" class="scene scene-product" aria-label="PRODUCT UI">
       <div class="container">
         <div class="product-head">
-          <div class="pidx">[1.0]</div>
-          <h2 class="product-title">Product interface</h2>
-          <p class="product-lead">
+          <div class="pidx" data-reveal="fade">[1.0]</div>
+          <h2 class="product-title" data-reveal="clip-up">Product interface</h2>
+          <p class="product-lead" data-reveal="fade-up" data-delay="120">
             “화면”은 장식이 아니라, <strong>리스크를 줄이는 구조</strong>입니다.
             탐지 → 판단 → 실행 → 보관을 UI에서 끊김 없이 연결합니다.
           </p>
         </div>
 
-        <article class="pblock">
-          <header class="pblock-top">
-            <h3 class="pblock-title">Data Integration &amp; Ontology</h3>
-            <div class="pblock-copy">
-              <p>
-                분산된 기록(상담·통지·보고·로그)을 <strong>공통 온톨로지</strong>로 묶어
-                케이스 단위로 검색·추적·감사 가능한 상태로 만듭니다.
-              </p>
-              <div class="pbullets">
-                <span class="pb">Ontology</span>
-                <span class="pb">Structured fields</span>
-                <span class="pb">Policy hooks</span>
+        <div class="product-sticky">
+          <!-- Left rail: scroll steps -->
+          <div class="product-rail" aria-label="Product steps">
+            <article class="pstep is-active" data-step="0">
+              <header class="pstep-top">
+                <h3 class="pstep-title" data-reveal="fade-up">Data Integration &amp; Ontology</h3>
+                <div class="pstep-copy" data-reveal="fade-up" data-delay="120">
+                  <p>
+                    분산된 기록(상담·통지·보고·로그)을 <strong>공통 온톨로지</strong>로 묶어
+                    케이스 단위로 검색·추적·감사 가능한 상태로 만듭니다.
+                  </p>
+                  <div class="pbullets">
+                    <span class="pb">Ontology</span>
+                    <span class="pb">Structured fields</span>
+                    <span class="pb">Policy hooks</span>
+                  </div>
+                </div>
+              </header>
+              <div class="pstep-meta" data-reveal="fade-up" data-delay="160">
+                <span class="pstep-k">MODE</span>
+                <span class="pstep-v">Context unification · Case-first</span>
               </div>
-            </div>
-          </header>
-          <div class="ui-frame ui-frame-block">
-            <img
-              src="./assets/ui-02-ontology.png"
-              alt="REDCLX Data Integration & Ontology UI"
-              loading="lazy"
-              width="1600"
-              height="900"
-            />
-          </div>
-        </article>
+            </article>
 
-        <article class="pblock">
-          <header class="pblock-top">
-            <h3 class="pblock-title">Decision Archiving &amp; Defensive Log</h3>
-            <div class="pblock-copy">
-              <p>
-                의사결정과 조치의 흐름을 <strong>방어 로그(Defensive Log)</strong>로 고정합니다.
-                “언제/왜/무엇을/누가”를 증거로 남겨 <strong>사후 재현</strong>이 가능해집니다.
-              </p>
-              <div class="pbullets">
-                <span class="pb">Audit trail</span>
-                <span class="pb">Immutable history</span>
-                <span class="pb">Evidence pack</span>
+            <article class="pstep" data-step="1">
+              <header class="pstep-top">
+                <h3 class="pstep-title" data-reveal="fade-up">Decision Archiving &amp; Defensive Log</h3>
+                <div class="pstep-copy" data-reveal="fade-up" data-delay="120">
+                  <p>
+                    의사결정과 조치의 흐름을 <strong>방어 로그(Defensive Log)</strong>로 고정합니다.
+                    “언제/왜/무엇을/누가”를 증거로 남겨 <strong>사후 재현</strong>이 가능해집니다.
+                  </p>
+                  <div class="pbullets">
+                    <span class="pb">Audit trail</span>
+                    <span class="pb">Immutable history</span>
+                    <span class="pb">Evidence pack</span>
+                  </div>
+                </div>
+              </header>
+              <div class="pstep-meta" data-reveal="fade-up" data-delay="160">
+                <span class="pstep-k">OUTPUT</span>
+                <span class="pstep-v">Defensive Log · Evidence Pack</span>
               </div>
-            </div>
-          </header>
-          <div class="ui-frame ui-frame-block">
-            <img
-              src="./assets/ui-03-defensivelog.png"
-              alt="REDCLX Decision Archiving & Defensive Log UI"
-              loading="lazy"
-              width="1600"
-              height="900"
-            />
-          </div>
-        </article>
+            </article>
 
-        <article class="pblock">
-          <header class="pblock-top">
-            <h3 class="pblock-title">Strategy Simulation Engine</h3>
-            <div class="pblock-copy">
-              <p>
-                선택지별 리스크/자원/결과를 비교해 <strong>최적 대응</strong>을 찾습니다.
-                감정이 아니라 <strong>프로토콜</strong>로 움직이게 하는 “리스크 전략무기”의 핵심입니다.
-              </p>
-              <div class="pbullets">
-                <span class="pb">Countermeasure</span>
-                <span class="pb">Risk score</span>
-                <span class="pb">Protocol response</span>
+            <article class="pstep" data-step="2">
+              <header class="pstep-top">
+                <h3 class="pstep-title" data-reveal="fade-up">Strategy Simulation Engine</h3>
+                <div class="pstep-copy" data-reveal="fade-up" data-delay="120">
+                  <p>
+                    선택지별 리스크/자원/결과를 비교해 <strong>최적 대응</strong>을 찾습니다.
+                    감정이 아니라 <strong>프로토콜</strong>로 움직이게 하는 “리스크 전략무기”의 핵심입니다.
+                  </p>
+                  <div class="pbullets">
+                    <span class="pb">Countermeasure</span>
+                    <span class="pb">Risk score</span>
+                    <span class="pb">Protocol response</span>
+                  </div>
+                </div>
+              </header>
+              <div class="pstep-meta" data-reveal="fade-up" data-delay="160">
+                <span class="pstep-k">ENGINE</span>
+                <span class="pstep-v">Compare outcomes · Safe defaults</span>
+              </div>
+            </article>
+          </div>
+
+          <!-- Right sticky view -->
+          <aside class="product-view" aria-label="Sticky UI preview">
+            <div class="ui-frame ui-frame-block sticky-frame" data-reveal="zoom">
+              <div class="pvisuals" aria-hidden="true">
+                <img class="pvisual is-active" src="./assets/ui-02-ontology.png" alt="REDCLX Data Integration & Ontology UI" loading="lazy" width="1600" height="900"/>
+                <img class="pvisual" src="./assets/ui-03-defensivelog.png" alt="REDCLX Decision Archiving & Defensive Log UI" loading="lazy" width="1600" height="900"/>
+                <img class="pvisual" src="./assets/ui-04-simengine.png" alt="REDCLX Strategy Simulation Engine UI" loading="lazy" width="1600" height="900"/>
               </div>
             </div>
-          </header>
-          <div class="ui-frame ui-frame-block">
-            <img
-              src="./assets/ui-04-simengine.png"
-              alt="REDCLX Strategy Simulation Engine UI"
-              loading="lazy"
-              width="1600"
-              height="900"
-            />
-          </div>
-        </article>
+
+            <div class="ui-caption product-caption" aria-live="polite">
+              <div class="pcap is-active" data-cap="0">
+                <span class="cap-k">02 / ONTOLOGY</span>
+                <span class="cap-v">Case mapping · Policy hooks · Unified context</span>
+              </div>
+              <div class="pcap" data-cap="1">
+                <span class="cap-k">03 / DEFENSIVE LOG</span>
+                <span class="cap-v">Audit trail · Immutable history · Evidence pack</span>
+              </div>
+              <div class="pcap" data-cap="2">
+                <span class="cap-k">04 / SIMULATION</span>
+                <span class="cap-v">Risk score · Countermeasure · Protocol response</span>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
 
@@ -389,44 +407,44 @@
       <div class="container">
         <div class="engine">
           <div class="engine-left">
-            <h2 class="scene-title">ENGINE</h2>
-            <p class="scene-lead">
+            <h2 class="scene-title" data-reveal="clip-up">ENGINE</h2>
+            <p class="scene-lead" data-reveal="fade-up" data-delay="120">
               <strong>Neuro-Symbolic Compliance Engine</strong><br/>
               LLM(Neural)의 생성 + 규정 논리(Symbolic)의 검증을 결합해
               “검증 가능한 액션 그래프”를 만듭니다.
             </p>
 
-            <div class="stack">
-              <div class="stack-item">
+            <div class="stack" data-stagger="90">
+              <div class="stack-item" data-reveal="fade-up">
                 <div class="stack-k">01 / POLICY COMPILATION</div>
                 <div class="stack-v">MUST·MUST-NOT·기한·선후관계를 제약식으로 컴파일</div>
               </div>
-              <div class="stack-item">
+              <div class="stack-item" data-reveal="fade-up">
                 <div class="stack-k">02 / ACTION GRAPH</div>
                 <div class="stack-v">자유 텍스트 대신 구조화 액션(JSON 스키마)만 생성</div>
               </div>
-              <div class="stack-item">
+              <div class="stack-item" data-reveal="fade-up">
                 <div class="stack-k">03 / VERIFIER + SELF-REPAIR</div>
                 <div class="stack-v">누락/위반/순서오류를 잡고 Hold/추가질문으로 안전 전환</div>
               </div>
             </div>
 
-            <div class="hero-actions">
+            <div class="hero-actions" data-reveal="fade-up" data-delay="140">
               <a class="btn-solid" href="#d">파일럿 문의</a>
               <a class="btn-ghost" href="#a">Back to top</a>
             </div>
           </div>
 
-          <div class="engine-right">
-            <div class="engine-panel">
+          <div class="engine-right" data-stagger="90">
+            <div class="engine-panel" data-reveal="fade-up">
               <div class="ep-k">OUTPUT CONTRACT</div>
               <div class="ep-v">Verified Actions only (Schema-bound)</div>
             </div>
-            <div class="engine-panel">
+            <div class="engine-panel" data-reveal="fade-up">
               <div class="ep-k">SAFE MODE</div>
               <div class="ep-v">Hold / Escalate / Ask-for-more</div>
             </div>
-            <div class="engine-panel">
+            <div class="engine-panel" data-reveal="fade-up">
               <div class="ep-k">DEFENSIBILITY</div>
               <div class="ep-v">Evidence Pack · Audit Trail · Compliance Gate</div>
             </div>
@@ -439,13 +457,13 @@
     <section id="d" class="scene scene-d" data-scene="d" aria-label="Get Started">
       <div class="container">
         <div class="start">
-          <h2 class="scene-title">GET STARTED</h2>
-          <p class="scene-lead">
+          <h2 class="scene-title" data-reveal="clip-up">GET STARTED</h2>
+          <p class="scene-lead" data-reveal="fade-up" data-delay="120">
             현장 검증(교사/학교)과 파일럿(B2B/B2G)을 함께 진행할 파트너를 찾습니다.
           </p>
 
           <div class="cta-grid">
-            <form class="form" action="mailto:team@redclx.example" method="post" enctype="text/plain" aria-label="데모/베타 신청 폼">
+            <form class="form" action="mailto:team@redclx.example" method="post" enctype="text/plain" aria-label="데모/베타 신청 폼" data-reveal="fade-up">
               <label>
                 <span>이름 / 소속</span>
                 <input name="name" autocomplete="name" placeholder="예) 홍길동 / OO초등학교" required />
@@ -471,14 +489,14 @@
               <p class="fine">* 현재는 메일 발송 방식입니다. 운영 시 서버 엔드포인트로 교체하세요.</p>
             </form>
 
-            <div class="aside">
-              <div class="panel panel-tight">
+            <div class="aside" data-stagger="90">
+              <div class="panel panel-tight" data-reveal="fade-up">
                 <div class="panel-h">CONTACT</div>
                 <p class="panel-p">team@redclx.example</p>
                 <div class="panel-tag">PILOT / CO-RESEARCH</div>
               </div>
 
-              <div class="panel panel-tight">
+              <div class="panel panel-tight" data-reveal="fade-up">
                 <div class="panel-h">ROADMAP</div>
                 <p class="panel-p">
                   1) 교사 개인 → 2) 학교/교육청 → 3) 인접 영역(상담/특수/아동보호)
@@ -486,7 +504,7 @@
                 <div class="panel-tag">ROLL-OUT</div>
               </div>
 
-              <div class="panel panel-tight">
+              <div class="panel panel-tight" data-reveal="fade-up">
                 <div class="panel-h">POSITIONING</div>
                 <p class="panel-p">
                   평범한 기록 OS가 아니라, <strong>교육 리스크 대응 체계</strong>를
@@ -497,7 +515,7 @@
             </div>
           </div>
 
-          <div class="footerline">
+          <div class="footerline" data-reveal="fade-up" data-delay="120">
             <span class="dim">©</span> <span id="y">2025</span> <span class="dim">REDCLX. All rights reserved.</span>
             <span class="dot">·</span>
             <a class="dim" href="#a">Back to top</a>
@@ -532,6 +550,132 @@
 
     scenes.forEach(s => io.observe(s));
     setActive("a");
+
+    // =========================
+    // Scroll Animations (vanilla)
+    // =========================
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Topbar settle
+    (() => {
+      const topbar = document.querySelector(".topbar");
+      if (!topbar) return;
+      const onScroll = () => topbar.classList.toggle("is-scrolled", window.scrollY > 60);
+      onScroll();
+      window.addEventListener("scroll", onScroll, { passive: true });
+    })();
+
+    // Reveal (IntersectionObserver)
+    (() => {
+      if (reduceMotion) return;
+
+      const els = Array.from(document.querySelectorAll("[data-reveal]"));
+
+      // container stagger
+      const staggers = Array.from(document.querySelectorAll("[data-stagger]"));
+      staggers.forEach(container => {
+        const step = parseInt(container.dataset.stagger || "80", 10);
+        const children = Array.from(container.children);
+        children.forEach((ch, i) => {
+          if (!ch.hasAttribute("data-reveal")) return;
+          ch.style.transitionDelay = `${i * step}ms`;
+        });
+      });
+
+      const rio = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-inview");
+            // once
+            rio.unobserve(e.target);
+          }
+        });
+      }, {
+        threshold: [0, 0.18],
+        rootMargin: "0px 0px -10% 0px"
+      });
+
+      els.forEach(el => {
+        const d = el.dataset.delay ? parseInt(el.dataset.delay, 10) : 0;
+        if (d) el.style.transitionDelay = `${d}ms`;
+        rio.observe(el);
+      });
+    })();
+
+    // Parallax (rAF) — only for .parallax-img
+    (() => {
+      if (reduceMotion) return;
+
+      const frames = Array.from(document.querySelectorAll(".ui-frame[data-parallax]"));
+      if (!frames.length) return;
+
+      let ticking = false;
+
+      const update = () => {
+        ticking = false;
+        const vh = window.innerHeight || 800;
+
+        frames.forEach(frame => {
+          const speed = parseFloat(frame.dataset.parallax || "0.18");
+          const range = parseFloat(frame.dataset.range || "60");
+          const r = frame.getBoundingClientRect();
+
+          if (r.bottom < -200 || r.top > vh + 200) return;
+
+          const center = r.top + r.height / 2;
+          const delta = (center - vh / 2) / (vh / 2);
+          const y = (-delta) * range * speed;
+
+          frame.style.setProperty("--py", `${y.toFixed(2)}px`);
+        });
+      };
+
+      const onScroll = () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(update);
+        }
+      };
+
+      update();
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", onScroll);
+    })();
+
+    // =========================
+    // PRODUCT Sticky Crossfade
+    // =========================
+    (() => {
+      const steps = Array.from(document.querySelectorAll(".pstep"));
+      const visuals = Array.from(document.querySelectorAll(".pvisual"));
+      const caps = Array.from(document.querySelectorAll(".pcap"));
+      if (!steps.length || !visuals.length) return;
+
+      const setActiveProduct = (i) => {
+        steps.forEach((s, idx) => s.classList.toggle("is-active", idx === i));
+        visuals.forEach((v, idx) => v.classList.toggle("is-active", idx === i));
+        caps.forEach((c, idx) => c.classList.toggle("is-active", idx === i));
+      };
+
+      // init
+      setActiveProduct(0);
+
+      // IntersectionObserver: pick most visible step
+      const pio = new IntersectionObserver((entries) => {
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+        if (!visible) return;
+        const idx = parseInt(visible.target.dataset.step || "0", 10);
+        setActiveProduct(idx);
+      }, {
+        threshold: [0.25, 0.4, 0.55, 0.7],
+        rootMargin: "-15% 0px -35% 0px"
+      });
+
+      steps.forEach(s => pio.observe(s));
+    })();
   </script>
 </body>
 </html>
