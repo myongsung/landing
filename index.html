@@ -19,7 +19,11 @@
   <meta property="og:url" content="https://www.redclexperice.com/" />
   <meta property="og:image" content="https://www.redclexperice.com/assets/og.png" />
 
-  <script>document.documentElement.classList.remove("no-js");document.documentElement.classList.add("js");</script>
+  <script>
+    document.documentElement.classList.remove("no-js");
+    document.documentElement.classList.add("js");
+  </script>
+
   <link rel="preload" href="./styles.css" as="style" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
@@ -27,7 +31,7 @@
 <body>
   <a class="skip-link" href="#main">본문 바로가기</a>
 
-  <!-- GLOBAL MACRO FX (FAST) -->
+  <!-- GLOBAL MACRO FX (PC only / mobile lite disables via CSS) -->
   <div class="fx" aria-hidden="true"></div>
 
   <!-- Top Bar -->
@@ -506,23 +510,35 @@
     document.getElementById("y").textContent = new Date().getFullYear();
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isMobile =
+      window.matchMedia("(pointer: coarse)").matches ||
+      window.matchMedia("(max-width: 520px)").matches;
+
     const root = document.documentElement;
+    if (isMobile) root.classList.add("is-mobile");
 
     // =========================
-    // GLOBAL FX VARS — FAST (throttled)
+    // GLOBAL FX VARS — PC only (mobile lite: static)
     // =========================
     (() => {
       if (reduceMotion) return;
 
+      if (isMobile) {
+        root.style.setProperty("--mx", `${window.innerWidth * 0.55}px`);
+        root.style.setProperty("--my", `${window.innerHeight * 0.22}px`);
+        root.style.setProperty("--nx", "0");
+        root.style.setProperty("--ny", "0");
+        return;
+      }
+
       let tx = window.innerWidth * 0.55;
       let ty = window.innerHeight * 0.22;
       let cx = tx, cy = ty;
-
       let raf = 0;
 
       const apply = () => {
         raf = 0;
-        cx += (tx - cx) * 0.18; // faster follow
+        cx += (tx - cx) * 0.18;
         cy += (ty - cy) * 0.18;
 
         root.style.setProperty("--mx", `${cx.toFixed(1)}px`);
@@ -550,29 +566,16 @@
         request();
       }, { passive: true });
 
-      // scroll var (throttled)
-      let sraf = 0;
-      const onScroll = () => {
-        if (sraf) return;
-        sraf = requestAnimationFrame(() => {
-          sraf = 0;
-          root.style.setProperty("--scroll", `${window.scrollY || 0}`);
-        });
-      };
-      window.addEventListener("scroll", onScroll, { passive: true });
-
       window.addEventListener("resize", () => {
         tx = window.innerWidth * 0.55;
         ty = window.innerHeight * 0.22;
         request();
-        onScroll();
       });
 
       request();
-      onScroll();
     })();
 
-    // Chapter highlight (IntersectionObserver)
+    // Chapter highlight
     const chapterLinks = Array.from(document.querySelectorAll(".chapter"));
     const scenes = Array.from(document.querySelectorAll("[data-scene]"));
 
@@ -601,7 +604,7 @@
     })();
 
     // =========================
-    // Reveal — repeatable (FAST)
+    // Reveal — repeatable (mobile 포함)
     // =========================
     (() => {
       if (reduceMotion) return;
@@ -622,7 +625,7 @@
         entries.forEach(e => {
           const once = e.target.hasAttribute("data-once");
           if (e.isIntersecting) e.target.classList.add("is-inview");
-          else if (!once) e.target.classList.remove("is-inview");
+          else if (!once) e.target.classList.remove("is-inview"); // ✅ 스크롤 올/내리면 재실행
         });
       }, {
         threshold: [0, 0.12, 0.2],
@@ -636,9 +639,11 @@
       });
     })();
 
-    // Parallax (rAF) — keep, but slightly cheaper
+    // =========================
+    // Parallax — ✅ 모바일 OFF (끊김 주범)
+    // =========================
     (() => {
-      if (reduceMotion) return;
+      if (reduceMotion || isMobile) return;
 
       const frames = Array.from(document.querySelectorAll(".ui-frame[data-parallax]"));
       if (!frames.length) return;
@@ -659,6 +664,7 @@
           const center = r.top + r.height / 2;
           const delta = (center - vh / 2) / (vh / 2);
           const y = (-delta) * range * speed;
+
           frame.style.setProperty("--py", `${y.toFixed(2)}px`);
         });
       };
