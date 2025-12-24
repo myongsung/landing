@@ -39,7 +39,7 @@ body{
   isolation:isolate;
 }
 
-/* subtle fixed grid (PC: ok, mobile: later reduced) */
+/* subtle fixed grid (PC: ok, mobile: reduced later) */
 body::before{
   content:"";
   position:fixed;
@@ -207,10 +207,10 @@ main{ position:relative; z-index:1; }
   .icon-btn[aria-label="검색"]{ display:none; }
 }
 
-/* ===== Left Chapters ===== */
+/* ===== Left Chapters (PC/모바일 모두 표기) ===== */
 .chapters{
   position:fixed;
-  left:18px;
+  left: calc(18px + env(safe-area-inset-left));
   top: 50%;
   transform: translateY(-50%);
   z-index:40;
@@ -220,31 +220,39 @@ main{ position:relative; z-index:1; }
   user-select:none;
 }
 .chapter{
-  width:40px; height:28px;
+  width:56px; height:30px;
   display:flex;
   align-items:center;
   justify-content:center;
   color: rgba(255,255,255,.35);
   font-family: var(--mono);
-  letter-spacing:.12em;
+  letter-spacing:.10em;
+  font-size:.86rem;
   position:relative;
 }
-.chapter .k{ transform: translateX(-2px); }
-.chapter.is-active{ color: rgba(255,255,255,.90); }
+.chapter.is-active{ color: rgba(255,255,255,.92); }
 .chapter.is-active::before{
   content:"[";
-  position:absolute; left:2px; top:50%;
+  position:absolute; left:6px; top:50%;
   transform: translateY(-50%);
-  color: rgba(255,255,255,.85);
+  color: rgba(255,255,255,.88);
 }
 .chapter.is-active::after{
   content:"]";
-  position:absolute; right:2px; top:50%;
+  position:absolute; right:6px; top:50%;
   transform: translateY(-50%);
-  color: rgba(255,255,255,.85);
+  color: rgba(255,255,255,.88);
 }
-@media (max-width: 980px){
-  .chapters{ display:none; }
+@media (max-width: 520px){
+  .chapters{
+    left: calc(10px + env(safe-area-inset-left));
+    gap:8px;
+  }
+  .chapter{
+    width:52px; height:28px;
+    font-size:.82rem;
+    color: rgba(255,255,255,.42);
+  }
 }
 
 /* ===== Scenes ===== */
@@ -254,7 +262,7 @@ main{ position:relative; z-index:1; }
   padding-bottom: 64px;
   position:relative;
 
-  /* 큰 성능 개선(특히 모바일도 이득): 아래 섹션은 렌더 지연 */
+  /* 성능: 아래 섹션은 렌더 지연 */
   content-visibility: auto;
   contain-intrinsic-size: 1px 980px;
 }
@@ -321,7 +329,52 @@ main{ position:relative; z-index:1; }
   grid-template-columns: 1.05fr .95fr;
   gap: 28px;
   align-items:start;
+  position:relative;
 }
+.hero-left, .hero-right{ position:relative; z-index:2; }
+
+/* ✅ 기본(PC 포함)에서는 숨김 */
+/* =========================
+   MOBILE ONLY: RIGHT VERTICAL WORDMARK (Palantir-style)
+   ========================= */
+/* 기본(PC)에서는 숨김 */
+.hero-gotham{ display:none; }
+
+/* 모바일(작은 화면)에서만: 우측 세로 워드마크(안 잘리게) */
+@media (pointer: coarse), (max-width: 520px){
+  .hero-left, .hero-right{ position:relative; z-index:2; }
+
+  .hero-gotham{
+    display:block;
+    position: fixed;                 /* ✅ hero 높이 영향 없이 화면 기준 고정 */
+    top: 50svh;                      /* ✅ 뷰포트 중앙 */
+    right: calc(14px + env(safe-area-inset-right));  /* ✅ 화면 안쪽 여백 */
+
+    /* ✅ 핵심: 오른쪽에서 살짝 '안으로' 당겨서 절대 안 잘리게 */
+    transform: translate3d(-8%, 0, 0) rotate(90deg);
+    transform-origin: right center;
+
+    font-weight: 650;
+    letter-spacing: -0.06em;
+    line-height: .92;
+    white-space: nowrap;
+    pointer-events:none;
+
+    /* ✅ 작은 화면에서도 안전한 크기 */
+    font-size: clamp(120px, 30vw, 200px);
+    opacity: .16;
+    color: rgba(255,255,255,.99);
+    text-shadow: 0 26px 90px rgba(0,0,0,.50);
+
+    z-index: 1;                      /* 콘텐츠 뒤 */
+  }
+}
+
+@media (pointer: coarse), (max-width: 520px){
+  .scene-a .hero-title{ display:none; }
+}
+
+
 .hudline{
   display:flex;
   flex-wrap:wrap;
@@ -346,14 +399,6 @@ main{ position:relative; z-index:1; }
   font-size: clamp(70px, 8.2vw, 140px);
 }
 .hero-strong{ display:inline-block; color: rgba(255,255,255,.96); }
-
-.hero-lead{
-  margin: 18px 0 0;
-  color: rgba(255,255,255,.76);
-  font-size: 1.05rem;
-  line-height: 1.9;
-  max-width: 720px;
-}
 
 .hero-metrics{
   margin-top: 22px;
@@ -522,8 +567,6 @@ main{ position:relative; z-index:1; }
   text-transform:uppercase;
   color: rgba(255,255,255,.52);
 }
-.panel-tight{ padding: 14px 14px 12px; }
-
 @media (max-width: 980px){
   .panel-grid{ grid-template-columns: 1fr; }
 }
@@ -739,7 +782,8 @@ main{ position:relative; z-index:1; }
 
 .cta-grid{
   margin-top: 22px;
-  grid-template-columns: 1.05fr .95fr;
+  display:grid;
+  grid-template-columns: 1fr;
   gap: 14px;
   align-items:start;
 }
@@ -773,7 +817,6 @@ textarea{ resize:vertical; }
   color: rgba(255,255,255,.55);
   font-size:.9rem;
 }
-.aside{ display:grid; gap: 14px; }
 
 .dim{ color: rgba(238,242,247,.70); }
 .dot{ opacity:.55; }
@@ -854,39 +897,6 @@ textarea{ resize:vertical; }
   line-height: 2.02;
   color: rgba(0,0,0,.60);
 }
-.team-actions{
-  margin-top: 22px;
-  display:flex;
-  gap: 12px;
-  flex-wrap:wrap;
-}
-.btn-black{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  height:44px;
-  padding:0 18px;
-  border-radius:0;
-  border: 1px solid rgba(0,0,0,.92);
-  background: rgba(0,0,0,.92);
-  color:#fff;
-  font-weight:800;
-}
-.btn-black:hover{ background:#000; border-color:#000; }
-.btn-outline-black{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  height:44px;
-  padding:0 18px;
-  border-radius:0;
-  border: 1px solid rgba(0,0,0,.92);
-  background: transparent;
-  color: rgba(0,0,0,.90);
-  font-weight:800;
-}
-.btn-outline-black:hover{ background: rgba(0,0,0,.04); }
-
 .team-spec{ margin-top: 14px; border-top: 1px solid rgba(0,0,0,.12); }
 .spec-row{
   display:grid;
@@ -903,12 +913,6 @@ textarea{ resize:vertical; }
   color: rgba(0,0,0,.58);
 }
 .spec-v{ color: rgba(0,0,0,.70); line-height: 1.85; }
-.team-note{
-  margin: 14px 0 0;
-  color: rgba(0,0,0,.42);
-  line-height: 1.75;
-  font-size: .95rem;
-}
 @media (max-width: 980px){
   .team-hero{ grid-template-columns: 1fr; gap: 18px; }
   .spec-row{ grid-template-columns: 1fr; gap: 6px; }
@@ -963,26 +967,20 @@ textarea{ resize:vertical; }
 
 /* =========================================
    MOBILE LITE MODE (끊김/느림 해결 핵심)
-   - fixed 대형 FX 제거
-   - backdrop-filter 제거
-   - gate(큰 언폴드) -> 가벼운 스캔바
-   - reveal transition 더 짧게
    ========================================= */
 @media (pointer: coarse), (max-width: 520px){
   /* 1) 가장 큰 주범: fixed FX 레이어 OFF */
   .fx{ display:none !important; }
-
-  /* 2) fixed grid도 모바일에서는 약하게(또는 완전 off 원하면 display:none) */
   body::before{ opacity:.08; }
 
-  /* 3) topbar blur(backdrop-filter) 제거 -> 매우 큰 체감 개선 */
+  /* 2) topbar blur(backdrop-filter) 제거 */
   .topbar{
     backdrop-filter: none !important;
     background: rgba(18,22,29,.92) !important;
     box-shadow: 0 10px 44px rgba(0,0,0,.34);
   }
 
-  /* 4) 모바일에서는 큰 게이트 대신 "상단 스캔바"로(가벼움 + 큼직한 느낌 유지) */
+  /* 3) 모바일에서는 큰 게이트 대신 스캔바 */
   .scene[data-reveal="scene"]::after{ display:none !important; }
   .scene[data-reveal="scene"]::before{
     top: -10px;
@@ -1009,7 +1007,7 @@ textarea{ resize:vertical; }
     100%{ opacity:0; transform: translate3d(120%,0,0); }
   }
 
-  /* 5) reveal은 모바일에서 더 짧고 가볍게 */
+  /* 4) reveal은 모바일에서 더 짧고 가볍게 */
   .js [data-reveal]{
     transition:
       transform .32s cubic-bezier(.2,.8,.2,1),
@@ -1019,10 +1017,8 @@ textarea{ resize:vertical; }
   .js [data-reveal="fade-up"]{ --tY: 10px; }
   .js [data-reveal="zoom"]{ --tY: 6px; --s: .995; }
 
-  /* 6) parallax를 JS에서 껐지만, 이미지 transform도 더 단순하게 */
-  .ui-frame img{
-    transform: scale(1.01);
-  }
+  /* 5) parallax를 JS에서 껐지만 이미지 transform도 단순화 */
+  .ui-frame img{ transform: scale(1.01); }
 }
 
 /* prefers-reduced-motion */
