@@ -57,6 +57,9 @@
 <body>
   <a class="skip-link" href="#main">본문 바로가기</a>
 
+  <!-- GLOBAL MACRO FX (big unfolding beams / scan / spotlight) -->
+  <div class="fx" aria-hidden="true"></div>
+
   <!-- Top Bar -->
   <header class="topbar" role="banner">
     <div class="topbar-inner">
@@ -109,7 +112,7 @@
 
   <main id="main">
     <!-- A / HERO -->
-    <section id="a" class="scene scene-a" data-scene="a" aria-label="REDCLX 메인">
+    <section id="a" class="scene scene-a" data-scene="a" data-reveal="scene" aria-label="REDCLX 메인">
       <div class="container">
         <div class="hero">
           <div class="hero-left">
@@ -176,7 +179,7 @@
     </section>
 
     <!-- TEAM -->
-    <section id="team" class="scene scene-team" aria-label="TEAM">
+    <section id="team" class="scene scene-team" data-reveal="scene" aria-label="TEAM">
       <div class="container">
         <div class="team-indexbar" aria-hidden="true" data-reveal="fade">
           <span class="tidx">[0.1]</span>
@@ -262,7 +265,7 @@
     </section>
 
     <!-- B / WHY -->
-    <section id="b" class="scene scene-b" data-scene="b" aria-label="WHY">
+    <section id="b" class="scene scene-b" data-scene="b" data-reveal="scene" aria-label="WHY">
       <div class="container">
         <div class="why-head">
           <h2 class="scene-title" data-reveal="clip-up">WHY</h2>
@@ -295,7 +298,7 @@
     </section>
 
     <!-- PRODUCT (Sticky + Crossfade) -->
-    <section id="product" class="scene scene-product" aria-label="PRODUCT UI">
+    <section id="product" class="scene scene-product" data-reveal="scene" aria-label="PRODUCT UI">
       <div class="container">
         <div class="product-head">
           <div class="pidx" data-reveal="fade">[1.0]</div>
@@ -403,7 +406,7 @@
     </section>
 
     <!-- C / ENGINE -->
-    <section id="c" class="scene scene-c" data-scene="c" aria-label="ENGINE">
+    <section id="c" class="scene scene-c" data-scene="c" data-reveal="scene" aria-label="ENGINE">
       <div class="container">
         <div class="engine">
           <div class="engine-left">
@@ -454,7 +457,7 @@
     </section>
 
     <!-- D / GET STARTED -->
-    <section id="d" class="scene scene-d" data-scene="d" aria-label="Get Started">
+    <section id="d" class="scene scene-d" data-scene="d" data-reveal="scene" aria-label="Get Started">
       <div class="container">
         <div class="start">
           <h2 class="scene-title" data-reveal="clip-up">GET STARTED</h2>
@@ -533,12 +536,85 @@
     // Year
     document.getElementById("y").textContent = new Date().getFullYear();
 
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // =========================
+    // GLOBAL FX VARS (pointer + scroll) — low-cost rAF
+    // =========================
+    (() => {
+      if (reduceMotion) return;
+
+      const root = document.documentElement;
+
+      let tx = window.innerWidth * 0.55;
+      let ty = window.innerHeight * 0.22;
+      let cx = tx, cy = ty;
+
+      let ticking = false;
+
+      const apply = () => {
+        ticking = false;
+        // damped follow
+        cx += (tx - cx) * 0.12;
+        cy += (ty - cy) * 0.12;
+
+        root.style.setProperty("--mx", `${cx.toFixed(1)}px`);
+        root.style.setProperty("--my", `${cy.toFixed(1)}px`);
+
+        const nx = (cx / Math.max(1, window.innerWidth)) - 0.5;
+        const ny = (cy / Math.max(1, window.innerHeight)) - 0.5;
+        root.style.setProperty("--nx", nx.toFixed(3));
+        root.style.setProperty("--ny", ny.toFixed(3));
+      };
+
+      const request = () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(apply);
+        }
+      };
+
+      window.addEventListener("pointermove", (e) => {
+        tx = e.clientX;
+        ty = e.clientY;
+        request();
+      }, { passive: true });
+
+      window.addEventListener("touchstart", (e) => {
+        if (!e.touches || !e.touches[0]) return;
+        tx = e.touches[0].clientX;
+        ty = e.touches[0].clientY;
+        request();
+      }, { passive: true });
+
+      // scroll-driven macro rotation
+      const onScroll = () => {
+        const st = window.scrollY || 0;
+        root.style.setProperty("--scroll", `${st}`);
+        const sdeg = (st * 0.02) % 360;
+        root.style.setProperty("--sdeg", `${sdeg.toFixed(2)}deg`);
+      };
+      onScroll();
+      window.addEventListener("scroll", onScroll, { passive: true });
+
+      window.addEventListener("resize", () => {
+        tx = window.innerWidth * 0.55;
+        ty = window.innerHeight * 0.22;
+        request();
+        onScroll();
+      });
+
+      // init
+      request();
+    })();
+
     // Chapter highlight (IntersectionObserver) — only A/B/C/D
     const chapterLinks = Array.from(document.querySelectorAll(".chapter"));
     const scenes = Array.from(document.querySelectorAll("[data-scene]"));
 
     const setActive = (id) => {
       chapterLinks.forEach(a => a.classList.toggle("is-active", a.dataset.target === id));
+      scenes.forEach(s => s.classList.toggle("is-current", s.dataset.scene === id));
     };
 
     const io = new IntersectionObserver((entries) => {
@@ -551,11 +627,6 @@
     scenes.forEach(s => io.observe(s));
     setActive("a");
 
-    // =========================
-    // Scroll Animations (vanilla)
-    // =========================
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
     // Topbar settle
     (() => {
       const topbar = document.querySelector(".topbar");
@@ -565,7 +636,9 @@
       window.addEventListener("scroll", onScroll, { passive: true });
     })();
 
-    // Reveal (IntersectionObserver)
+    // =========================
+    // Reveal (IntersectionObserver) — repeatable
+    // =========================
     (() => {
       if (reduceMotion) return;
 
@@ -584,14 +657,15 @@
 
       const rio = new IntersectionObserver((entries) => {
         entries.forEach(e => {
+          const once = e.target.hasAttribute("data-once");
           if (e.isIntersecting) {
             e.target.classList.add("is-inview");
-            // once
-            rio.unobserve(e.target);
+          } else {
+            if (!once) e.target.classList.remove("is-inview");
           }
         });
       }, {
-        threshold: [0, 0.18],
+        threshold: [0, 0.12, 0.2],
         rootMargin: "0px 0px -10% 0px"
       });
 
@@ -643,15 +717,31 @@
     })();
 
     // =========================
-    // PRODUCT Sticky Crossfade
+    // PRODUCT Sticky Crossfade + "burst shutter" on change
     // =========================
     (() => {
       const steps = Array.from(document.querySelectorAll(".pstep"));
       const visuals = Array.from(document.querySelectorAll(".pvisual"));
       const caps = Array.from(document.querySelectorAll(".pcap"));
+      const frame = document.querySelector(".sticky-frame");
       if (!steps.length || !visuals.length) return;
 
+      let last = 0;
+
+      const burst = () => {
+        if (!frame) return;
+        frame.classList.remove("is-burst");
+        // force restart animation
+        void frame.offsetWidth;
+        frame.classList.add("is-burst");
+        clearTimeout(frame._bt);
+        frame._bt = setTimeout(() => frame.classList.remove("is-burst"), 520);
+      };
+
       const setActiveProduct = (i) => {
+        if (i !== last) burst();
+        last = i;
+
         steps.forEach((s, idx) => s.classList.toggle("is-active", idx === i));
         visuals.forEach((v, idx) => v.classList.toggle("is-active", idx === i));
         caps.forEach((c, idx) => c.classList.toggle("is-active", idx === i));
@@ -660,7 +750,6 @@
       // init
       setActiveProduct(0);
 
-      // IntersectionObserver: pick most visible step
       const pio = new IntersectionObserver((entries) => {
         const visible = entries
           .filter(e => e.isIntersecting)
