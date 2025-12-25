@@ -322,11 +322,59 @@ main{ position:relative; z-index:1; }
 }
 
 /* ===== HERO ===== */
-.scene-a{ padding-top: 112px; }
+.scene-a{
+  padding-top: 112px;
+  overflow:hidden;
+
+  /* ✅ 첫 화면은 지연 렌더링 안 걸리게 */
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
+}
+
+/* ✅ Tactical dashboard background layer */
+.hero-bg{
+  position:absolute;
+  inset:-6%;
+  z-index:0;
+  pointer-events:none;
+
+  background: url("./assets/ui-01-tactical.png") center / cover no-repeat;
+  opacity: .38;
+
+  transform: translate3d(calc(var(--nx) * 16px), calc(var(--ny) * 12px), 0) scale(1.08);
+  will-change: transform, opacity;
+  filter: saturate(1.02) contrast(1.02);
+}
+
+/* ✅ readability overlay */
+.hero-bg::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(900px 700px at 20% 0%, rgba(255,255,255,.08), transparent 55%),
+    linear-gradient(180deg,
+      rgba(11,15,20,.18) 0%,
+      rgba(11,15,20,.74) 58%,
+      rgba(7,10,15,.94) 100%);
+}
+
+/* ✅ vignette */
+.hero-bg::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(1200px 900px at 50% 40%,
+      transparent 0%,
+      rgba(0,0,0,.26) 58%,
+      rgba(0,0,0,.52) 100%);
+  opacity:.75;
+}
 
 .hero{
   display:grid;
-  grid-template-columns: 1.05fr .95fr;
+  grid-template-columns: 1fr; /* ✅ hero-right 제거: 1컬럼 */
   gap: 28px;
   align-items:start;
   position:relative;
@@ -347,7 +395,7 @@ main{ position:relative; z-index:1; }
   .hero-gotham{
     display:block;
     position: fixed;                 /* ✅ hero 높이 영향 없이 화면 기준 고정 */
-    top: 50svh;                      /* ✅ 뷰포트 중앙 */
+    top: calc(50svh + 70px); /* ← 여기 숫자만 조절 */
     right: calc(14px + env(safe-area-inset-right));  /* ✅ 화면 안쪽 여백 */
 
     /* ✅ 핵심: 오른쪽에서 살짝 '안으로' 당겨서 절대 안 잘리게 */
@@ -373,7 +421,6 @@ main{ position:relative; z-index:1; }
 @media (pointer: coarse), (max-width: 520px){
   .scene-a .hero-title{ display:none; }
 }
-
 
 .hudline{
   display:flex;
@@ -526,7 +573,6 @@ main{ position:relative; z-index:1; }
 
 @media (max-width: 980px){
   .hero{ grid-template-columns: 1fr; }
-  .hero-right{ padding-top: 18px; }
 }
 
 /* ===== WHY ===== */
@@ -980,6 +1026,14 @@ textarea{ resize:vertical; }
     box-shadow: 0 10px 44px rgba(0,0,0,.34);
   }
 
+  /* ✅ hero 배경은 모바일에서 더 가볍게 */
+  .hero-bg{
+    inset:-4%;
+    transform: none;
+    opacity: .26;
+    filter: none;
+  }
+
   /* 3) 모바일에서는 큰 게이트 대신 스캔바 */
   .scene[data-reveal="scene"]::after{ display:none !important; }
   .scene[data-reveal="scene"]::before{
@@ -1025,6 +1079,7 @@ textarea{ resize:vertical; }
 @media (prefers-reduced-motion: reduce){
   html{ scroll-behavior:auto; }
   .fx{ display:none; }
+  .hero-bg{ transform:none !important; }
   .js [data-reveal]{
     transition:none;
     opacity:1 !important;

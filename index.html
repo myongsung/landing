@@ -87,6 +87,9 @@
   <main id="main">
     <!-- 1.0 / HERO -->
     <section id="a" class="scene scene-a" data-scene="a" data-reveal="scene" aria-label="REDCLX 메인">
+      <!-- ✅ Tactical dashboard를 scene-a 전체 배경으로 -->
+      <div class="hero-bg" aria-hidden="true"></div>
+
       <div class="container">
         <div class="hero">
           <!-- ✅ 모바일에서만 우측 세로 워드마크 (CSS에서 mobile-only 처리) -->
@@ -118,30 +121,9 @@
                 <div class="mv">Verified Actions · Evidence Pack</div>
               </div>
             </div>
-
-            <div class="hero-actions" data-reveal="fade-up" data-delay="140">
-              <a class="btn-solid" href="#d">데모/베타 신청</a>
-            </div>
           </div>
 
-          <div class="hero-right" aria-label="제품 UI: Tactical Dashboard">
-            <div class="ui-frame ui-frame-hero" data-reveal="zoom" data-parallax="0.22" data-range="84">
-              <img
-                class="parallax-img"
-                src="./assets/ui-01-tactical.png"
-                alt="REDCLX Tactical Dashboard UI"
-                loading="eager"
-                fetchpriority="high"
-                decoding="async"
-                width="1600"
-                height="900"
-              />
-            </div>
-            <div class="ui-caption" data-reveal="fade-up" data-delay="110">
-              <span class="cap-k">01 / TACTICAL DASHBOARD</span>
-              <span class="cap-v">Threat feed · Stress metrics · Class dynamics</span>
-            </div>
-          </div>
+          <!-- ❌ 기존 hero-right(대시보드 프레임/캡션) 제거 -->
         </div>
       </div>
     </section>
@@ -592,6 +574,7 @@
 
     // =========================
     // Parallax — ✅ 모바일 OFF (끊김 주범)
+    // (hero-right 제거로 frames가 없으면 자동으로 아무 것도 안 함)
     // =========================
     (() => {
       if (reduceMotion || isMobile) return;
