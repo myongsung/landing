@@ -197,6 +197,7 @@ main{ position:relative; z-index:1; }
 }
 @media (max-width: 520px){
   .topbar{
+    
     top: calc(10px + env(safe-area-inset-top));
     left: calc(10px + env(safe-area-inset-left));
     right: calc(10px + env(safe-area-inset-right));
@@ -1022,7 +1023,7 @@ textarea{ resize:vertical; }
   /* 2) topbar blur(backdrop-filter) 제거 */
   .topbar{
     backdrop-filter: none !important;
-    background: rgba(18,22,29,.92) !important;
+    background: rgba(18,22,29,.30) !important;
     box-shadow: 0 10px 44px rgba(0,0,0,.34);
   }
 
@@ -1030,8 +1031,24 @@ textarea{ resize:vertical; }
   .hero-bg{
     inset:-4%;
     transform: none;
-    opacity: .26;
+    opacity: .42;
     filter: none;
+  }
+   .hero-bg::after{
+    background:
+      radial-gradient(900px 700px at 20% 0%, rgba(255,255,255,.10), transparent 58%),
+      linear-gradient(180deg,
+        rgba(11,15,20,.06) 0%,
+        rgba(11,15,20,.40) 58%,
+        rgba(7,10,15,.62) 100%);
+  }
+  .hero-bg::before{
+    opacity: .40;  /* 기존 .75 → .40 */
+    background:
+      radial-gradient(1200px 900px at 50% 40%,
+        transparent 0%,
+        rgba(0,0,0,.16) 62%,
+        rgba(0,0,0,.30) 100%);
   }
 
   /* 3) 모바일에서는 큰 게이트 대신 스캔바 */
