@@ -440,66 +440,6 @@
             </div>
           </div>
 
-          <div class="engine-right" data-stagger="70">
-            <div class="engine-panel engine-score" data-reveal="fade-up" aria-label="Strategy score">
-              <div class="score-top">
-                <div class="ep-k">COMPLIANCE SCORE</div>
-                <div class="score-num">S</div>
-              </div>
-
-              <div class="bars" aria-label="Score components">
-                <div class="barrow">
-                  <div class="bname">Constraint Fit</div>
-                  <div class="bar" style="--p:.99"><span></span></div>
-                  <div class="bval">99</div>
-                </div>
-                <div class="barrow">
-                  <div class="bname">Completeness</div>
-                  <div class="bar" style="--p:.95"><span></span></div>
-                  <div class="bval">95</div>
-                </div>
-                <div class="barrow">
-                  <div class="bname">Traceability</div>
-                  <div class="bar" style="--p:.98"><span></span></div>
-                  <div class="bval">98</div>
-                </div>
-              </div>
-
-              <div class="score-foot">
-                <span class="sf">규정 위반(Violations) 및 필수 절차 누락 0건.</span>
-                <span class="sf"><strong>수학적으로 검증된 최적해</strong>를 보장합니다.</span>
-              </div>
-            </div>
-
-            <div class="engine-panel" data-reveal="fade-up">
-              <div class="ep-k">SAFETY ABSTENTION</div>
-              <div class="ep-v">
-                핵심 정보가 부족하여 위험도가 임계치를 넘을 경우,<br/>
-                설익은 추천을 중단하고 <strong>질문(Ask) 또는 보류(Hold)</strong>로 전환합니다.
-              </div>
-            </div>
-
-            <div class="engine-panel" data-reveal="fade-up">
-              <div class="ep-k">DEFENSIVE LOGGING</div>
-              <div class="ep-v">
-                사후 감사와 분쟁에 대비하여,<br/>
-                모든 의사결정 과정이 <strong>재현 가능한(Reproducible) 로그</strong>로 기록됩니다.
-              </div>
-            </div>
-
-            <div class="engine-panel engine-terminal" data-reveal="fade-up" aria-label="Engine log">
-              <div class="term-top">
-                <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
-                <span class="term-title">NS-ENGINE.log</span>
-              </div>
-              <pre class="term-body"><code>[COMPILE] policy -> logic_constraints
-[GENERATE] action_graph candidates: 12
-[VERIFY ] violation found (Node #3)
-[REPAIR ] applying counterexample... fixed
-[OPTIMIZE] ranking by risk/coverage
-[OUTPUT ] Best Action Graph (Score: 0.99)</code></pre>
-            </div>
-          </div>
         </div>
       </div>
     </section>
