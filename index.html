@@ -76,7 +76,7 @@
     </div>
   </header>
 
-  <!-- Left Chapters (PC/모바일 모두 표기) -->
+  <!-- Left Chapters -->
   <nav class="chapters" aria-label="챕터">
     <a class="chapter" href="#a" data-target="a" aria-label="챕터 1.0"><span class="k">1.0</span></a>
     <a class="chapter" href="#b" data-target="b" aria-label="챕터 2.0"><span class="k">2.0</span></a>
@@ -87,12 +87,10 @@
   <main id="main">
     <!-- 1.0 / HERO -->
     <section id="a" class="scene scene-a" data-scene="a" data-reveal="scene" aria-label="REDCLX 메인">
-      <!-- ✅ Tactical dashboard를 scene-a 전체 배경으로 -->
       <div class="hero-bg" aria-hidden="true"></div>
 
       <div class="container">
         <div class="hero">
-          <!-- ✅ 모바일에서만 우측 세로 워드마크 (CSS에서 mobile-only 처리) -->
           <div class="hero-gotham" aria-hidden="true">REDCLX</div>
 
           <div class="hero-left">
@@ -118,12 +116,10 @@
               </div>
               <div class="metric" data-reveal="fade-up">
                 <div class="mk">OUTPUT</div>
-                <div class="mv">Verified Actions · Evidence Pack</div>
+                <div class="mv">Best Action Plan · Evidence Pack</div>
               </div>
             </div>
           </div>
-
-          <!-- ❌ 기존 hero-right(대시보드 프레임/캡션) 제거 -->
         </div>
       </div>
     </section>
@@ -153,9 +149,7 @@
           </div>
 
           <div class="team-right">
-            <p class="team-copy" data-reveal="fade-up">
-          
-            </p>
+            <p class="team-copy" data-reveal="fade-up"></p>
 
             <div class="team-spec" aria-label="Team capabilities" data-stagger="70">
               <div class="spec-row" data-reveal="fade-up">
@@ -337,51 +331,173 @@
       </div>
     </section>
 
-    <!-- 3.0 / ENGINE -->
+    <!-- 3.0 / ENGINE (일반인 친화 + 최고성능 전략 강조 버전) -->
     <section id="c" class="scene scene-c" data-scene="c" data-reveal="scene" aria-label="ENGINE">
       <div class="container">
-        <div class="engine">
+        <div class="engine engine-v2">
           <div class="engine-left">
+            <div class="engine-eyebrow" data-reveal="fade-up">
+              NEURO-SYMBOLIC ENGINE
+              <span class="engine-dot">•</span>
+              Verified Action Graph Generation
+            </div>
+
             <h2 class="scene-title" data-reveal="clip-up">ENGINE</h2>
-            <p class="scene-lead" data-reveal="fade-up" data-delay="90">
-              <strong>Neuro-Symbolic Compliance Engine</strong><br/>
-              LLM(Neural)의 생성 + 규정 논리(Symbolic)의 검증을 결합해
-              “검증 가능한 액션 그래프”를 만듭니다.
+
+            <p class="scene-lead engine-lead" data-reveal="fade-up" data-delay="90">
+              REDCLX는 LLM의 추론 능력(Neural)과 규정의 엄격한 논리(Symbolic)를 결합하여,<br/>
+              단순 텍스트가 아닌 <strong>검증된 액션 그래프(Verified Action Graph)</strong>를 생성합니다.
+              <span class="lead-sub">수천 번의 시뮬레이션과 <strong>자기 수정(Self-Repair)</strong>을 거쳐, 규정 위반 확률을 0에 수렴시킨 <strong>단 하나의 최적 전략(Best Action)</strong>만을 도출합니다.</span>
             </p>
 
-            <div class="stack" data-stagger="70">
-              <div class="stack-item" data-reveal="fade-up">
-                <div class="stack-k">01 / POLICY COMPILATION</div>
-                <div class="stack-v">MUST·MUST-NOT·기한·선후관계를 제약식으로 컴파일</div>
+            <div class="engine-pills" data-stagger="70" aria-label="Engine highlights">
+              <div class="pill" data-reveal="fade-up">
+                <div class="pill-k">Constraint Satisfaction</div>
+                <div class="pill-v">Must/Must-Not 제약조건의 완전한 충족</div>
               </div>
-              <div class="stack-item" data-reveal="fade-up">
-                <div class="stack-k">02 / ACTION GRAPH</div>
-                <div class="stack-v">자유 텍스트 대신 구조화 액션(JSON 스키마)만 생성</div>
+              <div class="pill" data-reveal="fade-up">
+                <div class="pill-k">Formal Verification</div>
+                <div class="pill-v">정형 검증기가 반례를 찾아 스스로 수정</div>
               </div>
-              <div class="stack-item" data-reveal="fade-up">
-                <div class="stack-k">03 / VERIFIER + SELF-REPAIR</div>
-                <div class="stack-v">누락/위반/순서오류를 잡고 Hold/추가질문으로 안전 전환</div>
+              <div class="pill" data-reveal="fade-up">
+                <div class="pill-k">Audit-Ready Artifacts</div>
+                <div class="pill-v">감사 가능한 근거 인용 및 증거 패키징</div>
               </div>
             </div>
 
-            <div class="hero-actions" data-reveal="fade-up" data-delay="110">
+            <div class="engine-steps" aria-label="3-step pipeline" data-stagger="70">
+              <div class="estep" data-reveal="fade-up">
+                <div class="estep-k">01 / POLICY COMPILATION</div>
+                <div class="estep-v">
+                  자연어 정책 문서를 기계 판독 가능한 <strong>논리 제약식(Logic Constraints)</strong>과
+                  <strong>액션 온톨로지</strong>로 컴파일하여 판단 기준을 확립합니다.
+                </div>
+              </div>
+
+              <div class="estep" data-reveal="fade-up">
+                <div class="estep-k">02 / GRAPH GENERATION</div>
+                <div class="estep-v">
+                  사건을 노드(Action)와 엣지(Dependency)로 구조화된 <strong>Action Graph</strong>로 변환하며,
+                  가능한 모든 대응 시나리오의 <strong>최적 경로</strong>를 탐색합니다.
+                </div>
+              </div>
+
+              <div class="estep" data-reveal="fade-up">
+                <div class="estep-k">03 / VERIFIER &amp; SELF-REPAIR</div>
+                <div class="estep-v">
+                  생성된 전략을 <strong>정형 검증기(Formal Verifier)</strong>가 타격하여 반례를 찾고,
+                  엔진이 이를 <strong>스스로 수정(Self-Repair)</strong>한 뒤 최종 출력합니다.
+                </div>
+              </div>
+            </div>
+
+            <div class="engine-output" data-reveal="fade-up" data-delay="110" aria-label="Output preview">
+              <div class="out-head">
+                <div class="out-k">OUTPUT</div>
+                <div class="out-v">Optimized Action Graph · Evidence Pack</div>
+              </div>
+
+              <div class="out-grid">
+                <div class="out-card">
+                  <div class="out-title">Verified Action Graph</div>
+                  <ul class="out-list">
+                    <li>노드: 실행해야 할 구체적 액션(Node)</li>
+                    <li>엣지: 선후관계 및 필수 의존성(Edge)</li>
+                    <li>메타: 기한·근거·리스크가 태깅된 스키마</li>
+                  </ul>
+                </div>
+
+                <div class="out-card">
+                  <div class="out-title">Evidence Pack</div>
+                  <ul class="out-list">
+                    <li>방어적 로그(Log) 템플릿 생성</li>
+                    <li>필수 증거물/산출물 구조화</li>
+                    <li>감사 대응용 근거 조항(Span) 매핑</li>
+                  </ul>
+                </div>
+              </div>
+
+              <details class="engine-advanced">
+                <summary>Advanced (Technical Methodology)</summary>
+                <div class="adv-body">
+                  <p class="adv-p">
+                    본 엔진은 <strong>Neuro-Symbolic Compliance Engine</strong> 프레임워크를 기반으로
+                    환각(Hallucination)을 구조적으로 차단합니다.
+                  </p>
+                  <ul class="adv-ul">
+                    <li><strong>Policy Compilation:</strong> 법령/지침을 If-Then-Must 제약식으로 변환</li>
+                    <li><strong>Formal Verifier:</strong> 위반/누락 발생 시 반례(Counterexample) 리포트 생성</li>
+                    <li><strong>Self-Repair Loop:</strong> 반례를 기반으로 LLM이 전략을 반복 수정 및 최적화</li>
+                    <li><strong>Safety Policy:</strong> 정보 부족 시 '추천' 대신 질문/보류(Abstention)로 안전 전환</li>
+                  </ul>
+                </div>
+              </details>
+            </div>
+
+            <div class="hero-actions" data-reveal="fade-up" data-delay="130">
               <a class="btn-solid" href="#d">파일럿 문의</a>
-              <a class="btn-ghost" href="#a">Back to top</a>
+              <a class="btn-ghost" href="#a">Research Paper</a>
             </div>
           </div>
 
           <div class="engine-right" data-stagger="70">
-            <div class="engine-panel" data-reveal="fade-up">
-              <div class="ep-k">OUTPUT CONTRACT</div>
-              <div class="ep-v">Verified Actions only (Schema-bound)</div>
+            <div class="engine-panel engine-score" data-reveal="fade-up" aria-label="Strategy score">
+              <div class="score-top">
+                <div class="ep-k">COMPLIANCE SCORE</div>
+                <div class="score-num">S</div>
+              </div>
+
+              <div class="bars" aria-label="Score components">
+                <div class="barrow">
+                  <div class="bname">Constraint Fit</div>
+                  <div class="bar" style="--p:.99"><span></span></div>
+                  <div class="bval">99</div>
+                </div>
+                <div class="barrow">
+                  <div class="bname">Completeness</div>
+                  <div class="bar" style="--p:.95"><span></span></div>
+                  <div class="bval">95</div>
+                </div>
+                <div class="barrow">
+                  <div class="bname">Traceability</div>
+                  <div class="bar" style="--p:.98"><span></span></div>
+                  <div class="bval">98</div>
+                </div>
+              </div>
+
+              <div class="score-foot">
+                <span class="sf">규정 위반(Violations) 및 필수 절차 누락 0건.</span>
+                <span class="sf"><strong>수학적으로 검증된 최적해</strong>를 보장합니다.</span>
+              </div>
             </div>
+
             <div class="engine-panel" data-reveal="fade-up">
-              <div class="ep-k">SAFE MODE</div>
-              <div class="ep-v">Hold / Escalate / Ask-for-more</div>
+              <div class="ep-k">SAFETY ABSTENTION</div>
+              <div class="ep-v">
+                핵심 정보가 부족하여 위험도가 임계치를 넘을 경우,<br/>
+                설익은 추천을 중단하고 <strong>질문(Ask) 또는 보류(Hold)</strong>로 전환합니다.
+              </div>
             </div>
+
             <div class="engine-panel" data-reveal="fade-up">
-              <div class="ep-k">DEFENSIBILITY</div>
-              <div class="ep-v">Evidence Pack · Audit Trail · Compliance Gate</div>
+              <div class="ep-k">DEFENSIVE LOGGING</div>
+              <div class="ep-v">
+                사후 감사와 분쟁에 대비하여,<br/>
+                모든 의사결정 과정이 <strong>재현 가능한(Reproducible) 로그</strong>로 기록됩니다.
+              </div>
+            </div>
+
+            <div class="engine-panel engine-terminal" data-reveal="fade-up" aria-label="Engine log">
+              <div class="term-top">
+                <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
+                <span class="term-title">NS-ENGINE.log</span>
+              </div>
+              <pre class="term-body"><code>[COMPILE] policy -> logic_constraints
+[GENERATE] action_graph candidates: 12
+[VERIFY ] violation found (Node #3)
+[REPAIR ] applying counterexample... fixed
+[OPTIMIZE] ranking by risk/coverage
+[OUTPUT ] Best Action Graph (Score: 0.99)</code></pre>
             </div>
           </div>
         </div>
@@ -573,10 +689,7 @@
       });
     })();
 
-    // =========================
-    // Parallax — ✅ 모바일 OFF (끊김 주범)
-    // (hero-right 제거로 frames가 없으면 자동으로 아무 것도 안 함)
-    // =========================
+    // Parallax — 모바일 OFF
     (() => {
       if (reduceMotion || isMobile) return;
 
