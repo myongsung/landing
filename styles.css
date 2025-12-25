@@ -410,11 +410,12 @@ main{ position:relative; z-index:1; }
 
     /* ✅ 작은 화면에서도 안전한 크기 */
     font-size: clamp(120px, 40vw, 200px);
-    opacity: .16;
+    opacity: .40;
     color: rgba(255,255,255,.99);
-    text-shadow: 0 26px 90px rgba(0,0,0,.50);
-
-    z-index: 1;                      /* 콘텐츠 뒤 */
+    text-shadow:
+      0 30px 120px rgba(0,0,0,.62),   /* 그림자 강화 */
+      0 10px 40px rgba(0,0,0,.45);
+    z-index: 0;                      /* 콘텐츠 뒤 */
   }
 }
 
