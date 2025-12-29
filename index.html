@@ -3,27 +3,39 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="format-detection" content="telephone=no,address=no,email=no" />
 
-  <title>REDCLX 레드클렉스 | The Agent For Defense Education </title>
-  <meta name="description" content="REDCLX는 국방 교육훈련 규정과 안전지침을 Neuro-Symbolic AI로 통제하여, 감사 리스크와 안전사고를 원천 차단하는 Defense Strategy Agent입니다." />
+  <title>REDCLX 레드클렉스 | 국방 교육훈련 규정준수·검증 COA 엔진</title>
+  <meta name="description" content="REDCLX는 국방 교육훈련 규정·SOP·안전지침을 논리 제약식으로 컴파일하고, 오프라인 환경에서 COA(Action Graph)를 생성·검증·수리하여 절차 누락과 감사 리스크를 최소화합니다." />
+  <meta name="keywords" content="국방, 방위사업청, 국방부, 교육훈련, SOP, 규정준수, 감사, 안전, COA, Action Graph, 온톨로지, 정책 컴파일, 정형검증, 오프라인" />
   <meta name="theme-color" content="#0b0f14" />
   <link rel="canonical" href="https://www.redclexperice.com/" />
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
   <link rel="sitemap" type="application/xml" href="https://www.redclexperice.com/sitemap.xml" />
+
+  <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="ko_KR" />
   <meta property="og:site_name" content="REDCLX 레드클렉스" />
-  <meta property="og:title" content="REDCLX 레드클렉스 | The Agent For Defense Education" />
-  <meta property="og:description" content="국방 교육훈련 규정·SOP·안전지침을 Neuro-Symbolic Verification으로 통제해 감사 리스크와 안전사고를 원천 차단합니다." />
+  <meta property="og:title" content="REDCLX | 국방 교육훈련 규정준수·검증 COA 엔진" />
+  <meta property="og:description" content="규정·SOP·안전지침을 Logic Constraints로 컴파일하고, Verified COA(Action Graph)와 감사 로그로 규정준수를 증명합니다. 오프라인 작전/훈련 환경 최적화." />
   <meta property="og:url" content="https://www.redclexperice.com/" />
   <meta property="og:image" content="https://www.redclexperice.com/assets/og-redclx-defense.png" />
+  <meta property="og:image:alt" content="REDCLX Defense Compliance Agent preview" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 
+  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="REDCLX 레드클렉스 | The Agent For Defense Education" />
-  <meta name="twitter:description" content="규정이 곧 코드가 되는 국방 감사·안전 에이전트. Verified Action Graph로 절차 무결성을 증명합니다." />
+  <meta name="twitter:title" content="REDCLX | 국방 교육훈련 규정준수·검증 COA 엔진" />
+  <meta name="twitter:description" content="규정이 곧 코드가 되는 국방 교육훈련 에이전트. Verified Action Graph와 감사 로그로 절차 무결성을 증명합니다. 오프라인 실행." />
   <meta name="twitter:image" content="https://www.redclexperice.com/assets/og-redclx-defense.png" />
+  <meta name="twitter:image:alt" content="REDCLX Defense Compliance Agent preview" />
+
+  <!-- Preload critical images (optional but helps LCP) -->
+  <link rel="preload" as="image" href="./assets/ui-01-tactical.png" />
+  <link rel="preload" as="image" href="./assets/field-tablet.png" />
+  <link rel="preload" as="image" href="./assets/field-banner.png" />
 
   <script>
     document.documentElement.classList.remove("no-js");
@@ -31,19 +43,7 @@
   </script>
 
   <link rel="stylesheet" href="./styles.css" />
-  
-  <style>
-    /* Mobile Responsive Patch */
-    @media (max-width: 768px) {
-      .team-hero, .engine-v2 { flex-direction: column !important; gap: 40px !important; }
-      .team-left, .team-right, .engine-left, .engine-right { width: 100% !important; position: static !important; }
-      .hero-title { font-size: 3.5rem !important; }
-      .team-display { font-size: 2.5rem !important; }
-      .spec-row { align-items: flex-start !important; }
-      .spec-k { min-width: 100px; margin-right: 12px; }
-      .out-grid { grid-template-columns: 1fr !important; }
-    }
-  </style>
+
   <script type="application/ld+json">
 {
   "@context":"https://schema.org",
@@ -71,15 +71,35 @@
       "@id":"https://www.redclexperice.com/#app",
       "name":"REDCLX DEFENSE",
       "applicationCategory":"BusinessApplication",
-      "operatingSystem":"Web",
-      "description":"국방 교육훈련 규정·SOP·안전지침을 Neuro-Symbolic Verification으로 통제하여 감사 리스크와 안전사고를 원천 차단하는 Defense Strategy Agent.",
+      "operatingSystem":"Web / Offline-capable",
+      "description":"국방 교육훈련 규정·SOP·안전지침을 논리 제약식으로 컴파일하고, 오프라인 환경에서 COA(Action Graph)를 생성·검증·수리하여 절차 누락과 감사 리스크를 최소화하는 Compliance Engine.",
       "url":"https://www.redclexperice.com/",
       "publisher":{"@id":"https://www.redclexperice.com/#org"}
+    },
+    {
+      "@type":"FAQPage",
+      "@id":"https://www.redclexperice.com/#faq",
+      "mainEntity":[
+        {
+          "@type":"Question",
+          "name":"오프라인(작전/훈련장) 환경에서 동작하나요?",
+          "acceptedAnswer":{"@type":"Answer","text":"네. 런타임은 정책 번들(Policy Bundle) 기반으로 외부 LLM/API 없이 동작하도록 설계되어 오프라인 환경에 적합합니다."}
+        },
+        {
+          "@type":"Question",
+          "name":"감사 대응에 어떤 산출물을 제공하나요?",
+          "acceptedAnswer":{"@type":"Answer","text":"COA(Action Graph), 룰 위반 반례(Counterexample), 수리 이력(Repair Trace), 근거 매핑(span→rule_id)로 구성된 감사 패키지를 제공합니다."}
+        },
+        {
+          "@type":"Question",
+          "name":"방위사업청/국방부 PoC는 어떻게 진행하나요?",
+          "acceptedAnswer":{"@type":"Answer","text":"대상 SOP/규정 선정 → 온톨로지/룰 제작 → 번들 컴파일 → 오프라인 단말 배포 후, 준수율/누락률/감사 적합성 지표로 평가합니다."}
+        }
+      ]
     }
   ]
 }
 </script>
-
 </head>
 
 <body>
@@ -101,9 +121,11 @@
 
       <nav class="topbar-nav" aria-label="주요 메뉴">
         <a href="#team">LEADERSHIP</a>
+        <a href="#field">FIELD</a>
         <a href="#b">MISSION</a>
         <a href="#product">SYSTEM</a>
         <a href="#c">VERIFICATION</a>
+        <a href="#proc">PROCUREMENT</a>
         <a href="#d">DEPLOY</a>
       </nav>
 
@@ -127,15 +149,25 @@
     </div>
   </header>
 
+  <!-- Chapter rail -->
   <nav class="chapters" aria-label="챕터">
     <a class="chapter" href="#a" data-target="a" aria-label="챕터 1.0"><span class="k">1.0</span></a>
     <a class="chapter" href="#team" data-target="team" aria-label="챕터 1.5"><span class="k">1.5</span></a>
+    <a class="chapter" href="#field" data-target="field" aria-label="챕터 1.8"><span class="k">1.8</span></a>
     <a class="chapter" href="#b" data-target="b" aria-label="챕터 2.0"><span class="k">2.0</span></a>
     <a class="chapter" href="#c" data-target="c" aria-label="챕터 3.0"><span class="k">3.0</span></a>
+    <a class="chapter" href="#proc" data-target="proc" aria-label="챕터 3.5"><span class="k">3.5</span></a>
     <a class="chapter" href="#d" data-target="d" aria-label="챕터 4.0"><span class="k">4.0</span></a>
   </nav>
 
+  <!-- Mobile sticky CTA bar -->
+  <div class="mobile-opsbar" role="navigation" aria-label="모바일 빠른 실행">
+    <a class="mob-btn mob-ghost" href="#c">검증 엔진</a>
+    <a class="mob-btn mob-solid" href="#d">PoC 문의</a>
+  </div>
+
   <main id="main">
+    <!-- HERO -->
     <section id="a" class="scene scene-a" data-scene="a" data-reveal="scene" aria-label="REDCLX 메인">
       <div class="hero-bg" aria-hidden="true"></div>
 
@@ -145,136 +177,222 @@
 
           <div class="hero-left">
             <div class="hudline" data-reveal="fade-up">
-              <span class="hud-tag">DEFENSE RISK INTELLIGENCE</span>
+              <span class="hud-tag">OFFLINE COMPLIANCE / VERIFIED COA</span>
               <span class="hud-sep">/</span>
-              <span class="hud-quote">규정과 안전을 통제하는 전략 감사 에이전트</span>
+              <span class="hud-quote">규정이 절차가 되고, 절차가 증명이 되는 실행 엔진</span>
             </div>
 
             <h1 class="hero-title" data-reveal="clip-up">
               REDCLX<br/>
-              <span class="hero-strong"></span>
+              <span class="hero-strong">DEFENSE</span>
             </h1>
 
             <div class="hero-metrics" data-stagger="70">
               <div class="metric" data-reveal="fade-up">
                 <div class="mk">OPERATING SYSTEM FOR</div>
-                <div class="mv">Training & Safety Procedure</div>
+                <div class="mv">Training · Safety · Audit</div>
               </div>
               <div class="metric" data-reveal="fade-up">
                 <div class="mk">CORE ENGINE</div>
-                <div class="mv">Neuro-Symbolic Verification</div>
+                <div class="mv">Policy Compilation + Verification</div>
               </div>
               <div class="metric" data-reveal="fade-up">
                 <div class="mk">OUTPUT</div>
-                <div class="mv">Verified Action Graph</div>
+                <div class="mv">Verified COA · Action Graph · Audit Pack</div>
               </div>
+            </div>
+
+            <div class="hero-actions" data-reveal="fade-up" data-delay="130">
+              <a class="btn-solid" href="#d">도입/PoC 문의</a>
+              <a class="btn-ghost" href="#proc">조달·보안 적합성</a>
+            </div>
+
+            <div class="hero-strip" data-reveal="fade-up" data-delay="160" aria-label="핵심 강점">
+              <span class="strip-pill">Offline-first</span>
+              <span class="strip-pill">Counterexample Repair</span>
+              <span class="strip-pill">Audit Evidence</span>
+              <span class="strip-pill">Policy Bundle</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="team" class="scene scene-team" data-reveal="scene" aria-label="LEADERSHIP">
+    <!-- TEAM (White) -->
+    <section id="team" class="scene scene-team" data-scene="team" data-reveal="scene" aria-label="LEADERSHIP">
       <div class="container">
         <div class="team-indexbar" aria-hidden="true" data-reveal="fade">
           <span class="tidx">[0.1]</span>
           <span class="tline"></span>
-          <span class="tghost">ARCHITECT — BACKGROUND</span>
+          <span class="tghost">QUIET PROFESSIONALS</span>
         </div>
 
         <div class="team-hero">
           <div class="team-left">
-            <div class="team-path" data-reveal="fade-up">REDCLX / TECHNICAL LEAD</div>
+            <div class="team-path" data-reveal="fade-up">REDCLX / CORE UNIT</div>
 
             <h2 class="team-display" data-reveal="clip-up">
-              DOMAIN<br>CONVERGENCE
+              QUIET<br>DISCIPLINE
             </h2>
 
             <p class="team-sublead" data-reveal="fade-up" data-delay="90">
-              국방의 난제는 한 가지 시각으로 풀 수 없습니다.<br/>
-              <strong>조교의 현장성, 연구자의 기술, 교육자의 설계</strong>가<br/>
-              단일 아키텍처 내에서 융합되어 타협 없는 무결성을 보증합니다.
+              화려한 데모보다 중요한 건 <strong>현장 실행</strong>입니다.<br/>
+              REDCLX는 규정을 <strong>실행 단위로 압축</strong>하고,<br/>
+              결과를 <strong>검증 가능한 기록</strong>으로 남깁니다.
             </p>
+
+            <div class="team-badges" data-reveal="fade-up" data-delay="110" aria-label="팀 역량 요약">
+              <span class="badge">Field Discipline</span>
+              <span class="badge">Education Ops</span>
+              <span class="badge">Verification</span>
+              <span class="badge">Law & Audit</span>
+            </div>
           </div>
 
           <div class="team-right">
-            <p class="team-copy" data-reveal="fade-up"></p>
+            <p class="team-copy" data-reveal="fade-up">
+              우리는 “설명 가능한 준수”에 집중합니다.  
+              규정 문장(근거) → 룰(rule_id) → COA 단계 → 감사 리포트가 끊기지 않도록,
+              절차의 흐름과 책임소명을 한 파이프라인으로 묶습니다.
+            </p>
 
             <div class="team-spec" aria-label="Core Capabilities" data-stagger="70">
-              
               <div class="spec-row" data-reveal="fade-up">
-                <div class="spec-k">FIELD COMMAND DNA</div>
+                <div class="spec-k">FIELD-READY</div>
                 <div class="spec-v">
-                  <strong>육군 훈련소 조교(Drill Instructor)</strong> 경험을 통해 규정과 현장의 괴리를 깊이 이해합니다.
-                  탁상공론이 아닌, <strong>연병장의 흙먼지 속에서도 작동하는</strong> 실전적 프로토콜을 시스템에 이식했습니다.
+                  훈련장·현장 단말 기준으로 <strong>오프라인 실행</strong>을 우선 설계합니다.
+                  네트워크가 끊겨도 절차는 계속되어야 합니다.
                 </div>
               </div>
 
               <div class="spec-row" data-reveal="fade-up">
-                <div class="spec-k">SOTA AI RESEARCH</div>
+                <div class="spec-k">EDU OPS</div>
                 <div class="spec-v">
-                  세계 최고 권위 <strong>ICLR 등재 연구자</strong>가 설계를 주도합니다.
-                  단순한 LLM 도입이 아닌, 할루시네이션을 수학적으로 제어하는 
-                  <strong>Neuro-Symbolic Verification</strong> 기술을 직접 개발하고 입증했습니다.
+                  복잡한 SOP를 사용자가 즉시 수행할 수 있도록
+                  <strong>체크리스트/입력폼/단계 UI</strong>로 재구성합니다.
                 </div>
               </div>
 
               <div class="spec-row" data-reveal="fade-up">
-                <div class="spec-k">PEDAGOGICAL DESIGN</div>
+                <div class="spec-k">VERIFICATION</div>
                 <div class="spec-v">
-                  <strong>교육학 석사 및 임용 합격</strong>의 전문성으로,
-                  복잡한 행정 절차를 사용자가 직관적으로 인지하고 이행하도록
-                  <strong>최적의 인지 구조(Cognitive Structure)</strong>를 인터페이스에 구현했습니다.
+                  “그럴듯함” 대신 <strong>검증</strong>을 기준으로 설계합니다.
+                  위반은 반례로 드러나고, 수리는 추적 가능한 이력으로 남습니다.
                 </div>
               </div>
 
               <div class="spec-row" data-reveal="fade-up">
-                <div class="spec-k">PROVEN EXECUTION</div>
+                <div class="spec-k">LAW & AUDIT</div>
                 <div class="spec-v">
-                  <strong>POSCO 창업인큐베이팅 및 학술대회 수상</strong>으로 검증된 실행력.
-                  이론에 머무르지 않고, 국방 조직이 요구하는 수준의 
-                  <strong>완결성 높은 솔루션</strong>을 끝까지 구현해냅니다.
+                  준수는 기술과 행정이 만나는 지점입니다.
+                  <strong>근거·로그·책임소명</strong>을 기본 산출물로 제공합니다.
                 </div>
               </div>
+            </div>
 
+            <div class="team-note" data-reveal="fade-up" data-delay="140">
+              <span class="note-k">NOTE</span>
+              <span class="note-v">요청 시 기술 브리프/PoC 평가 지표/보안·운영 가이드 제공</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- FIELD PROOF (New, photo-driven PR section) -->
+    <section id="field" class="scene scene-field" data-scene="field" data-reveal="scene" aria-label="FIELD PROOF">
+      <div class="field-bg" aria-hidden="true"></div>
+
+      <div class="container">
+        <div class="field-head">
+          <div class="pidx" data-reveal="fade">[0.8]</div>
+          <h2 class="scene-title field-title" data-reveal="clip-up">FIELD PROOF</h2>
+          <p class="scene-lead field-lead" data-reveal="fade-up" data-delay="90">
+            탁상에서 끝나지 않도록. <strong>현장에서 바로 쓰는</strong> 규정준수 런타임.  
+            COA는 생성되고, 위반은 반례로 드러나며, 절차는 수리되어 <strong>끝까지 완수</strong>됩니다.
+          </p>
+        </div>
+
+        <div class="field-grid" data-stagger="70">
+          <div class="field-card" data-reveal="fade-up">
+            <div class="field-k">01 / ON-DEVICE</div>
+            <div class="field-v">
+              외부 LLM/API 없이도 작동하도록 설계된 <strong>오프라인 런타임</strong>.  
+              단말에서 정책 번들을 로드하고, COA를 생성·검증합니다.
+            </div>
+          </div>
+
+          <div class="field-card" data-reveal="fade-up">
+            <div class="field-k">02 / COUNTEREXAMPLE</div>
+            <div class="field-v">
+              위반은 숨기지 않습니다.  
+              <strong>반례</strong>로 위치/규칙/사유를 명확히 제시하고, 수리로 이어집니다.
+            </div>
+          </div>
+
+          <div class="field-card" data-reveal="fade-up">
+            <div class="field-k">03 / AUDIT PACK</div>
+            <div class="field-v">
+              “왜 그렇게 했는가”를 남깁니다.  
+              근거 매핑(span→rule_id) + COA + 반례 + 수리 이력으로 <strong>감사 패키지</strong>를 구성합니다.
+            </div>
+          </div>
+        </div>
+
+        <div class="field-media" data-reveal="zoom" aria-label="현장 이미지">
+          <figure class="field-figure">
+            <img src="./assets/field-tablet.png" alt="현장 단말에서 COA/Action Graph를 확인하는 장면" loading="lazy" decoding="async" width="1600" height="900" />
+            <figcaption class="field-cap">
+              <span class="cap-k">REAL-TIME</span>
+              <span class="cap-v">규정 기반 절차를 단말에서 검증하고, 필요한 단계만 남깁니다.</span>
+            </figcaption>
+          </figure>
+
+          <figure class="field-figure field-figure-2">
+            <img src="./assets/field-banner.png" alt="Defense Ontology & COA System 현장 준수 이미지" loading="lazy" decoding="async" width="1600" height="900" />
+            <figcaption class="field-cap">
+              <span class="cap-k">COMPLIANCE IN THE FIELD</span>
+              <span class="cap-v">교육훈련·안전·행정 절차를 규정 위에서만 실행되도록 강제합니다.</span>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- MISSION -->
     <section id="b" class="scene scene-b" data-scene="b" data-reveal="scene" aria-label="WHY">
       <div class="container">
         <div class="why-head">
           <h2 class="scene-title" data-reveal="clip-up">MISSION</h2>
           <p class="scene-lead" data-reveal="fade-up" data-delay="90">
-            국방 리스크의 본질은 '규정의 망각'과 '절차의 누락'입니다.<br/>
-            단 한 번의 <strong>SOP 위반</strong>이 감사 지적과 안전 사고로 이어집니다.
+            국방 리스크의 본질은 <strong>절차 누락</strong>과 <strong>근거 부재</strong>입니다.<br/>
+            REDCLX는 규정을 논리 제약식으로 고정하고, 실행 로그로 <strong>준수 사실을 증명</strong>합니다.
           </p>
         </div>
 
         <div class="panel-grid" data-stagger="70">
           <article class="panel" data-reveal="fade-up">
-            <div class="panel-h">규정의 복잡성</div>
-            <p class="panel-p">수천 페이지의 육규/지침/SOP를 현장에서 즉시 기억할 수 없습니다.</p>
+            <div class="panel-h">규정의 분산</div>
+            <p class="panel-p">육규·지침·SOP가 분산되어 있어 현장에서 즉시 찾아 적용하기 어렵습니다.</p>
             <div class="panel-tag">HUMAN ERROR</div>
           </article>
 
           <article class="panel" data-reveal="fade-up">
-            <div class="panel-h">AI의 환각 위험</div>
-            <p class="panel-p">일반 LLM은 없는 규정을 지어내거나, 위험한 조언을 하여 리스크를 키웁니다.</p>
-            <div class="panel-tag">RISK FACTOR</div>
+            <div class="panel-h">오프라인 제약</div>
+            <p class="panel-p">훈련장/현장 단말은 네트워크·외부 API 의존 없이 동작해야 합니다.</p>
+            <div class="panel-tag">OFFLINE-FIRST</div>
           </article>
 
           <article class="panel" data-reveal="fade-up">
-            <div class="panel-h">감사 대응 부재</div>
-            <p class="panel-p">조치에 대한 명확한 근거(Log)와 법적 정당성이 기록되지 않습니다.</p>
+            <div class="panel-h">감사·책임소재</div>
+            <p class="panel-p">‘무엇을 했는가’보다 ‘왜 그렇게 했는가’의 근거와 기록이 요구됩니다.</p>
             <div class="panel-tag">COMPLIANCE</div>
           </article>
         </div>
       </div>
     </section>
 
+    <!-- SYSTEM -->
     <section id="product" class="scene scene-product" data-reveal="scene" aria-label="PRODUCT UI">
       <div class="container">
         <div class="product-head">
@@ -282,8 +400,8 @@
           <h2 class="product-title" data-reveal="clip-up">System Interface</h2>
           <p class="product-lead" data-reveal="fade-up" data-delay="90">
             <strong>"규정이 곧 코드가 됩니다."</strong><br/>
-            REDCLX는 보안 지침과 SOP를 시스템 레벨에서 강제하여,<br/>
-            지휘관이 고민 없이 최적의 판단을 내리도록 돕습니다.
+            REDCLX는 규정·SOP를 시스템 레벨에서 강제하여,<br/>
+            현장 사용자가 <strong>망설이지 않고</strong> 절차를 완수하도록 돕습니다.
           </p>
         </div>
 
@@ -294,16 +412,28 @@
                 <h3 class="pstep-title" data-reveal="fade-up">Policy Compilation</h3>
                 <div class="pstep-copy" data-reveal="fade-up" data-delay="90">
                   <p>
-                    공개 가능한 규정, 안전지침, SOP를 <strong>기계가 이해하는 논리(Logic Constraints)</strong>로 자동 변환(Compile)합니다.
-                    이제 모든 훈련 계획은 규정 위에서만 수립됩니다.
+                    규정·안전지침·SOP를 <strong>검증 가능한 논리 제약식(Logic Constraints)</strong>으로 변환하고,
+                    액션 타입·산출물·파라미터를 <strong>온톨로지</strong>로 정규화합니다.
+                    최종 정책은 단말에서 실행 가능한 <strong>Policy Bundle(JSON)</strong>로 컴파일됩니다.
                   </p>
                   <div class="pbullets">
-                    <span class="pb">Auto-Extraction</span>
-                    <span class="pb">If-Then Rules</span>
-                    <span class="pb">Safety Constraints</span>
+                    <span class="pb">Ontology</span>
+                    <span class="pb">Rule Authoring</span>
+                    <span class="pb">Bundle Compile</span>
                   </div>
                 </div>
               </header>
+
+                <figure class="pstep-shot" aria-label="Policy Compilation UI">
+                  <img src="./assets/ui-02-ontology.png"
+                      alt="정책 컴파일 및 온톨로지 기반 규정 정규화 UI"
+                      loading="lazy" decoding="async" width="1600" height="900" />
+                  <figcaption class="pstep-shot-cap">
+                    <span class="cap-k">01 / COMPILATION</span>
+                    <span class="cap-v">Manual → Logic · Rule Extraction · Bundle</span>
+                  </figcaption>
+                </figure>
+
               <div class="pstep-meta" data-reveal="fade-up" data-delay="110">
                 <span class="pstep-k">INPUT</span>
                 <span class="pstep-v">Field Manuals · Safety Regs</span>
@@ -312,19 +442,29 @@
 
             <article class="pstep" data-step="1">
               <header class="pstep-top">
-                <h3 class="pstep-title" data-reveal="fade-up">Immutable Operation Log</h3>
+                <h3 class="pstep-title" data-reveal="fade-up">Audit Trail</h3>
                 <div class="pstep-copy" data-reveal="fade-up" data-delay="90">
                   <p>
-                    모든 의사결정과 조치 사항이 위변조 불가능한 <strong>방어 로그</strong>로 기록됩니다.
-                    사고 발생 시, 규정을 준수했음을 증명하는 <strong>완벽한 감사(Audit) 자료</strong>가 됩니다.
+                    각 조치의 근거 문장(span)과 룰(rule_id), 수행 시점이 <strong>감사 추적(Audit Trail)</strong>로 연결됩니다.
+                    사후 검토 시, 규정 준수 여부를 <strong>검증 결과와 함께</strong> 제시할 수 있습니다.
                   </p>
                   <div class="pbullets">
-                    <span class="pb">Audit Trail</span>
-                    <span class="pb">Legal Defense</span>
+                    <span class="pb">Traceability</span>
+                    <span class="pb">Evidence Pack</span>
                     <span class="pb">Time-stamped</span>
                   </div>
                 </div>
               </header>
+
+              <figure class="pstep-shot" aria-label="Audit Trail UI">
+                <img src="./assets/ui-03-defensivelog.png"
+                    alt="감사 추적 및 증거 패키지 생성 UI"
+                    loading="lazy" decoding="async" width="1600" height="900" />
+                <figcaption class="pstep-shot-cap">
+                  <span class="cap-k">02 / AUDIT LOG</span>
+                  <span class="cap-v">Traceability · Evidence · Review</span>
+                </figcaption>
+              </figure>
               <div class="pstep-meta" data-reveal="fade-up" data-delay="110">
                 <span class="pstep-k">ARCHIVE</span>
                 <span class="pstep-v">Evidence Pack · Action History</span>
@@ -336,19 +476,29 @@
                 <h3 class="pstep-title" data-reveal="fade-up">Verified Action Graph</h3>
                 <div class="pstep-copy" data-reveal="fade-up" data-delay="90">
                   <p>
-                    단순 텍스트 답변이 아닌, 구조화된 <strong>행동 그래프(Action Graph)</strong>를 생성합니다.
-                    위험 요소 식별, 필수 보고 절차, 장비 점검 순서를 시각적으로 시뮬레이션합니다.
+                    텍스트 답변이 아니라 <strong>COA(Action Graph)</strong>를 생성합니다.
+                    정책 위반이 발견되면 <strong>반례(Counterexample)</strong>를 산출하고,
+                    그래프 수리(삽입/삭제/재정렬)로 <strong>준수 가능한 절차</strong>로 자동 보정합니다.
                   </p>
                   <div class="pbullets">
-                    <span class="pb">Flowchart Gen</span>
-                    <span class="pb">Risk Alerts</span>
-                    <span class="pb">Procedure Check</span>
+                    <span class="pb">COA Graph</span>
+                    <span class="pb">Verifier</span>
+                    <span class="pb">Repair</span>
                   </div>
                 </div>
               </header>
+              <figure class="pstep-shot" aria-label="Action Graph UI">
+                <img src="./assets/ui-04-simengine.png"
+                    alt="COA Action Graph 생성 및 검증 UI"
+                    loading="lazy" decoding="async" width="1600" height="900" />
+                <figcaption class="pstep-shot-cap">
+                  <span class="cap-k">03 / ACTION GRAPH</span>
+                  <span class="cap-v">COA Graph · Verification · Repair</span>
+                </figcaption>
+              </figure>
               <div class="pstep-meta" data-reveal="fade-up" data-delay="110">
                 <span class="pstep-k">OUTPUT</span>
-                <span class="pstep-v">Actionable Strategy · Visual Guide</span>
+                <span class="pstep-v">Actionable COA · Verified Path</span>
               </div>
             </article>
           </div>
@@ -356,24 +506,24 @@
           <aside class="product-view" aria-label="Sticky UI preview">
             <div class="ui-frame sticky-frame" data-reveal="zoom">
               <div class="pvisuals" aria-hidden="true">
-                <img class="pvisual is-active" src="./assets/ui-02-ontology.png" alt="SOP Compilation Interface" loading="lazy" decoding="async" width="1600" height="900"/>
-                <img class="pvisual" src="./assets/ui-03-defensivelog.png" alt="Immutable Audit Log Interface" loading="lazy" decoding="async" width="1600" height="900"/>
-                <img class="pvisual" src="./assets/ui-04-simengine.png" alt="Action Graph Simulation Interface" loading="lazy" decoding="async" width="1600" height="900"/>
+                <img class="pvisual is-active" src="./assets/ui-02-ontology.png" alt="Policy Compilation interface" loading="lazy" decoding="async" width="1600" height="900"/>
+                <img class="pvisual" src="./assets/ui-03-defensivelog.png" alt="Audit trail interface" loading="lazy" decoding="async" width="1600" height="900"/>
+                <img class="pvisual" src="./assets/ui-04-simengine.png" alt="Action Graph simulation interface" loading="lazy" decoding="async" width="1600" height="900"/>
               </div>
             </div>
 
             <div class="ui-caption product-caption" aria-live="polite">
               <div class="pcap is-active" data-cap="0">
                 <span class="cap-k">01 / COMPILATION</span>
-                <span class="cap-v">Manual to Logic · Rule Extraction · Constraint Set</span>
+                <span class="cap-v">Manual to Logic · Rule Extraction · Bundle</span>
               </div>
               <div class="pcap" data-cap="1">
                 <span class="cap-k">02 / AUDIT LOG</span>
-                <span class="cap-v">Command History · Evidence Preservation · Defense</span>
+                <span class="cap-v">Traceability · Evidence · Review</span>
               </div>
               <div class="pcap" data-cap="2">
                 <span class="cap-k">03 / ACTION GRAPH</span>
-                <span class="cap-v">Step-by-step Guide · Risk Warning · Verified Path</span>
+                <span class="cap-v">COA Graph · Verification · Repair</span>
               </div>
             </div>
           </aside>
@@ -381,6 +531,7 @@
       </div>
     </section>
 
+    <!-- VERIFICATION -->
     <section id="c" class="scene scene-c" data-scene="c" data-reveal="scene" aria-label="ENGINE">
       <div class="container">
         <div class="engine engine-v2">
@@ -388,29 +539,30 @@
             <div class="engine-eyebrow" data-reveal="fade-up">
               INTEGRITY ASSURANCE AGENT
               <span class="engine-dot">•</span>
-              Causal Analysis & Verification
+              Offline Verification Runtime
             </div>
 
             <h2 class="scene-title" data-reveal="clip-up">AUDIT ENGINE</h2>
 
             <p class="scene-lead engine-lead" data-reveal="fade-up" data-delay="90">
-              REDCLX는 단순한 조언자가 아닌, <strong>작전과 행정의 무결성을 감시하는 감사관(Auditor)</strong>입니다.<br/>
-              현장의 복잡한 인과관계를 분석하여, 생성된 기록(Log)이 규정(Policy)과 완벽히 일치함을 증명합니다.
-              <span class="lead-sub">자체 개발된 <strong>Formal Verification(정형 검증)</strong> 기술이 모든 조치에 대한 <strong>논리적 정합성(Consistency)</strong>을 수학적으로 보증하여, 사후 감사 및 법적 분쟁을 원천 차단합니다.</span>
+              REDCLX는 “추천”이 아니라 <strong>규정준수 여부를 판단하고 증명</strong>하는 실행 엔진입니다.<br/>
+              정책 번들(Policy Bundle)을 기반으로 COA 그래프를 생성·검증하고,
+              위반 시 반례와 수리 이력을 남겨 <strong>설명 가능한 절차</strong>를 제공합니다.
+              <span class="lead-sub">외부 LLM/API 없이도 동작하도록 설계되어, <strong>오프라인 작전/훈련 환경</strong>에서 적용 가능합니다.</span>
             </p>
 
             <div class="engine-pills" data-stagger="70" aria-label="Engine highlights">
               <div class="pill" data-reveal="fade-up">
                 <div class="pill-k">Integrity Proof</div>
-                <div class="pill-v">사건-규정-기록 간 논리적 일치 증명</div>
+                <div class="pill-v">근거-룰-조치 간 일치성 검증</div>
               </div>
               <div class="pill" data-reveal="fade-up">
-                <div class="pill-k">Causal Analysis</div>
-                <div class="pill-v">상황 발생 원인과 조치 결과의 인과 추론</div>
+                <div class="pill-k">Counterexample</div>
+                <div class="pill-v">위반 위치/사유를 반례로 산출</div>
               </div>
               <div class="pill" data-reveal="fade-up">
-                <div class="pill-k">Legal Defense</div>
-                <div class="pill-v">책임 소명 가능한 무결점 증거 패키징</div>
+                <div class="pill-k">Offline Runtime</div>
+                <div class="pill-v">네트워크 없이 단말에서 실행</div>
               </div>
             </div>
 
@@ -418,26 +570,24 @@
               <div class="estep" data-reveal="fade-up">
                 <div class="estep-k">01 / LOGIC COMPILATION</div>
                 <div class="estep-v">
-                  자연어 SOP를 <strong>감사 가능한 논리 제약식(Logic Constraints)</strong>으로 컴파일합니다.
-                  "위험 발생 시 즉시 중지"와 같은 규칙은 시스템 내에서
-                  절대 위반할 수 없는 <strong>강제 조항(Must-Not)</strong>으로 작동합니다.
+                  자연어 규정을 <strong>룰과 온톨로지</strong>로 정규화하고,
+                  단말 실행을 위해 <strong>Policy Bundle(JSON)</strong>로 컴파일합니다.
                 </div>
               </div>
 
               <div class="estep" data-reveal="fade-up">
-                <div class="estep-k">02 / CAUSAL CHECK & GENERATION</div>
+                <div class="estep-k">02 / GENERATION & CHECK</div>
                 <div class="estep-v">
-                  단순 추천을 넘어, 현재 상황에서 해당 조치가 왜 필요한지 <strong>인과관계</strong>를 분석합니다.
-                  정보가 부족할 경우 섣부른 판단 대신 <strong>보류(Abstention)</strong> 및 추가 정보 요청을 수행합니다.
+                  케이스 입력(상황/제약/자원)에 따라 COA 그래프를 생성하고,
+                  각 단계가 정책 룰을 만족하는지 검증합니다.
                 </div>
               </div>
 
               <div class="estep" data-reveal="fade-up">
                 <div class="estep-k">03 / COUNTEREXAMPLE REPAIR</div>
                 <div class="estep-v">
-                  생성된 로그를 <strong>수학적 검증기(Formal Verifier)</strong>가 공격(Attack)합니다.
-                  규정 위반의 <strong>반례(Counterexample)</strong>가 발견되면, 
-                  AI가 스스로 논리를 수정(Self-Repair)하여 무결점 기록을 완성합니다.
+                  위반이 발견되면 위반 룰과 위치를 <strong>반례</strong>로 산출합니다.
+                  반례를 입력으로 수리 연산을 적용해 COA를 <strong>준수 가능한 그래프</strong>로 보정합니다.
                 </div>
               </div>
             </div>
@@ -445,69 +595,170 @@
             <div class="engine-output" data-reveal="fade-up" data-delay="110" aria-label="Output preview">
               <div class="out-head">
                 <div class="out-k">OUTPUT</div>
-                <div class="out-v">Verified Action Graph · Defense Audit Pack</div>
+                <div class="out-v">Verified COA · Action Graph · Audit Pack</div>
               </div>
 
               <div class="out-grid">
                 <div class="out-card">
                   <div class="out-title">Verified Action Graph</div>
                   <ul class="out-list">
-                    <li>Flow: 규정과 정합성이 검증된 행동 절차도</li>
-                    <li>Logic Link: 각 행동 단계별 근거 규정 자동 매핑</li>
-                    <li>Risk Alert: 상황과 맞지 않는 기록 시도 실시간 차단</li>
+                    <li>Flow: 규정과 정합성이 검증된 행동 절차</li>
+                    <li>Logic Link: 단계별 근거(문장/span) 자동 연결</li>
+                    <li>Risk Guard: 위반 시도 탐지 및 보정</li>
                   </ul>
                 </div>
 
                 <div class="out-card">
-                  <div class="out-title">Defense Audit Report</div>
+                  <div class="out-title">Audit Evidence Pack</div>
                   <ul class="out-list">
-                    <li>Proof: "왜 이 조치를 했는가"에 대한 논리적 증명서</li>
-                    <li>Traceability: 최초 상황부터 종결까지의 불변 기록</li>
-                    <li>SOP Match: 표준운영절차 준수율 100% 검증 리포트</li>
+                    <li>Proof: 근거·룰·행동 연결로 책임소명</li>
+                    <li>Traceability: 상황→조치→종결까지 추적</li>
+                    <li>Repair Trace: 반례·수리 이력 포함</li>
                   </ul>
                 </div>
               </div>
 
               <details class="engine-advanced">
-                <summary>Technical Core (Neuro-Symbolic Methodology)</summary>
+                <summary>Technical Core</summary>
                 <div class="adv-body">
                   <p class="adv-p">
-                    본 엔진은 ICLR 등재 연구진이 개발한 <strong>Verification-Driven Generation</strong> 기술을 적용했습니다.
+                    생성과 검증을 분리하여, 오프라인 환경에서도 신뢰 가능한 결과를 남기는 것을 목표로 합니다.
                   </p>
                   <ul class="adv-ul">
-                    <li><strong>Policy Compilation:</strong> 자연어 SOP를 Temporal Logic(LTL)으로 변환</li>
-                    <li><strong>Constraint Decoding:</strong> 생성 단계에서 금지된 행동(Must-Not) 원천 차단</li>
-                    <li><strong>Counterexample-Guided Repair:</strong> 반례 리포트를 이용한 반복적 자기 수정</li>
-                    <li><strong>Safe Abstention:</strong> 필수 정보 부재 시 환각 대신 '추가 정보 요청' 수행</li>
+                    <li><strong>Policy Compilation:</strong> 규정 문장 → 온톨로지/룰 → 실행용 번들(JSON)</li>
+                    <li><strong>Constraint Verification:</strong> MUST/MUST_NOT/MUST_BEFORE/IF_THEN 룰 기반 검증</li>
+                    <li><strong>Counterexample-Guided Repair:</strong> 위반 반례 기반 그래프 자동 수리</li>
+                    <li><strong>Offline Runtime:</strong> 네트워크·외부 API 없이 단말에서 결정적 실행</li>
                   </ul>
                 </div>
               </details>
             </div>
-
-            <div class="hero-actions" data-reveal="fade-up" data-delay="130">
-              <a class="btn-solid" href="#d">솔루션 도입 문의</a>
-              <a class="btn-ghost" href="#a">Verification Paper 요청</a>
-            </div>
           </div>
-
         </div>
       </div>
     </section>
 
+    <!-- PROCUREMENT / DAPA-FIT (New) -->
+    <section id="proc" class="scene scene-proc" data-scene="proc" data-reveal="scene" aria-label="PROCUREMENT">
+      <div class="container">
+        <div class="proc-head">
+          <div class="pidx" data-reveal="fade">[2.0]</div>
+          <h2 class="scene-title proc-title" data-reveal="clip-up">PROCUREMENT FIT</h2>
+          <p class="scene-lead proc-lead" data-reveal="fade-up" data-delay="90">
+            방위사업청/국방부 실증·도입 관점에서 중요한 것은 “멋진 데모”가 아니라
+            <strong>운영 가능성, 보안, 산출물</strong>입니다.  
+            REDCLX는 오프라인 런타임 + 정책 번들 + 감사 패키지를 기본 단위로 제공합니다.
+          </p>
+        </div>
+
+        <div class="proc-grid" data-stagger="70" aria-label="조달/도입 어필 포인트">
+          <article class="proc-card" data-reveal="fade-up">
+            <div class="proc-k">OFFLINE-READY</div>
+            <div class="proc-v">
+              네트워크 불가/제한 환경을 전제로 설계.  
+              외부 API 의존 없이 정책 번들로 동작.
+            </div>
+          </article>
+
+          <article class="proc-card" data-reveal="fade-up">
+            <div class="proc-k">AUDIT DELIVERABLES</div>
+            <div class="proc-v">
+              COA, 반례, 수리 이력, 근거 매핑으로  
+              검토/감사 가능한 산출물 제공.
+            </div>
+          </article>
+
+          <article class="proc-card" data-reveal="fade-up">
+            <div class="proc-k">SCOPED PoC</div>
+            <div class="proc-v">
+              SOP 단위로 범위를 고정하고  
+              준수율/누락률/검증 통과율로 평가.
+            </div>
+          </article>
+
+          <article class="proc-card" data-reveal="fade-up">
+            <div class="proc-k">POLICY BUNDLE</div>
+            <div class="proc-v">
+              규정 업데이트를 “코드 배포”가 아니라  
+              번들 교체로 단순화.
+            </div>
+          </article>
+
+          <article class="proc-card" data-reveal="fade-up">
+            <div class="proc-k">INTEGRATION</div>
+            <div class="proc-v">
+              로그/리포트는 JSON 기반으로  
+              상위 시스템 연동에 유리.
+            </div>
+          </article>
+
+          <article class="proc-card" data-reveal="fade-up">
+            <div class="proc-k">OPERATIONAL CONTROL</div>
+            <div class="proc-v">
+              “왜 이 단계인가”를 남겨  
+              현장 책임소명과 교육에 활용.
+            </div>
+          </article>
+        </div>
+
+        <div class="proc-steps" data-reveal="fade-up" data-delay="110" aria-label="PoC 진행">
+          <div class="proc-step">
+            <span class="ps-k">STEP 01</span>
+            <span class="ps-v">대상 SOP/규정 선정 (범위 고정)</span>
+          </div>
+          <div class="proc-step">
+            <span class="ps-k">STEP 02</span>
+            <span class="ps-v">온톨로지/룰 제작 → 번들 컴파일</span>
+          </div>
+          <div class="proc-step">
+            <span class="ps-k">STEP 03</span>
+            <span class="ps-v">오프라인 단말 배포 → 준수/검증 지표 측정</span>
+          </div>
+          <div class="proc-step">
+            <span class="ps-k">STEP 04</span>
+            <span class="ps-v">감사 패키지 산출 → 적용 확대</span>
+          </div>
+        </div>
+
+        <div class="proc-faq" id="faq" aria-label="FAQ" data-stagger="60">
+          <details class="faq" data-reveal="fade-up">
+            <summary>오프라인 환경에서 업데이트는 어떻게 하나요?</summary>
+            <div class="faq-body">
+              정책은 <strong>Policy Bundle(JSON)</strong>로 배포됩니다. 규정 개정 시 번들 교체로 적용을 단순화합니다.
+            </div>
+          </details>
+          <details class="faq" data-reveal="fade-up">
+            <summary>감사 대응 산출물은 어떤 형태로 제공되나요?</summary>
+            <div class="faq-body">
+              COA(Action Graph) + 위반 반례 + 수리 이력 + 근거 매핑(span→rule_id)로 구성된 <strong>Audit Evidence Pack</strong>을 제공합니다.
+            </div>
+          </details>
+          <details class="faq" data-reveal="fade-up">
+            <summary>훈련관리자/조교 사용성을 어떻게 담보하나요?</summary>
+            <div class="faq-body">
+              현장 워크플로우를 기준으로 입력을 최소화하고, 단계 UI/체크리스트로 <strong>실행 부담</strong>을 낮춥니다. 모바일 최적화를 기본 설계로 둡니다.
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEPLOY -->
     <section id="d" class="scene scene-d" data-scene="d" data-reveal="scene" aria-label="Get Started">
       <div class="container">
         <div class="start">
           <h2 class="scene-title" data-reveal="clip-up">DEPLOYMENT</h2>
           <p class="scene-lead" data-reveal="fade-up" data-delay="90">
-            국방 교육훈련의 혁신을 함께할 <strong>PoC/시범사업 파트너</strong>를 찾습니다.<br/>
-            예비군 훈련장, 신병교육대, 안전관리 부서에 최적화되어 있습니다.
+            REDCLX는 <strong>국방 교육훈련·안전·감사</strong> 영역에서
+            “규정 준수”를 운영 가능하게 만드는 것을 목표로 합니다.<br/>
+            예비군 훈련, 신병교육, 안전관리, 행정 절차 등 <strong>현장 적용 PoC/시범</strong>을 함께할 파트너를 찾습니다.
           </p>
 
           <div class="cta-grid">
-            <form class="form" action="mailto:contact@redclx-defense.com" method="post" enctype="text/plain" aria-label="데모/베타 신청 폼" data-reveal="fade-up">
+            <form class="form" action="mailto:contact@redclx-defense.com" method="post" enctype="text/plain" aria-label="데모/PoC 문의 폼" data-reveal="fade-up">
               <label>
-                <span>소속 / 계급 (담당자명)</span>
-                <input name="name" autocomplete="name" placeholder="예) 육군본부 교육사령부 / 대위 김철수" required />
+                <span>소속 / 직책 (담당자명)</span>
+                <input name="name" autocomplete="name" placeholder="예) ○○부대 교육훈련과 / ○○○" required />
               </label>
               <label>
                 <span>이메일 (인트라넷/외부망)</span>
@@ -524,9 +775,10 @@
               </label>
               <label>
                 <span>메시지</span>
-                <textarea name="message" rows="4" placeholder="현재 겪는 문제/원하는 기능을 간단히 적어주세요."></textarea>
+                <textarea name="message" rows="4" placeholder="대상 SOP/업무(예: 안전사고 대응, 훈련 중단 기준, 보고 체계)와 기대 산출물을 적어주세요."></textarea>
               </label>
               <button class="btn-solid" type="submit">문의하기</button>
+              <p class="fine">※ 보안 상 민감정보는 입력하지 마세요. 필요 시 별도 채널로 안내드립니다.</p>
             </form>
           </div>
 
@@ -545,7 +797,7 @@
   </noscript>
 
   <script>
-    // JS Logic Preserved Exactly as Requested
+    // JS Logic Preserved (same behavior)
     document.getElementById("y").textContent = new Date().getFullYear();
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -720,6 +972,8 @@
 
     // PRODUCT Sticky Crossfade + burst
     (() => {
+     if (isMobile) return;  // ✅ 모바일에서는 인라인 UI만 사용
+
       const steps = Array.from(document.querySelectorAll(".pstep"));
       const visuals = Array.from(document.querySelectorAll(".pvisual"));
       const caps = Array.from(document.querySelectorAll(".pcap"));
