@@ -467,9 +467,10 @@ main{ position:relative; z-index:1; }
 .hud-tag{
   font-family: var(--mono);
   letter-spacing:.16em;
-  font-size:.82rem;
+  font-size:1.0rem;
   text-transform:uppercase;
   color: rgba(238,242,247,.82);
+  margin-top: 60px;
   border-left: 2px solid rgba(159,179,107,.90);
   padding-left: 10px;
 }
