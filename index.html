@@ -1,992 +1,328 @@
 <!doctype html>
-<html lang="ko" class="no-js">
+<html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="format-detection" content="telephone=no,address=no,email=no" />
-
-  <title>REDCLX 레드클렉스 | 정책 기반 지능형 훈련 검증·평가 자동화 플랫폼</title>
-  <meta name="description" content="REDCLX는 교범·SOP·교전규칙(ROE)을 ‘유전체(Genome) 정책 번들’로 관리하고, 셀(Cell) 기반 온톨로지 런타임에서 훈련 절차·작전방안을 검증합니다. 위반은 반례로 제시하고 그래프 수리로 전술 교정안을 제안하며, 근거 패키지를 자동 생성합니다." />
-  <meta name="keywords" content="국방, 국방부, 방위사업청, 예비군, 전술훈련, 교육훈련, 전술 교정, 전술 보정, 작전방안, COA, SOP, ROE, 교전규칙, 규정준수, 감사, 훈련평가, 오프라인, 검증, 온톨로지, 정책 번들, 제약식, 반례, 그래프 수리, 근거 패키지" />
-  <meta name="theme-color" content="#0b0f14" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="format-detection" content="telephone=no" />
+  
+  <title>REDCLX | 규정준수 기반 차세대 드론 전술 운영체계 (DroneOS)</title>
+  <meta name="description" content="규정·데이터를 Cell로 통합하고 정책을 컴파일하여, 드론 임무 중 발생하는 규정 위반을 반례 기반으로 자동 수리하고 증거를 남기는 차세대 전술 운영체계입니다." />
+  <meta name="keywords" content="드론전술, DroneOS, 산불감시드론, 규정준수, Genocell, 전술운영체계, 군용드론, REDCLX, 안티드론, 드론관제" />
+  <meta name="author" content="REDCLX Defense Systems" />
+  <meta name="theme-color" content="#0b0c15" />
   <link rel="canonical" href="https://www.redclexperice.com/" />
-  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
-  <link rel="sitemap" type="application/xml" href="https://www.redclexperice.com/sitemap.xml" />
-
-  <!-- Open Graph -->
+  
   <meta property="og:type" content="website" />
-  <meta property="og:locale" content="ko_KR" />
-  <meta property="og:site_name" content="REDCLX 레드클렉스" />
-  <meta property="og:title" content="REDCLX | 유전체 정책 번들 기반 전술 교정·규정준수 검증 엔진" />
-  <meta property="og:description" content="교범·SOP·교전규칙(ROE)을 ‘유전체(Genome) 정책 번들’로 관리하고, 셀(Cell) 기반 온톨로지 런타임에서 절차·작전방안을 검증합니다. 반례와 그래프 수리로 전술 교정안을 제시하고, 근거 패키지를 자동 생성합니다." />
   <meta property="og:url" content="https://www.redclexperice.com/" />
-  <meta property="og:image" content="https://www.redclexperice.com/assets/og-redclx-defense.png" />
-  <meta property="og:image:alt" content="REDCLX Genocell Ontology 기반 전술 교정·규정준수 검증 미리보기" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <meta property="og:title" content="REDCLX | 규정준수 전술 생성·검증 DroneOS" />
+  <meta property="og:description" content="규정이 곧 전술이 됩니다. 임무 중 위반을 스스로 수리하고 모든 결정을 근거로 남기는 차세대 드론 운영체계." />
+  <meta property="og:image" content="https://www.redclexperice.com/assets/og-image.png" />
 
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="REDCLX | 유전체 정책 번들 기반 전술 교정·규정준수 검증 엔진" />
-  <meta name="twitter:description" content="셀(Cell) 기반 온톨로지 런타임 + 유전체 정책 번들. 절차·작전방안 자동 검증, 반례·그래프 수리로 전술 교정안 제시, 근거 패키지 자동 생성. 오프라인 훈련장 적용." />
-  <meta name="twitter:image" content="https://www.redclexperice.com/assets/og-redclx-defense.png" />
-  <meta name="twitter:image:alt" content="REDCLX Genocell Ontology 미리보기" />
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="REDCLX DroneOS">
+  <meta name="twitter:description" content="규정준수 기반 드론 전술 자동 생성 및 검증 시스템">
+  <meta name="twitter:image" content="https://www.redclexperice.com/assets/og-image.png">
 
-  <!-- Preload critical images -->
-  <link rel="preload" as="image" href="./assets/ui-01-tactical.png" />
-  <link rel="preload" as="image" href="./assets/field-tablet.png" />
-  <link rel="preload" as="image" href="./assets/field-banner.png" />
-
-  <script>
-    document.documentElement.classList.remove("no-js");
-    document.documentElement.classList.add("js");
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "REDCLX Genocell DroneOS",
+    "applicationCategory": "Defense & Safety Application",
+    "operatingSystem": "Genocell Runtime",
+    "description": "Genocell Ontology 기반의 드론 전술 생성 및 검증 운영체계. 규정 위반 시 반례 기반 자동 수리 기능 제공.",
+    "offers": {
+      "@type": "Offer",
+      "availability": "https://schema.org/InStock"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "REDCLX Defense Systems"
+    }
+  }
   </script>
 
   <link rel="stylesheet" href="./styles.css" />
-
-  <script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@graph":[
-    {
-      "@type":"Organization",
-      "@id":"https://www.redclexperice.com/#org",
-      "name":"REDCLX DEFENSE",
-      "url":"https://www.redclexperice.com/",
-      "logo":"https://www.redclexperice.com/assets/logo.png",
-      "sameAs":[
-        "https://www.linkedin.com/company/REPLACE",
-        "https://github.com/REPLACE"
-      ]
-    },
-    {
-      "@type":"WebSite",
-      "@id":"https://www.redclexperice.com/#website",
-      "url":"https://www.redclexperice.com/",
-      "name":"REDCLX DEFENSE",
-      "publisher":{"@id":"https://www.redclexperice.com/#org"}
-    },
-    {
-      "@type":"SoftwareApplication",
-      "@id":"https://www.redclexperice.com/#app",
-      "name":"REDCLX",
-      "applicationCategory":"BusinessApplication",
-      "operatingSystem":"Web / Offline-capable",
-      "description":"교범·SOP·교전규칙(ROE)을 유전체(Genome) 정책 번들로 관리하고, 셀(Cell) 기반 운영 온톨로지 런타임에서 훈련 절차·작전방안을 검증합니다. 위반은 반례로 제시하고 그래프 수리로 전술 교정안을 제안하며, 근거 패키지를 자동 생성합니다.",
-      "url":"https://www.redclexperice.com/",
-      "publisher":{"@id":"https://www.redclexperice.com/#org"}
-    },
-    {
-      "@type":"FAQPage",
-      "@id":"https://www.redclexperice.com/#faq",
-      "mainEntity":[
-        {
-          "@type":"Question",
-          "name":"오프라인(훈련장) 환경에서 동작하나요?",
-          "acceptedAnswer":{"@type":"Answer","text":"네. 외부 API 의존 없이 ‘유전체(Genome) 정책 번들’을 단말에 탑재해 오프라인 환경에서도 검증·교정·근거 패키지 생성이 가능합니다."}
-        },
-        {
-          "@type":"Question",
-          "name":"무엇을 산출물로 제공하나요?",
-          "acceptedAnswer":{"@type":"Answer","text":"검증된 절차/작전방안(그래프), 위반 반례(근거·조항 연결), 전술 교정안(그래프 수리 결과), 교정 이력(Repair Trace), 근거 패키지를 제공합니다."}
-        },
-        {
-          "@type":"Question",
-          "name":"예비군 파일럿(PoC)은 어떻게 진행하나요?",
-          "acceptedAnswer":{"@type":"Answer","text":"대상 과목·절차를 1~2개로 범위 고정 → 유전체 정책 번들 구성 → 절차/작전방안 검증 → 반례·교정안 제시 → 교정 시간 절감, 판정 일관성, 근거 패키지 생성률로 성과를 측정합니다."}
-        }
-      ]
-    }
-  ]
-}
-</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-  <a class="skip-link" href="#main">본문 바로가기</a>
+  <div class="bg-layer"></div>
+  
+  <nav class="nav-rail pc-only">
+    <div class="rail-logo">R</div>
+    <div class="rail-links">
+      <a href="#hero" class="active" title="Home">00</a>
+      <a href="#imperative" title="Problem">01</a>
+      <a href="#engine" title="Genocell">02</a>
+      <a href="#workflow" title="Workflow">03</a>
+      <a href="#scenarios" title="Ops">04</a>
+    </div>
+  </nav>
 
-  <div class="fx" aria-hidden="true"></div>
-
-  <header class="topbar" role="banner">
-    <div class="topbar-inner">
-      <a class="topbar-brand" href="#a" aria-label="REDCLX 홈">
-        <span class="brand-mark" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 2l9 4v6c0 5.5-3.5 10.5-9 12-5.5-1.5-9-6.5-9-12V6l9-4z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </span>
-        <span class="brand-name">REDCLX</span>
-      </a>
-
-      <nav class="topbar-nav" aria-label="주요 메뉴">
-        <a href="#team">LEADERSHIP</a>
-        <a href="#field">FIELD</a>
-        <a href="#b">MISSION</a>
-        <a href="#product">SYSTEM</a>
-        <a href="#c">GENOCELL</a>
-        <a href="#proc">PROCUREMENT</a>
-        <a href="#d">DEPLOY</a>
-      </nav>
-
-      <div class="topbar-cta">
-        <a class="btn-outline" href="#d">Secure Access</a>
-
-        <button class="icon-btn" type="button" aria-label="검색">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="1.6"/>
-          </svg>
-        </button>
-
-        <button class="icon-btn" type="button" aria-label="메뉴">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 7h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-            <path d="M4 12h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-            <path d="M4 17h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon"></span>
+      <span class="brand-txt">REDCLX <span class="ver">OS v2.4</span></span>
+    </div>
+    <div class="status-badge pc-only">
+      <span class="dot"></span> SYSTEM OPERATIONAL
     </div>
   </header>
 
-  <!-- Chapter rail -->
-  <nav class="chapters" aria-label="챕터">
-    <a class="chapter" href="#a" data-target="a" aria-label="챕터 1.0"><span class="k">1.0</span></a>
-    <a class="chapter" href="#team" data-target="team" aria-label="챕터 1.5"><span class="k">1.5</span></a>
-    <a class="chapter" href="#field" data-target="field" aria-label="챕터 1.8"><span class="k">1.8</span></a>
-    <a class="chapter" href="#b" data-target="b" aria-label="챕터 2.0"><span class="k">2.0</span></a>
-    <a class="chapter" href="#c" data-target="c" aria-label="챕터 3.0"><span class="k">3.0</span></a>
-    <a class="chapter" href="#proc" data-target="proc" aria-label="챕터 3.5"><span class="k">3.5</span></a>
-    <a class="chapter" href="#d" data-target="d" aria-label="챕터 4.0"><span class="k">4.0</span></a>
-  </nav>
-
-  <!-- Mobile sticky CTA bar -->
-  <div class="mobile-opsbar" role="navigation" aria-label="모바일 빠른 실행">
-    <a class="mob-btn mob-ghost" href="#c">Genocell 엔진</a>
-    <a class="mob-btn mob-solid" href="#d">PoC 문의</a>
-  </div>
-
-  <main id="main">
-    <!-- HERO -->
-    <section id="a" class="scene scene-a" data-scene="a" data-reveal="scene" aria-label="REDCLX 메인">
-      <div class="hero-bg" aria-hidden="true"></div>
-
-      <div class="container">
-        <div class="hero">
-          <div class="hero-gotham" aria-hidden="true">DEFENSE</div>
-
-          <div class="hero-left">
-
-            <h1 class="hero-title" data-reveal="clip-up">
-              Train by Policy.<br/>
-              <span class="hero-strong">Prove by Data.</span>
-            </h1>
-
-            <div class="hudline" data-reveal="fade-up">
-              <span class="hud-tag">정책 기반 지능형 훈련 검증·평가 자동화 플랫폼</span>
+  <main>
+    <section id="hero" class="hero-section">
+      <div class="hero-spotlight"></div>
+      
+      <div class="container hero-container">
+        <div class="hero-content">
+          <div class="label-badge" data-reveal="fade">TACTICAL OPERATING SYSTEM</div>
           
-            </div>
+          <h1 class="hero-title" data-reveal="fade-up">
+            TACTICS,<br>
+            UNDER <span class="highlight">POLICY.</span>
+          </h1>
+          
+          <p class="hero-lead" data-reveal="fade-up" data-delay="100">
+            <strong>규정이 곧 전술이 됩니다.</strong><br>
+            Genocell Ontology 기반으로 임무 경로를 생성하고,<br class="mob-hide">
+            위반을 스스로 <span class="text-white">수리(Repair)</span>하며,<br class="mob-hide">
+            모든 결정을 <span class="text-white">근거(Audit)</span>로 남기는 차세대 운영체계.
+          </p>
 
+          <div class="hero-btns" data-reveal="fade-up" data-delay="200">
+            <a href="#imperative" class="btn-primary">SYSTEM OVERVIEW</a>
+            <a href="mailto:contact@redclx-defense.com" class="btn-secondary">REQUEST DEMO</a>
+          </div>
+        </div>
+
+        <div class="hero-metrics" data-reveal="fade-up" data-delay="300">
+          <div class="metric-item">
+            <span class="m-val">AUTO</span>
+            <span class="m-key">REPAIR LOOP</span>
+          </div>
+          <div class="metric-line"></div>
+          <div class="metric-item">
+            <span class="m-val text-accent">100%</span>
+            <span class="m-key">COMPLIANCE</span>
+          </div>
+          <div class="metric-line"></div>
+          <div class="metric-item">
+            <span class="m-val">ZERO</span>
+            <span class="m-key">LIABILITY</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- TEAM -->
-    <section id="team" class="scene scene-team" data-scene="team" data-reveal="scene" aria-label="LEADERSHIP">
+    <section id="imperative" class="section">
       <div class="container">
-        <div class="team-indexbar" aria-hidden="true" data-reveal="fade">
-          <span class="tidx">[0.1]</span>
-          <span class="tline"></span>
-          <span class="tghost">TEAM PROFILE</span>
+        <div class="sec-head">
+          <span class="sec-idx">01 // THE IMPERATIVE</span>
+          <h2 class="sec-title">The Compliance Gap</h2>
         </div>
-
-        <div class="team-hero">
-          <div class="team-left">
-            <div class="team-path" data-reveal="fade-up">REDCLX / CORE UNIT</div>
-
-            <h2 class="team-display" data-reveal="clip-up">
-              SoftWare
-            </h2>
-
-            <p class="team-sublead" data-reveal="fade-up" data-delay="90">
-              REDCLX는 <strong>현장 훈련 운영</strong>, <strong>규정·감사 관점</strong>, <strong>자연어 규정 구조화</strong>를 함께 다루는 소규모 전문팀입니다.<br/>
-              “설명”이 아니라 <strong>검증과 교정</strong>을 목표로, 오프라인 환경에서 돌아가는 전술 교정 파이프라인을 구축합니다.
+        
+        <div class="grid-2 align-start">
+          <div class="text-block" data-reveal="fade-up">
+            <p class="lead-p">
+              드론 임무는 복잡한 <strong>규정(공역, 보안, 교전수칙)</strong>과 예측 불가능한 <strong>현장 데이터</strong>가 충돌하는 영역입니다.
+            </p>
+            <p>
+              기존 시스템은 '계획 수립'과 '규정 준수 확인'이 분리되어 있어, 급박한 현장에서 의사결정 근거가 불명확해지고 사고 발생 시 책임 소재가 커지는 구조적 문제를 안고 있습니다.
             </p>
           </div>
 
-          <div class="team-right">
-            <p class="team-copy" data-reveal="fade-up">
-              REDCLX의 기준은 단순합니다.  
-              훈련의 실효성은 “그럴듯한 평가”가 아니라 <strong>다음 훈련에서 바뀌는 전술</strong>로 증명됩니다.  
-              그래서 우리는 규정을 정책으로 고정하고, 절차/작전방안을 검증한 뒤, 위반을 반례로 드러내고,
-              교정안을 제시해 <strong>실제 실행 방식이 바뀌도록</strong> 설계합니다.
+          <div class="visual-stack" data-stagger>
+            <div class="compliance-visual" data-reveal="fade-up">
+              <img src="assets/dronimg.png" alt="산불 현장에서 다수의 전술 드론이 비행 중이며, 증강현실(AR) 오버레이로 규정 위반 구역과 전술 데이터가 표시된 화면" loading="lazy">
+              <div class="visual-overlay"></div> </div>
+
+            <div class="info-card warning" data-reveal="fade-up">
+              <div class="card-icon">⚠️</div>
+              <h3>Mission Critical Gap</h3>
+              <p>다양한 기관의 상충되는 요구사항을 실시간으로 해결하고, 모든 행동에 대한 증거 기반 감사(Audit)가 가능한 시스템이 부재합니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="engine" class="section bg-dim">
+      <div class="container">
+        <div class="sec-head">
+          <span class="sec-idx">02 // CORE ENGINE</span>
+          <h2 class="sec-title">Genocell Ontology</h2>
+        </div>
+
+        <div class="grid-2" data-stagger>
+          <div class="tech-card" data-reveal="fade-up">
+            <div class="tc-head">
+              <span class="tc-icon">C</span>
+              <h3>Cell Structure</h3>
+            </div>
+            <ul class="spec-list">
+              <li><strong>CORE:</strong> 규정 텍스트, 센서 수치 등 데이터의 본질</li>
+              <li><strong>DIMENSIONS:</strong> 공간/시간/조항 간의 연결 고리</li>
+              <li><strong>ACTOR:</strong> 접근 및 실행 권한을 가진 주체</li>
+              <li><strong>REPAIR:</strong> 위반 발생 시 자가 수리 규칙</li>
+            </ul>
+          </div>
+          
+          <div class="tech-card" data-reveal="fade-up">
+            <div class="tc-head">
+              <span class="tc-icon">DNA</span>
+              <h3>DNA Blueprint</h3>
+            </div>
+            <p class="tc-desc">
+              전방배치 엔지니어(FDSE)가 설계한 스키마를 통해,<br>
+              이질적인 데이터들이 <strong>'살아있는 연산 그래프'</strong>로 동작합니다.
             </p>
-
-            <div class="team-spec" aria-label="Core Capabilities" data-stagger="70">
-              <div class="spec-row" data-reveal="fade-up">
-                <div class="spec-k">FIELD-READY</div>
-                <div class="spec-v">
-                  훈련장·현장 단말을 기준으로 <strong>오프라인 실행</strong>을 우선합니다.
-                  네트워크가 끊겨도 교정 흐름은 멈추지 않아야 합니다.
-                </div>
-              </div>
-
-              <div class="spec-row" data-reveal="fade-up">
-                <div class="spec-k">EDU OPS</div>
-                <div class="spec-v">
-                  교관/조교의 실제 업무 흐름에 맞춰
-                  <strong>체크리스트·단계 UI</strong>로 입력과 판단 부담을 줄입니다.
-                </div>
-              </div>
-
-              <div class="spec-row" data-reveal="fade-up">
-                <div class="spec-k">POLICY & LAW</div>
-                <div class="spec-v">
-                  규정은 ‘문서’가 아니라 ‘운영 기준’입니다.
-                  <strong>판정 근거</strong>와 <strong>교정 이력</strong>을 기본 산출물로 제공합니다.
-                </div>
-              </div>
-
-              <div class="spec-row" data-reveal="fade-up">
-                <div class="spec-k">VERIFIABLE AI</div>
-                <div class="spec-v">
-                  “추천”보다 <strong>검증 가능한 교정</strong>을 지향합니다.
-                  위반은 반례로 명확히 드러나고, 교정은 이력으로 남습니다.
-                </div>
-              </div>
-            </div>
-
-            <div class="team-note" data-reveal="fade-up" data-delay="140">
-              <span class="note-k">NOTE</span>
-              <span class="note-v">요청 시 예비군 파일럿(과목 1~2개) 범위로 PoC 지표·산출물·운영 가이드 제공</span>
+            <div class="code-block">
+              > Generating connectome... OK<br>
+              > Policy constraints loaded.
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- FIELD PROOF -->
-    <section id="field" class="scene scene-field" data-scene="field" data-reveal="scene" aria-label="FIELD PROOF">
-      <div class="field-bg" aria-hidden="true"></div>
-
+    <section id="workflow" class="section">
       <div class="container">
-        <div class="field-head">
-          <div class="pidx" data-reveal="fade">[0.8]</div>
-          <h2 class="scene-title field-title" data-reveal="clip-up">FIELD PROOF</h2>
-          <p class="scene-lead field-lead" data-reveal="fade-up" data-delay="90">
-            탁상에서 끝나지 않도록. <strong>현장에서 바로 쓰는</strong> 전술 교정 런타임.  
-            절차는 검증되고, 위반은 반례로 드러나며, 교정안이 즉시 제시됩니다.
-          </p>
+        <div class="sec-head">
+          <span class="sec-idx">03 // KILL CHAIN</span>
+          <h2 class="sec-title">Auto-Repair Loop</h2>
         </div>
-
-        <div class="field-grid" data-stagger="70">
-          <div class="field-card" data-reveal="fade-up">
-            <div class="field-k">01 / ON-DEVICE</div>
-            <div class="field-v">
-              외부 API 없이 동작하는 <strong>오프라인 런타임</strong>.  
-              단말에서 정책 번들을 로드하고, 훈련 절차·작전방안을 검증합니다.
+        
+        <div class="process-list">
+          <div class="p-item" data-reveal="fade-up">
+            <div class="p-num">01</div>
+            <div class="p-content">
+              <h3>Ingest & Compile</h3>
+              <p>데이터 Cell 통합 및 정책 번들을 실행 가능한 제약식으로 컴파일.</p>
             </div>
           </div>
-
-          <div class="field-card" data-reveal="fade-up">
-            <div class="field-k">02 / COUNTEREXAMPLE</div>
-            <div class="field-v">
-              위반은 숨기지 않습니다.  
-              <strong>반례</strong>로 “어느 단계에서 무엇을 왜 위반했는지”를 명확히 제시합니다.
+          <div class="p-item" data-reveal="fade-up">
+            <div class="p-num">02</div>
+            <div class="p-content">
+              <h3>Generate & Verify</h3>
+              <p>임무 목적과 제약식을 결합해 전술 그래프 생성 및 시뮬레이션 검증.</p>
             </div>
           </div>
-
-          <div class="field-card" data-reveal="fade-up">
-            <div class="field-k">03 / TACTICAL CORRECTION</div>
-            <div class="field-v">
-              평가로 끝내지 않습니다.  
-              <strong>그래프 수리</strong>로 전술 교정안을 제시하고, 다음 훈련의 표준 절차로 반영합니다.
+          <div class="p-item highlight" data-reveal="fade-up">
+            <div class="p-num">03</div>
+            <div class="p-content">
+              <h3>Auto-Repair (Core)</h3>
+              <p>반례(위반) 발생 시, 최소 수정(Diff) 알고리즘으로 <strong>그래프 자동 수리</strong>.</p>
             </div>
           </div>
-        </div>
-
-        <div class="field-media" data-reveal="zoom" aria-label="현장 이미지">
-          <figure class="field-figure">
-            <img src="./assets/field-tablet.png" alt="현장 단말에서 절차/작전방안 검증 및 교정안을 확인하는 장면" loading="lazy" decoding="async" width="1600" height="900" />
-            <figcaption class="field-cap">
-              <span class="cap-k">REAL-TIME</span>
-              <span class="cap-v">단계별 준수/위반을 즉시 확인하고, 교정안을 바로 적용합니다.</span>
-            </figcaption>
-          </figure>
-
-          <figure class="field-figure field-figure-2">
-            <img src="./assets/field-banner.png" alt="규정준수 기반 전술 교정 및 훈련 운영" loading="lazy" decoding="async" width="1600" height="900" />
-            <figcaption class="field-cap">
-              <span class="cap-k">CORRECTION</span>
-              <span class="cap-v">교범·SOP·교전규칙 기준으로 절차를 끝까지 안전하게 교정합니다.</span>
-            </figcaption>
-          </figure>
+          <div class="p-item" data-reveal="fade-up">
+            <div class="p-num">04</div>
+            <div class="p-content">
+              <h3>Audit Pack</h3>
+              <p>최종 전술 실행 후 판단 근거와 교정 이력을 담은 증거 패키지 생성.</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- MISSION -->
-    <section id="b" class="scene scene-b" data-scene="b" data-reveal="scene" aria-label="WHY">
+    <section id="scenarios" class="section bg-dim">
       <div class="container">
-        <div class="why-head">
-          <h2 class="scene-title" data-reveal="clip-up">MISSION</h2>
-          <p class="scene-lead" data-reveal="fade-up" data-delay="90">
-            훈련 리스크의 핵심은 <strong>절차 누락</strong>, <strong>규정 위반</strong>, 그리고 <strong>교정의 지연</strong>입니다.<br/>
-            REDCLX는 규정을 기준으로 절차를 검증하고, 반례와 교정안으로 <strong>다음 훈련에서 전술이 바뀌도록</strong> 만듭니다.
-          </p>
+        <div class="sec-head">
+          <span class="sec-idx">04 // FIELD OPERATIONS</span>
+          <h2 class="sec-title">Mission Ready</h2>
         </div>
 
-        <div class="panel-grid" data-stagger="70">
-          <article class="panel" data-reveal="fade-up">
-            <div class="panel-h">절차 누락</div>
-            <p class="panel-p">단계가 빠지거나 순서가 바뀌면 사고·분쟁·감사 리스크가 커집니다.</p>
-            <div class="panel-tag">RISK</div>
-          </article>
-
-          <article class="panel" data-reveal="fade-up">
-            <div class="panel-h">오프라인 현실</div>
-            <p class="panel-p">훈련장/현장 단말은 네트워크가 끊겨도 멈추지 않아야 합니다.</p>
-            <div class="panel-tag">OFFLINE</div>
-          </article>
-
-          <article class="panel" data-reveal="fade-up">
-            <div class="panel-h">교정 가능한 기준</div>
-            <p class="panel-p">판정 근거와 교정 이력이 있어야 표준 절차를 개선하고 유지할 수 있습니다.</p>
-            <div class="panel-tag">CORRECTION</div>
-          </article>
+        <div class="scenario-grid">
+          <div class="ops-card" data-reveal="fade-up">
+            <div class="ops-img img-disaster"></div>
+            <div class="ops-body">
+              <div class="tag red">DISASTER RESPONSE</div>
+              <h3>재난 감시 (산불/홍수)</h3>
+              <p>인구밀집/민감구역 회피, 통신 음영지역 우회 경로 자동 생성.</p>
+            </div>
+          </div>
+          <div class="ops-card" data-reveal="fade-up" data-delay="100">
+            <div class="ops-img img-defense"></div>
+            <div class="ops-body">
+              <div class="tag blue">INFRASTRUCTURE</div>
+              <h3>국가 시설 방호 (댐/교량)</h3>
+              <p>보안 등급별 접근 이격거리 준수 및 감사용 증거 영상 확보.</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- SYSTEM -->
-    <section id="product" class="scene scene-product" data-reveal="scene" aria-label="PRODUCT UI">
+    <section class="section">
       <div class="container">
-        <div class="product-head">
-          <div class="pidx" data-reveal="fade">[1.0]</div>
-          <h2 class="product-title" data-reveal="clip-up">System Interface</h2>
-          <p class="product-lead" data-reveal="fade-up" data-delay="90">
-            <strong>"기준을 고정하면, 전술은 교정 가능합니다."</strong><br/>
-            REDCLX는 교범·SOP·교전규칙을 ‘유전체 정책 번들’로 관리하고,<br/>
-            절차·작전방안을 <strong>검증</strong>해 위반을 드러내고 <strong>교정안</strong>을 제시합니다.
-          </p>
+        <div class="sec-head">
+          <span class="sec-idx">05 // COMMAND ETHOS</span>
+          <h2 class="sec-title">Forged in Discipline</h2>
         </div>
-
-        <div class="product-sticky">
-          <div class="product-rail" aria-label="Product steps">
-            <article class="pstep is-active" data-step="0">
-              <header class="pstep-top">
-                <h3 class="pstep-title" data-reveal="fade-up">유전체(Genome) 정책 번들</h3>
-                <div class="pstep-copy" data-reveal="fade-up" data-delay="90">
-                  <p>
-                    교범·SOP·교전규칙(ROE)을 <strong>유전체 정책 번들</strong>로 묶어
-                    “이번 훈련의 기준”을 버전으로 고정합니다.
-                    기준이 바뀌면 결과도 바뀌기 때문에, <strong>기준 관리</strong>가 곧 신뢰입니다.
-                  </p>
-                  <div class="pbullets">
-                    <span class="pb">정책 번들</span>
-                    <span class="pb">버전 고정</span>
-                    <span class="pb">배포 단순화</span>
-                  </div>
-                </div>
-              </header>
-
-              <figure class="pstep-shot" aria-label="Genome Policy Bundle UI">
-                <img src="./assets/ui-02-ontology.png"
-                    alt="유전체 정책 번들 구성 및 버전 관리 화면"
-                    loading="lazy" decoding="async" width="1600" height="900" />
-                <figcaption class="pstep-shot-cap">
-                  <span class="cap-k">01 / GENOME BUNDLE</span>
-                  <span class="cap-v">기준 정리 · 버전 고정 · 배포</span>
-                </figcaption>
-              </figure>
-
-              <div class="pstep-meta" data-reveal="fade-up" data-delay="110">
-                <span class="pstep-k">INPUT</span>
-                <span class="pstep-v">교범 · SOP · ROE</span>
-              </div>
-            </article>
-
-            <article class="pstep" data-step="1">
-              <header class="pstep-top">
-                <h3 class="pstep-title" data-reveal="fade-up">근거 패키지(판정·교정 이력)</h3>
-                <div class="pstep-copy" data-reveal="fade-up" data-delay="90">
-                  <p>
-                    각 판정과 교정은 <strong>근거 조항</strong>과 연결되어 기록됩니다.
-                    훈련 운영자는 “무엇이 문제였나”를 넘어,
-                    “<strong>어떻게 고쳤나</strong>”를 이력으로 남길 수 있습니다.
-                  </p>
-                  <div class="pbullets">
-                    <span class="pb">근거 연결</span>
-                    <span class="pb">시간 기록</span>
-                    <span class="pb">교정 이력</span>
-                  </div>
-                </div>
-              </header>
-
-              <figure class="pstep-shot" aria-label="Evidence UI">
-                <img src="./assets/ui-03-defensivelog.png"
-                    alt="근거 패키지 및 교정 이력 화면"
-                    loading="lazy" decoding="async" width="1600" height="900" />
-                <figcaption class="pstep-shot-cap">
-                  <span class="cap-k">02 / EVIDENCE</span>
-                  <span class="cap-v">판정 · 근거 · 교정 이력</span>
-                </figcaption>
-              </figure>
-              <div class="pstep-meta" data-reveal="fade-up" data-delay="110">
-                <span class="pstep-k">ARCHIVE</span>
-                <span class="pstep-v">근거 패키지 · 교정 이력 · 실행 기록</span>
-              </div>
-            </article>
-
-            <article class="pstep" data-step="2">
-              <header class="pstep-top">
-                <h3 class="pstep-title" data-reveal="fade-up">검증 + 반례 + 전술 교정안</h3>
-                <div class="pstep-copy" data-reveal="fade-up" data-delay="90">
-                  <p>
-                    REDCLX는 절차를 <strong>그래프</strong>로 다룹니다.
-                    위반이 발견되면 <strong>반례</strong>(위반 규칙·위치·사유)를 제시하고,
-                    <strong>그래프 수리</strong>(단계 삽입/삭제/재배치)로 <strong>전술 교정안</strong>을 제안합니다.
-                  </p>
-                  <div class="pbullets">
-                    <span class="pb">자동 검증</span>
-                    <span class="pb">반례</span>
-                    <span class="pb">전술 교정</span>
-                  </div>
-                </div>
-              </header>
-              <figure class="pstep-shot" aria-label="Verification UI">
-                <img src="./assets/ui-04-simengine.png"
-                    alt="절차 그래프 검증 및 반례·전술 교정안 화면"
-                    loading="lazy" decoding="async" width="1600" height="900" />
-                <figcaption class="pstep-shot-cap">
-                  <span class="cap-k">03 / VERIFY & CORRECT</span>
-                  <span class="cap-v">검증 · 반례 · 교정안</span>
-                </figcaption>
-              </figure>
-              <div class="pstep-meta" data-reveal="fade-up" data-delay="110">
-                <span class="pstep-k">OUTPUT</span>
-                <span class="pstep-v">검증 결과 · 반례 · 전술 교정안 · 근거 패키지</span>
-              </div>
-            </article>
+        <div class="grid-3" data-stagger>
+          <div class="ethos-box" data-reveal="fade-up">
+            <h4>Interdisciplinary Rigor</h4>
+            <p>법학의 규범적 사고와 공학적 논리를 결합하여, 모호한 규정을 실행 가능한 코드로 번역합니다.</p>
           </div>
-
-          <aside class="product-view" aria-label="Sticky UI preview">
-            <div class="ui-frame sticky-frame" data-reveal="zoom">
-              <div class="pvisuals" aria-hidden="true">
-                <img class="pvisual is-active" src="./assets/ui-02-ontology.png" alt="유전체 정책 번들 화면" loading="lazy" decoding="async" width="1600" height="900"/>
-                <img class="pvisual" src="./assets/ui-03-defensivelog.png" alt="근거 패키지 화면" loading="lazy" decoding="async" width="1600" height="900"/>
-                <img class="pvisual" src="./assets/ui-04-simengine.png" alt="검증 및 전술 교정안 화면" loading="lazy" decoding="async" width="1600" height="900"/>
-              </div>
-            </div>
-
-            <div class="ui-caption product-caption" aria-live="polite">
-              <div class="pcap is-active" data-cap="0">
-                <span class="cap-k">01 / GENOME BUNDLE</span>
-                <span class="cap-v">기준 정리 · 버전 고정 · 배포</span>
-              </div>
-              <div class="pcap" data-cap="1">
-                <span class="cap-k">02 / EVIDENCE</span>
-                <span class="cap-v">판정 · 근거 · 교정 이력</span>
-              </div>
-              <div class="pcap" data-cap="2">
-                <span class="cap-k">03 / VERIFY & CORRECT</span>
-                <span class="cap-v">검증 · 반례 · 교정안</span>
-              </div>
-            </div>
-          </aside>
+          <div class="ethos-box" data-reveal="fade-up">
+            <h4>Field-Proven</h4>
+            <p>실전 훈련 교관 경험을 바탕으로, 현장에서 즉시 작동하는 견고한 시스템을 설계합니다.</p>
+          </div>
+          <div class="ethos-box" data-reveal="fade-up">
+            <h4>Evidence-Based</h4>
+            <p>측정 가능하고 검증 가능한 결과(Evidence)만을 신뢰하는 R&D 문화를 지향합니다.</p>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- GENOCELL ENGINE -->
-    <section id="c" class="scene scene-c" data-scene="c" data-reveal="scene" aria-label="ENGINE">
+    <footer class="footer">
       <div class="container">
-        <div class="engine engine-v2">
-          <div class="engine-left">
-            <div class="engine-eyebrow" data-reveal="fade-up">
-              유전체 정책 번들 · 셀 기반 온톨로지 런타임
-              <span class="engine-dot">•</span>
-              제약식 컴파일 · 반례 기반 그래프 수리
-            </div>
-
-            <h2 class="scene-title" data-reveal="clip-up">Genocell Ontology</h2>
-
-            <p class="scene-lead engine-lead" data-reveal="fade-up" data-delay="90">
-       
-              교범·SOP·교전규칙(ROE)은 <strong>유전체(Genome) 정책 번들</strong>로 관리되고,
-              모든 관련 데이터는 <strong>셀(Cell)</strong> 단위로 구조화되어 온톨로지 런타임에서 일관되게 처리됩니다.<br/>
-              위반이 발생하면 <strong>반례</strong>로 근거를 제시하고,
-              <strong>그래프 수리</strong>로 전술 교정안을 제안합니다.
-         
-            </p>
-
-            <div class="engine-pills" data-stagger="70" aria-label="Engine highlights">
-              <div class="pill" data-reveal="fade-up">
-                <div class="pill-k">Genome Bundle</div>
-                <div class="pill-v">훈련 기준을 버전으로 고정</div>
-              </div>
-              <div class="pill" data-reveal="fade-up">
-                <div class="pill-k">Cell Runtime</div>
-                <div class="pill-v">단계·행동을 셀 단위 처리</div>
-              </div>
-              <div class="pill" data-reveal="fade-up">
-                <div class="pill-k">Verify → Correct</div>
-                <div class="pill-v">검증 후 전술 교정안 제시</div>
-              </div>
-            </div>
-
-            <div class="engine-steps" aria-label="3-step pipeline" data-stagger="70">
-              <div class="estep" data-reveal="fade-up">
-                <div class="estep-k">01 / 유전체 정책 번들 구성</div>
-                <div class="estep-v">
-                  교범·SOP·ROE를 훈련 기준으로 묶어 <strong>정책 번들</strong>로 배포합니다.
-                  “이번 훈련의 기준”을 버전으로 고정합니다.
-                </div>
-              </div>
-
-              <div class="estep" data-reveal="fade-up">
-                <div class="estep-k">02 / 제약식 컴파일 · 셀 기반 검증</div>
-                <div class="estep-v">
-                  정책을 <strong>검증 가능한 제약식</strong>으로 컴파일하고,
-                  절차·작전방안을 <strong>셀(Cell)</strong> 단위로 검증합니다.
-                </div>
-              </div>
-
-              <div class="estep" data-reveal="fade-up">
-                <div class="estep-k">03 / 반례 · 그래프 수리 · 전술 교정안</div>
-                <div class="estep-v">
-                  위반은 반례로 제시하고, 그래프 수리로 <strong>준수 가능한 교정안</strong>을 제안합니다.
-                  교정 이력과 근거가 함께 남습니다.
-                </div>
-              </div>
-            </div>
-
-            <div class="engine-output" data-reveal="fade-up" data-delay="110" aria-label="Output preview">
-              <div class="out-head">
-                <div class="out-k">OUTPUT</div>
-                <div class="out-v">검증 결과 · 반례 · 전술 교정안 · 교정 이력 · 근거 패키지</div>
-              </div>
-
-              <div class="out-grid">
-                <div class="out-card">
-                  <div class="out-title">전술 교정안(그래프 수리 결과)</div>
-                  <ul class="out-list">
-                    <li>위반 단계/규칙/사유를 반례로 명확화</li>
-                    <li>단계 삽입·삭제·재배치로 절차를 교정</li>
-                    <li>교정 전/후 비교 및 적용 근거 제공</li>
-                  </ul>
-                </div>
-
-                <div class="out-card">
-                  <div class="out-title">근거 패키지(판정·교정 이력)</div>
-                  <ul class="out-list">
-                    <li>근거 조항 ↔ 단계 ↔ 판정 자동 연결</li>
-                    <li>교정 이력(Repair Trace) 포함</li>
-                    <li>표준 절차 개선·교육 자료로 활용</li>
-                  </ul>
-                </div>
-              </div>
-
-              <details class="engine-advanced">
-                <summary>Technical Core</summary>
-                <div class="adv-body">
-                  <p class="adv-p">
-                    핵심은 “기준(정책) → 검증(판정) → 교정(수리) → 근거(기록)”을 끊기지 않게 만드는 것입니다.
-                  </p>
-                  <ul class="adv-ul">
-                    <li><strong>유전체 정책 번들:</strong> 규정 기준을 버전으로 고정하고 배포</li>
-                    <li><strong>셀 기반 런타임:</strong> 단계/행동을 셀 단위로 구조화해 일관 처리</li>
-                    <li><strong>제약식 컴파일:</strong> 필수/금지/조건/순서 규칙으로 검증 가능화</li>
-                    <li><strong>반례 기반 그래프 수리:</strong> 위반 근거로 절차를 자동 교정</li>
-                    <li><strong>오프라인 실행:</strong> 외부 API 없이 단말에서 결정적 실행</li>
-                  </ul>
-                </div>
-              </details>
-            </div>
-          </div>
+        <h2>SECURE THE FUTURE.</h2>
+        <p>규정으로 지휘하고, 근거로 증명하십시오.</p>
+        <div class="copy">
+          © 2026 REDCLX DEFENSE SYSTEMS.<br>
+          CLASSIFIED: UNRESTRICTED // VERSION 2.4.1
         </div>
       </div>
-    </section>
-
-    <!-- PROCUREMENT -->
-    <section id="proc" class="scene scene-proc" data-scene="proc" data-reveal="scene" aria-label="PROCUREMENT">
-      <div class="container">
-        <div class="proc-head">
-          <div class="pidx" data-reveal="fade">[2.0]</div>
-          <h2 class="scene-title proc-title" data-reveal="clip-up">PROCUREMENT FIT</h2>
-          <p class="scene-lead proc-lead" data-reveal="fade-up" data-delay="90">
-            조달·도입에서 중요한 것은 “멋진 데모”가 아니라
-            <strong>운영 가능성, 보안, 산출물, 성과지표</strong>입니다.  
-            REDCLX는 오프라인 실행 + 유전체 정책 번들 + 반례/교정안 + 근거 패키지를 기본 단위로 제공합니다.
-          </p>
-        </div>
-
-        <div class="proc-grid" data-stagger="70" aria-label="조달/도입 어필 포인트">
-          <article class="proc-card" data-reveal="fade-up">
-            <div class="proc-k">OFFLINE-READY</div>
-            <div class="proc-v">
-              네트워크 제한 환경을 전제로 설계.  
-              외부 API 의존 없이 단말에서 실행.
-            </div>
-          </article>
-
-          <article class="proc-card" data-reveal="fade-up">
-            <div class="proc-k">EVIDENCE OUTPUT</div>
-            <div class="proc-v">
-              반례·교정안·교정 이력으로  
-              검토 가능한 근거 패키지 제공.
-            </div>
-          </article>
-
-          <article class="proc-card" data-reveal="fade-up">
-            <div class="proc-k">SCOPED PoC</div>
-            <div class="proc-v">
-              과목 1~2개로 범위 고정 후  
-              교정 시간 절감/일관성/근거 생성률로 평가.
-            </div>
-          </article>
-
-          <article class="proc-card" data-reveal="fade-up">
-            <div class="proc-k">POLICY BUNDLE</div>
-            <div class="proc-v">
-              규정 업데이트는 “코드 수정”이 아니라  
-              번들 교체로 단순화.
-            </div>
-          </article>
-
-          <article class="proc-card" data-reveal="fade-up">
-            <div class="proc-k">INTEGRATION</div>
-            <div class="proc-v">
-              리포트/로그는 JSON 기반으로  
-              상위 시스템 연동에 유리.
-            </div>
-          </article>
-
-          <article class="proc-card" data-reveal="fade-up">
-            <div class="proc-k">STANDARDIZATION</div>
-            <div class="proc-v">
-              교정 이력 기반으로  
-              표준 절차를 지속 개선·유지.
-            </div>
-          </article>
-        </div>
-
-        <div class="proc-steps" data-reveal="fade-up" data-delay="110" aria-label="PoC 진행">
-          <div class="proc-step">
-            <span class="ps-k">STEP 01</span>
-            <span class="ps-v">대상 과목·절차 선정 (범위 고정)</span>
-          </div>
-          <div class="proc-step">
-            <span class="ps-k">STEP 02</span>
-            <span class="ps-v">유전체 정책 번들 구성 → 단말 배포</span>
-          </div>
-          <div class="proc-step">
-            <span class="ps-k">STEP 03</span>
-            <span class="ps-v">검증 → 반례 → 전술 교정안(그래프 수리) 제시</span>
-          </div>
-          <div class="proc-step">
-            <span class="ps-k">STEP 04</span>
-            <span class="ps-v">성과지표 측정 → 적용 확대</span>
-          </div>
-        </div>
-
-        <div class="proc-faq" id="faq" aria-label="FAQ" data-stagger="60">
-          <details class="faq" data-reveal="fade-up">
-            <summary>오프라인 환경에서 업데이트는 어떻게 하나요?</summary>
-            <div class="faq-body">
-              기준은 <strong>유전체(Genome) 정책 번들</strong>로 배포됩니다. 규정 개정 시 번들 교체만으로 적용을 단순화합니다.
-            </div>
-          </details>
-          <details class="faq" data-reveal="fade-up">
-            <summary>산출물은 어떤 형태로 제공되나요?</summary>
-            <div class="faq-body">
-              <strong>검증 결과</strong> + <strong>반례</strong> + <strong>전술 교정안</strong> + <strong>교정 이력</strong> + <strong>근거 패키지</strong>를 제공합니다.
-            </div>
-          </details>
-          <details class="faq" data-reveal="fade-up">
-            <summary>교관/조교 사용성은 어떻게 담보하나요?</summary>
-            <div class="faq-body">
-              입력을 최소화하고, 단계 UI·체크리스트 중심으로 설계합니다.
-              “문서 작성”이 아니라 “전술 교정”에 집중할 수 있게 만드는 것이 목표입니다.
-            </div>
-          </details>
-        </div>
-      </div>
-    </section>
-
-    <!-- DEPLOY -->
-    <section id="d" class="scene scene-d" data-scene="d" data-reveal="scene" aria-label="Get Started">
-      <div class="container">
-        <div class="start">
-          <h2 class="scene-title" data-reveal="clip-up">DEPLOYMENT</h2>
-          <p class="scene-lead" data-reveal="fade-up" data-delay="90">
-            REDCLX는 <strong>전술 훈련 운영</strong>에서
-            규정준수와 전술 교정을 <strong>운영 가능하게</strong> 만드는 것을 목표로 합니다.<br/>
-            예비군 과학화 훈련장, 신병교육, 안전관리, 행정 절차 등 <strong>현장 적용 PoC</strong> 파트너를 찾습니다.
-          </p>
-
-          <div class="cta-grid">
-            <form class="form" action="mailto:contact@redclx-defense.com" method="post" enctype="text/plain" aria-label="데모/PoC 문의 폼" data-reveal="fade-up">
-              <label>
-                <span>소속 / 직책 (담당자명)</span>
-                <input name="name" autocomplete="name" placeholder="예) ○○부대 교육훈련과 / ○○○" required />
-              </label>
-              <label>
-                <span>이메일 (인트라넷/외부망)</span>
-                <input type="email" name="email" autocomplete="email" placeholder="official@army.mil.kr" required />
-              </label>
-              <label>
-                <span>관심 분야</span>
-                <select name="interest">
-                  <option>예비군 전술 훈련 교정</option>
-                  <option>절차·작전방안 규정준수 검증</option>
-                  <option>안전·사고 대응 절차 교정</option>
-                  <option>규정/교범 디지털화</option>
-                </select>
-              </label>
-              <label>
-                <span>메시지</span>
-                <textarea name="message" rows="4" placeholder="대상 과목/절차(예: 검문소 절차, ROE 포함 상황, 안전사고 대응)와 기대 산출물을 적어주세요."></textarea>
-              </label>
-              <button class="btn-solid" type="submit">문의하기</button>
-              <p class="fine">※ 보안 상 민감정보는 입력하지 마세요. 필요 시 별도 채널로 안내드립니다.</p>
-            </form>
-          </div>
-
-          <div class="footerline" data-reveal="fade-up" data-delay="110">
-            <span class="dim">©</span> <span id="y">2025</span> <span class="dim">REDCLX DEFENSE. All rights reserved.</span>
-            <span class="dot">·</span>
-            <a class="dim" href="#a">Back to top</a>
-          </div>
-        </div>
-      </div>
-    </section>
+    </footer>
   </main>
 
-  <noscript>
-    <div class="noscript">이 사이트는 자바스크립트 없이도 대부분의 콘텐츠를 볼 수 있습니다.</div>
-  </noscript>
+  <div class="mobile-dock">
+    <div class="dock-status">
+      <span class="status-dot"></span> Ready
+    </div>
+    <a href="mailto:contact@redclx-defense.com" class="dock-btn">
+      REQUEST POC
+    </a>
+  </div>
 
   <script>
-    // JS Logic Preserved (same behavior)
-    document.getElementById("y").textContent = new Date().getFullYear();
-
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const isMobile =
-      window.matchMedia("(pointer: coarse)").matches ||
-      window.matchMedia("(max-width: 520px)").matches;
-
-    const root = document.documentElement;
-    if (isMobile) root.classList.add("is-mobile");
-
-    // =========================
-    // GLOBAL FX VARS
-    // =========================
-    (() => {
-      if (reduceMotion) return;
-
-      if (isMobile) {
-        root.style.setProperty("--mx", `${window.innerWidth * 0.55}px`);
-        root.style.setProperty("--my", `${window.innerHeight * 0.22}px`);
-        root.style.setProperty("--nx", "0");
-        root.style.setProperty("--ny", "0");
-        return;
-      }
-
-      let tx = window.innerWidth * 0.55;
-      let ty = window.innerHeight * 0.22;
-      let cx = tx, cy = ty;
-      let raf = 0;
-
-      const apply = () => {
-        raf = 0;
-        cx += (tx - cx) * 0.18;
-        cy += (ty - cy) * 0.18;
-
-        root.style.setProperty("--mx", `${cx.toFixed(1)}px`);
-        root.style.setProperty("--my", `${cy.toFixed(1)}px`);
-
-        const nx = (cx / Math.max(1, window.innerWidth)) - 0.5;
-        const ny = (cy / Math.max(1, window.innerHeight)) - 0.5;
-        root.style.setProperty("--nx", nx.toFixed(3));
-        root.style.setProperty("--ny", ny.toFixed(3));
-      };
-
-      const request = () => {
-        if (!raf) raf = requestAnimationFrame(apply);
-      };
-
-      window.addEventListener("pointermove", (e) => {
-        tx = e.clientX; ty = e.clientY;
-        request();
-      }, { passive: true });
-
-      window.addEventListener("touchstart", (e) => {
-        if (!e.touches || !e.touches[0]) return;
-        tx = e.touches[0].clientX;
-        ty = e.touches[0].clientY;
-        request();
-      }, { passive: true });
-
-      window.addEventListener("resize", () => {
-        tx = window.innerWidth * 0.55;
-        ty = window.innerHeight * 0.22;
-        request();
+    // Reveal Animation
+    const reveals = document.querySelectorAll("[data-reveal]");
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if(e.isIntersecting) e.target.classList.add("active");
       });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
 
-      request();
-    })();
-
-    // Chapter highlight
-    const chapterLinks = Array.from(document.querySelectorAll(".chapter"));
-    const scenes = Array.from(document.querySelectorAll("[data-scene]"));
-
-    const setActive = (id) => {
-      chapterLinks.forEach(a => a.classList.toggle("is-active", a.dataset.target === id));
-      scenes.forEach(s => s.classList.toggle("is-current", s.dataset.scene === id));
-    };
-
-    const io = new IntersectionObserver((entries) => {
-      const visible = entries
-        .filter(e => e.isIntersecting)
-        .sort((a,b) => (b.intersectionRatio - a.intersectionRatio))[0];
-      if (visible) setActive(visible.target.dataset.scene);
-    }, { threshold: [0.35, 0.55, 0.7] });
-
-    scenes.forEach(s => io.observe(s));
-    setActive("a");
-
-    // Topbar settle
-    (() => {
-      const topbar = document.querySelector(".topbar");
-      if (!topbar) return;
-      const onScroll = () => topbar.classList.toggle("is-scrolled", window.scrollY > 60);
-      onScroll();
-      window.addEventListener("scroll", onScroll, { passive: true });
-    })();
-
-    // =========================
-    // Reveal
-    // =========================
-    (() => {
-      if (reduceMotion) return;
-
-      const els = Array.from(document.querySelectorAll("[data-reveal]"));
-
-      const staggers = Array.from(document.querySelectorAll("[data-stagger]"));
-      staggers.forEach(container => {
-        const step = parseInt(container.dataset.stagger || "70", 10);
-        const children = Array.from(container.children);
-        children.forEach((ch, i) => {
-          if (!ch.hasAttribute("data-reveal")) return;
-          ch.style.transitionDelay = `${i * step}ms`;
-        });
-      });
-
-      const rio = new IntersectionObserver((entries) => {
-        entries.forEach(e => {
-          const once = e.target.hasAttribute("data-once");
-          if (e.isIntersecting) e.target.classList.add("is-inview");
-          else if (!once) e.target.classList.remove("is-inview");
-        });
-      }, {
-        threshold: [0, 0.12, 0.2],
-        rootMargin: "0px 0px -12% 0px"
-      });
-
-      els.forEach(el => {
-        const d = el.dataset.delay ? parseInt(el.dataset.delay, 10) : 0;
-        if (d) el.style.transitionDelay = `${d}ms`;
-        rio.observe(el);
-      });
-    })();
-
-    // Parallax
-    (() => {
-      if (reduceMotion || isMobile) return;
-
-      const frames = Array.from(document.querySelectorAll(".ui-frame[data-parallax]"));
-      if (!frames.length) return;
-
-      let ticking = false;
-
-      const update = () => {
-        ticking = false;
-        const vh = window.innerHeight || 800;
-
-        frames.forEach(frame => {
-          const speed = parseFloat(frame.dataset.parallax || "0.18");
-          const range = parseFloat(frame.dataset.range || "70");
-          const r = frame.getBoundingClientRect();
-
-          if (r.bottom < -160 || r.top > vh + 160) return;
-
-          const center = r.top + r.height / 2;
-          const delta = (center - vh / 2) / (vh / 2);
-          const y = (-delta) * range * speed;
-
-          frame.style.setProperty("--py", `${y.toFixed(2)}px`);
-        });
-      };
-
-      const onScroll = () => {
-        if (!ticking) {
-          ticking = true;
-          requestAnimationFrame(update);
+    // PC Rail Active State
+    const sections = document.querySelectorAll("section[id]");
+    const railLinks = document.querySelectorAll(".rail-links a");
+    const railObs = new IntersectionObserver((entries)=>{
+      entries.forEach(e => {
+        if(e.isIntersecting && e.intersectionRatio > 0.3){
+          railLinks.forEach(link => {
+            link.classList.toggle("active", link.getAttribute("href") === `#${e.target.id}`);
+          });
         }
-      };
-
-      update();
-      window.addEventListener("scroll", onScroll, { passive: true });
-      window.addEventListener("resize", onScroll);
-    })();
-
-    // PRODUCT Sticky Crossfade + burst
-    (() => {
-      if (isMobile) return;  // ✅ 모바일에서는 인라인 UI만 사용
-
-      const steps = Array.from(document.querySelectorAll(".pstep"));
-      const visuals = Array.from(document.querySelectorAll(".pvisual"));
-      const caps = Array.from(document.querySelectorAll(".pcap"));
-      const frame = document.querySelector(".sticky-frame");
-      if (!steps.length || !visuals.length) return;
-
-      let last = 0;
-
-      const burst = () => {
-        if (!frame) return;
-        frame.classList.remove("is-burst");
-        void frame.offsetWidth;
-        frame.classList.add("is-burst");
-        clearTimeout(frame._bt);
-        frame._bt = setTimeout(() => frame.classList.remove("is-burst"), 360);
-      };
-
-      const setActiveProduct = (i) => {
-        if (i !== last) burst();
-        last = i;
-
-        steps.forEach((s, idx) => s.classList.toggle("is-active", idx === i));
-        visuals.forEach((v, idx) => v.classList.toggle("is-active", idx === i));
-        caps.forEach((c, idx) => c.classList.toggle("is-active", idx === i));
-      };
-
-      setActiveProduct(0);
-
-      const pio = new IntersectionObserver((entries) => {
-        const visible = entries
-          .filter(e => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (!visible) return;
-        setActiveProduct(parseInt(visible.target.dataset.step || "0", 10));
-      }, {
-        threshold: [0.25, 0.4, 0.55, 0.7],
-        rootMargin: "-15% 0px -35% 0px"
       });
-
-      steps.forEach(s => pio.observe(s));
-    })();
+    }, {threshold: [0.3, 0.6]});
+    sections.forEach(s => railObs.observe(s));
   </script>
 </body>
 </html>
