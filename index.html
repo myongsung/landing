@@ -4,325 +4,725 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="format-detection" content="telephone=no" />
-  
-  <title>REDCLX | 규정준수 기반 차세대 드론 전술 운영체계 (DroneOS)</title>
-  <meta name="description" content="규정·데이터를 Cell로 통합하고 정책을 컴파일하여, 드론 임무 중 발생하는 규정 위반을 반례 기반으로 자동 수리하고 증거를 남기는 차세대 전술 운영체계입니다." />
-  <meta name="keywords" content="드론전술, DroneOS, 산불감시드론, 규정준수, Genocell, 전술운영체계, 군용드론, REDCLX, 안티드론, 드론관제" />
+
+  <!-- Primary SEO -->
+  <title>REDCLX 레드클렉스| 규정준수 기반 전술 생성·검증 OS</title>
+  <meta name="description" content="Policy Genome Engine(PGE): Genocell Ontology 기반 규정준수 자동화 모듈. 정책 제약식 컴파일 + 반례 기반 그래프 수리로 드론 임무 전술을 생성·검증하고, 모든 결정을 감사(Audit) 증거로 남깁니다." />
+  <meta name="keywords" content="Policy Genome Engine,PGE,Genocell Ontology,DroneOS,규정준수,정책 컴파일,반례 기반 수리,전술 생성,전술 검증,감사 패키지,드론관제,방산,군용드론,안티드론,재난감시" />
   <meta name="author" content="REDCLX Defense Systems" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
   <meta name="theme-color" content="#0b0c15" />
+
+  <!-- Canonical (실제 배포 도메인으로 꼭 교체) -->
   <link rel="canonical" href="https://www.redclexperice.com/" />
-  
+
+  <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.redclexperice.com/" />
-  <meta property="og:title" content="REDCLX | 규정준수 전술 생성·검증 DroneOS" />
-  <meta property="og:description" content="규정이 곧 전술이 됩니다. 임무 중 위반을 스스로 수리하고 모든 결정을 근거로 남기는 차세대 드론 운영체계." />
+  <meta property="og:title" content="REDCLX | Policy Genome Engine (PGE)" />
+  <meta property="og:description" content="규정이 곧 전술이 됩니다. 정책 제약식 컴파일 + 반례 기반 그래프 수리로 규정준수 전술을 생성·검증하고, 근거를 남깁니다." />
   <meta property="og:image" content="https://www.redclexperice.com/assets/og-image.png" />
+  <meta property="og:locale" content="ko_KR" />
 
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="REDCLX DroneOS">
-  <meta name="twitter:description" content="규정준수 기반 드론 전술 자동 생성 및 검증 시스템">
-  <meta name="twitter:image" content="https://www.redclexperice.com/assets/og-image.png">
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="REDCLX | Policy Genome Engine (PGE)" />
+  <meta name="twitter:description" content="Genocell Ontology 기반 규정준수 자동화 모듈 — 컴파일·수리·감사로 전술을 증명합니다." />
+  <meta name="twitter:image" content="https://www.redclexperice.com/assets/og-image.png" />
 
+  <!-- Favicons (선택: 파일 준비되면 연결) -->
+  <link rel="icon" href="/assets/favicon.ico" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css" />
+
+  <!-- Structured Data: Organization + WebSite + SoftwareApplication + FAQPage -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "REDCLX Genocell DroneOS",
-    "applicationCategory": "Defense & Safety Application",
-    "operatingSystem": "Genocell Runtime",
-    "description": "Genocell Ontology 기반의 드론 전술 생성 및 검증 운영체계. 규정 위반 시 반례 기반 자동 수리 기능 제공.",
-    "offers": {
-      "@type": "Offer",
-      "availability": "https://schema.org/InStock"
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "REDCLX Defense Systems"
-    }
+    "@graph": [
+      {
+        "@type": "Organization",
+        "name": "REDCLX Defense Systems",
+        "url": "https://www.redclexperice.com/",
+        "logo": "https://www.redclexperice.com/assets/og-image.png"
+      },
+      {
+        "@type": "WebSite",
+        "name": "REDCLX",
+        "url": "https://www.redclexperice.com/",
+        "inLanguage": "ko-KR"
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "Policy Genome Engine (PGE)",
+        "applicationCategory": "Defense & Safety Application",
+        "operatingSystem": "Genocell Runtime",
+        "description": "Genocell Ontology 기반 규정준수 자동화 모듈. 정책 제약식 컴파일과 반례 기반 그래프 수리로 전술을 생성·검증하고 Audit Pack을 생성한다.",
+        "publisher": {
+          "@type": "Organization",
+          "name": "REDCLX Defense Systems"
+        },
+        "offers": {
+          "@type": "Offer",
+          "availability": "https://schema.org/InStock"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "PGE(Policy Genome Engine)는 무엇인가요?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "PGE는 Genocell Ontology 기반 규정준수 자동화 모듈로, 정책 제약식을 컴파일해 전술 그래프를 생성·검증하고 위반(반례) 발생 시 최소 수정(Diff)로 자동 수리하며 감사(Audit) 근거를 남깁니다."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Genocell Ontology는 어떤 방식으로 데이터를 처리하나요?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "문서·규정·센서·공개 수치·생성 데이터 등 이질 데이터를 Cell 단위로 관리하고, CORE/DIMENSIONS/ACTOR/REPAIR 구조로 의미·연결·권한·자가수리 규칙을 포함합니다."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "반례 기반 그래프 수리란 무엇인가요?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "검증 과정에서 규정 위반이 발견되면 해당 위반을 반례로 삼아, 전체 계획을 무너뜨리지 않고 최소 변경량(Diff)으로 전술 그래프를 자동 교정하는 방식입니다."
+            }
+          }
+        ]
+      }
+    ]
   }
   </script>
-
-  <link rel="stylesheet" href="./styles.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-  <div class="bg-layer"></div>
-  
-  <nav class="nav-rail pc-only">
-    <div class="rail-logo">R</div>
+  <a class="skip" href="#main">본문 바로가기</a>
+
+  <!-- Ambient background -->
+  <div class="bg">
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-a"></div>
+    <div class="bg-glow bg-glow-b"></div>
+    <div class="bg-noise" aria-hidden="true"></div>
+  </div>
+
+  <!-- Left rail (PC) -->
+  <nav class="rail pc-only" aria-label="섹션 탐색">
+    <div class="rail-brand" aria-label="REDCLX">
+      <span class="rail-mark">R</span>
+    </div>
     <div class="rail-links">
-      <a href="#hero" class="active" title="Home">00</a>
-      <a href="#imperative" title="Problem">01</a>
-      <a href="#engine" title="Genocell">02</a>
-      <a href="#workflow" title="Workflow">03</a>
-      <a href="#scenarios" title="Ops">04</a>
+      <a href="#hero" class="active" data-rail="hero" title="Home"><span>00</span></a>
+      <a href="#pge" data-rail="pge" title="PGE"><span>A</span></a>
+      <a href="#genocell" data-rail="genocell" title="Genocell"><span>B</span></a>
+      <a href="#repair" data-rail="repair" title="Auto-Repair"><span>C</span></a>
+      <a href="#missions" data-rail="missions" title="Missions"><span>D</span></a>
+      <a href="#faq" data-rail="faq" title="FAQ"><span>?</span></a>
+    </div>
+    <div class="rail-foot">
+      <span class="rail-status"><i class="dot"></i> OPERATIONAL</span>
     </div>
   </nav>
 
-  <header class="topbar">
-    <div class="brand">
-      <span class="brand-icon"></span>
-      <span class="brand-txt">REDCLX <span class="ver">OS v2.4</span></span>
+  <!-- Topbar -->
+  <header class="topbar" role="banner">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true"></span>
+        <span class="brand-name">REDCLX</span>
+        <span class="brand-sub">PGE / OS <span class="mono">v2.4</span></span>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="status-badge pc-only" aria-label="시스템 상태">
+          <span class="dot"></span> SYSTEM OPERATIONAL
+        </div>
+
+        <button class="menu-btn mob-only" id="menuBtn" aria-label="메뉴 열기" aria-expanded="false" aria-controls="mobileMenu">
+          <span class="menu-bars" aria-hidden="true"></span>
+        </button>
+
+        <a class="btn btn-ghost pc-only" href="#pge" aria-label="PGE 개요로 이동">SYSTEM OVERVIEW</a>
+        <a class="btn btn-solid pc-only" href="mailto:contact@redclx-defense.com?subject=REDCLX%20PGE%20Demo%20Request" aria-label="데모 요청 이메일 보내기">
+          REQUEST DEMO
+        </a>
+      </div>
     </div>
-    <div class="status-badge pc-only">
-      <span class="dot"></span> SYSTEM OPERATIONAL
-    </div>
+
+    <!-- Mobile menu -->
+    <nav class="mobile-menu mob-only" id="mobileMenu" aria-label="모바일 메뉴">
+      <a href="#pge" class="m-item">A. Policy Genome Engine</a>
+      <a href="#genocell" class="m-item">B. Genocell Ontology Runtime</a>
+      <a href="#repair" class="m-item">C. Counterexample Auto-Repair</a>
+      <a href="#missions" class="m-item">D. Mission Ready</a>
+      <a href="#faq" class="m-item">FAQ</a>
+      <a href="mailto:contact@redclx-defense.com?subject=REDCLX%20PGE%20Demo%20Request" class="m-cta">REQUEST DEMO</a>
+    </nav>
   </header>
 
-  <main>
-    <section id="hero" class="hero-section">
-      <div class="hero-spotlight"></div>
-      
-      <div class="container hero-container">
-        <div class="hero-content">
-          <div class="label-badge" data-reveal="fade">규정준수 기반 차세대 드론 전술 운영체계</div>
-          
-          <h1 class="hero-title" data-reveal="fade-up">
-            TACTICS,<br>
-            UNDER <span class="highlight">POLICY.</span>
+  <main id="main">
+    <!-- HERO -->
+    <section id="hero" class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy" data-reveal="fade-up">
+          <div class="kicker">
+            <span class="pill mono">PRIORITY // 01</span>
+            <span class="pill mono pill-accent">POLICY GENOME ENGINE (PGE)</span>
+          </div>
+
+          <h1 class="hero-title">
+            <span class="hero-title-top">TACTICS,</span>
+            <span class="hero-title-mid">COMPILED</span>
+            <span class="hero-title-bot">UNDER <span class="accent">POLICY</span>.</span>
           </h1>
-          
-          <p class="hero-lead" data-reveal="fade-up" data-delay="100">
-            <strong>규정이 곧 전술이 됩니다.</strong><br>
-            Genocell Ontology 기반으로 임무 경로를 생성하고,<br class="mob-hide">
-            위반을 스스로 <span class="text-white">수리(Repair)</span>하며,<br class="mob-hide">
-            모든 결정을 <span class="text-white">근거(Audit)</span>로 남기는 차세대 운영체계.
+
+          <!-- 캐치프라이즈: 아주 과감하고 창의적으로 강조 -->
+          <div class="catchphrase" data-reveal="fade-up" data-delay="120" aria-label="캐치프라이즈">
+            <div class="catchphrase-head mono">MISSION ORDER / CATCH PHRASE</div>
+            <div class="catchphrase-body">
+              <span class="cp-small">선생님들을 위한</span>
+              <span class="cp-big">가장 강력한</span>
+              <span class="cp-big cp-accent">방어체계</span>
+            </div>
+            <div class="catchphrase-foot mono">
+              POLICY → COMPILE → REPAIR → AUDIT
+            </div>
+          </div>
+
+          <p class="hero-lead" data-reveal="fade-up" data-delay="200">
+            <strong class="white">PGE는 “규정이 곧 전술”이 되도록 만드는 컴플라이언스 엔진</strong>입니다.<br />
+            Genocell Ontology로 모든 데이터를 <span class="white">Cell</span>로 통합하고,
+            정책 번들을 <span class="white">제약식</span>으로 컴파일하여,
+            임무 중 위반을 <span class="white">반례 기반 Auto-Repair</span>로 교정합니다.<br />
+            그리고 모든 판단을 <span class="white">Audit Pack</span>으로 남겨 책임을 “증명 가능”하게 만듭니다.
           </p>
 
-          <div class="hero-btns" data-reveal="fade-up" data-delay="200">
-            <a href="#imperative" class="btn-primary">SYSTEM OVERVIEW</a>
-            <a href="mailto:contact@redclx-defense.com" class="btn-secondary">REQUEST DEMO</a>
+          <div class="hero-ctas" data-reveal="fade-up" data-delay="260">
+            <a class="btn btn-solid" href="#pge">SYSTEM OVERVIEW</a>
+            <a class="btn btn-ghost" href="mailto:contact@redclx-defense.com?subject=REDCLX%20PGE%20Demo%20Request">REQUEST DEMO</a>
+          </div>
+
+          <div class="hero-metrics" data-reveal="fade-up" data-delay="320">
+            <div class="metric">
+              <div class="m-val mono">AUTO</div>
+              <div class="m-key mono">REPAIR LOOP</div>
+            </div>
+            <div class="metric-line"></div>
+            <div class="metric">
+              <div class="m-val mono accent">COMPILE</div>
+              <div class="m-key mono">POLICY → CONSTRAINTS</div>
+            </div>
+            <div class="metric-line"></div>
+            <div class="metric">
+              <div class="m-val mono">AUDIT</div>
+              <div class="m-key mono">EVIDENCE PACK</div>
+            </div>
           </div>
         </div>
 
-        <div class="hero-metrics" data-reveal="fade-up" data-delay="300">
-          <div class="metric-item">
-            <span class="m-val">AUTO</span>
-            <span class="m-key">REPAIR LOOP</span>
+        <!-- Right: “Console frame” -->
+        <aside class="hero-console" data-reveal="fade-up" data-delay="220" aria-label="PGE 콘솔 프리뷰">
+          <div class="console-top">
+            <div class="console-dots" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="console-title mono">PGE // POLICY GENOME ENGINE</div>
+            <div class="console-chip mono">LIVE</div>
           </div>
-          <div class="metric-line"></div>
-          <div class="metric-item">
-            <span class="m-val text-accent">100%</span>
-            <span class="m-key">COMPLIANCE</span>
+
+          <div class="console-body">
+            <div class="console-card">
+              <div class="console-card-title mono">RUN / COMPILE</div>
+              <div class="console-lines mono">
+                <div>> Loading policy-genome.bundle … <span class="ok">OK</span></div>
+                <div>> Parsing regulations / SOP / ROE … <span class="ok">OK</span></div>
+                <div>> Compiling constraints … <span class="ok">OK</span></div>
+                <div>> Generating action-graph … <span class="ok">OK</span></div>
+              </div>
+            </div>
+
+            <div class="console-card">
+              <div class="console-card-title mono">VERIFY / COUNTEREXAMPLE</div>
+              <div class="console-lines mono">
+                <div>> Simulation step: 128</div>
+                <div>> Counterexample detected: <span class="bad">NO-FLY ZONE</span></div>
+                <div>> Minimal diff repair … <span class="ok">APPLIED</span></div>
+                <div>> Re-verify … <span class="ok">PASSED</span></div>
+              </div>
+            </div>
+
+            <div class="console-card">
+              <div class="console-card-title mono">AUDIT PACK</div>
+              <div class="console-lines mono">
+                <div>> Evidence chain: <span class="ok">SEALED</span></div>
+                <div>> Hash: <span class="hash">0x8f2c…d91a</span></div>
+                <div>> Export: <span class="ok">READY</span></div>
+              </div>
+            </div>
+
+            <div class="console-footer">
+              <span class="mono dim">“규정 준수”는 체크리스트가 아니라, 실행 가능한 엔진이다.</span>
+            </div>
           </div>
-          <div class="metric-line"></div>
-          <div class="metric-item">
-            <span class="m-val">ZERO</span>
-            <span class="m-key">LIABILITY</span>
-          </div>
-        </div>
+        </aside>
+      </div>
+
+      <div class="scroll-hint mono" aria-hidden="true">
+        <span class="scroll-dot"></span> SCROLL
       </div>
     </section>
 
-    <section id="imperative" class="section">
+    <!-- A: PGE -->
+    <section id="pge" class="section">
       <div class="container">
-        <div class="sec-head">
-          <span class="sec-idx">01 // THE IMPERATIVE</span>
-          <h2 class="sec-title">The Compliance Gap</h2>
-        </div>
-        
-        <div class="grid-2 align-start">
-          <div class="text-block" data-reveal="fade-up">
-            <p class="lead-p">
-              드론 임무는 복잡한 <strong>규정(공역, 보안, 교전수칙)</strong>과 예측 불가능한 <strong>현장 데이터</strong>가 충돌하는 영역입니다.
-            </p>
+        <header class="sec-head">
+          <div class="sec-kicker mono">A // PRODUCT</div>
+          <h2 class="sec-title">Policy Genome Engine (PGE)</h2>
+          <p class="sec-desc">
+            Genocell Ontology 위에서 동작하는 <span class="white">규정준수 자동화 코어</span> —
+            정책을 “컴파일”하고, 위반을 “수리”하고, 결과를 “증명”합니다.
+          </p>
+        </header>
+
+        <div class="cards-3" data-stagger>
+          <article class="card" data-reveal="fade-up">
+            <div class="card-tag mono">01 / COMPILE</div>
+            <h3 class="card-title">Policy → Constraints</h3>
             <p>
-              기존 시스템은 '계획 수립'과 '규정 준수 확인'이 분리되어 있어, 급박한 현장에서 의사결정 근거가 불명확해지고 사고 발생 시 책임 소재가 커지는 구조적 문제를 안고 있습니다.
+              기관별 규정·교전수칙·보안지침을 <span class="white">정책 번들(Genome)</span>로 구조화하고,
+              임무 엔진이 실행 가능한 <span class="white">제약식</span>으로 컴파일합니다.
             </p>
-          </div>
-
-          <div class="visual-stack" data-stagger>
-            <div class="compliance-visual" data-reveal="fade-up">
-              <img src="assets/dronimg.png" alt="산불 현장에서 다수의 전술 드론이 비행 중이며, 증강현실(AR) 오버레이로 규정 위반 구역과 전술 데이터가 표시된 화면" loading="lazy">
-              <div class="visual-overlay"></div> </div>
-
-            <div class="info-card warning" data-reveal="fade-up">
-              <div class="card-icon">⚠️</div>
-              <h3>Mission Critical Gap</h3>
-              <p>다양한 기관의 상충되는 요구사항을 실시간으로 해결하고, 모든 행동에 대한 증거 기반 감사(Audit)가 가능한 시스템이 부재합니다.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="engine" class="section bg-dim">
-      <div class="container">
-        <div class="sec-head">
-          <span class="sec-idx">02 // CORE ENGINE</span>
-          <h2 class="sec-title">Genocell Ontology</h2>
-        </div>
-
-        <div class="grid-2" data-stagger>
-          <div class="tech-card" data-reveal="fade-up">
-            <div class="tc-head">
-              <span class="tc-icon">C</span>
-              <h3>Cell Structure</h3>
-            </div>
-            <ul class="spec-list">
-              <li><strong>CORE:</strong> 규정 텍스트, 센서 수치 등 데이터의 본질</li>
-              <li><strong>DIMENSIONS:</strong> 공간/시간/조항 간의 연결 고리</li>
-              <li><strong>ACTOR:</strong> 접근 및 실행 권한을 가진 주체</li>
-              <li><strong>REPAIR:</strong> 위반 발생 시 자가 수리 규칙</li>
+            <ul class="bullets">
+              <li>규정 텍스트/문서/지침 → 정책 그래프</li>
+              <li>경계조건/금지구역/권한 → 수학적 제약</li>
+              <li>실시간 센서·상황 데이터와 결합</li>
             </ul>
-          </div>
-          
-          <div class="tech-card" data-reveal="fade-up">
-            <div class="tc-head">
-              <span class="tc-icon">DNA</span>
-              <h3>DNA Blueprint</h3>
-            </div>
-            <p class="tc-desc">
-              전방배치 엔지니어(FDSE)가 설계한 스키마를 통해,<br>
-              이질적인 데이터들이 <strong>'살아있는 연산 그래프'</strong>로 동작합니다.
+          </article>
+
+          <article class="card card-accent" data-reveal="fade-up" data-delay="80">
+            <div class="card-tag mono">02 / REPAIR</div>
+            <h3 class="card-title">Counterexample Auto-Repair</h3>
+            <p>
+              검증 중 위반(반례)이 발생하면, 전체 계획을 폐기하지 않고
+              <span class="white">최소 수정(Diff)</span>으로 전술 그래프를 자동 교정합니다.
             </p>
-            <div class="code-block">
-              > Generating connectome... OK<br>
-              > Policy constraints loaded.
+            <ul class="bullets">
+              <li>반례 기반 위반 원인 추적</li>
+              <li>최소 변경량으로 경로/행동 재구성</li>
+              <li>재검증 루프 자동 수행</li>
+            </ul>
+          </article>
+
+          <article class="card" data-reveal="fade-up" data-delay="140">
+            <div class="card-tag mono">03 / AUDIT</div>
+            <h3 class="card-title">Audit Pack Evidence</h3>
+            <p>
+              최종 전술 실행 후, 판단 근거·교정 이력·입출력 데이터를 묶어
+              <span class="white">감사(Audit) 증거 패키지</span>로 생성합니다.
+            </p>
+            <ul class="bullets">
+              <li>결정 근거 / 정책 조항 매핑</li>
+              <li>교정 내역(변경 diff) 추적</li>
+              <li>검증 결과/시뮬 로그 보존</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="wide-panel" data-reveal="fade-up">
+          <div class="wide-left">
+            <div class="wide-kicker mono">WHY IT HITS HARD</div>
+            <h3 class="wide-title">“규정 준수”를 <span class="accent">실행 가능한 전술 엔진</span>으로 바꾼다</h3>
+            <p class="wide-desc">
+              계획-검증-수정이 분리된 기존 구조에서는, 급박한 현장에서 책임과 근거가 붕괴합니다.
+              PGE는 계획 자체가 규정을 내장하도록 만들고, 위반을 시스템이 스스로 교정하며,
+              그 모든 과정을 <span class="white">증거로 남깁니다.</span>
+            </p>
+          </div>
+
+          <div class="wide-right">
+            <div class="mini-console mono" aria-hidden="true">
+              <div class="mini-line"><span class="dim">policy.bundle</span> → constraints.compile()</div>
+              <div class="mini-line">actionGraph.generate()</div>
+              <div class="mini-line"><span class="bad">counterexample</span> → repair.diff()</div>
+              <div class="mini-line"><span class="ok">verify.pass</span> → audit.pack()</div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="workflow" class="section">
+    <!-- B: Genocell Ontology -->
+    <section id="genocell" class="section section-dim">
       <div class="container">
-        <div class="sec-head">
-          <span class="sec-idx">03 // KILL CHAIN</span>
-          <h2 class="sec-title">Auto-Repair Loop</h2>
+        <header class="sec-head">
+          <div class="sec-kicker mono">B // CORE TECH</div>
+          <h2 class="sec-title">Genocell Ontology Runtime</h2>
+          <p class="sec-desc">
+            규정·지침·문서·센서·공개 수치·생성 데이터… 전부를 <span class="white">Cell</span>로 관리해
+            <span class="white">유기적 연결</span>과 <span class="white">융합 계산</span>이 가능한 온톨로지 런타임.
+          </p>
+        </header>
+
+        <div class="grid-2">
+          <article class="card" data-reveal="fade-up">
+            <div class="card-tag mono">CELL MODEL</div>
+            <h3 class="card-title">모든 것을 “Cell 단위”로</h3>
+            <p>
+              각종 데이터(규정/문서/센서/수치/생성물)를 하나의 Cell로 통합 관리하고,
+              연결 가능한 연산 그래프로 확장합니다.
+            </p>
+
+            <div class="cell-diagram" aria-label="Cell 구조 다이어그램">
+              <div class="cell">
+                <div class="cell-head mono">CELL</div>
+                <div class="cell-grid">
+                  <div class="cell-box">
+                    <div class="cell-k mono">CORE</div>
+                    <div class="cell-v">내용/종류</div>
+                  </div>
+                  <div class="cell-box">
+                    <div class="cell-k mono">DIMENSIONS</div>
+                    <div class="cell-v">연결고리</div>
+                  </div>
+                  <div class="cell-box">
+                    <div class="cell-k mono">ACTOR</div>
+                    <div class="cell-v">역할/권한</div>
+                  </div>
+                  <div class="cell-box cell-accent">
+                    <div class="cell-k mono">REPAIR</div>
+                    <div class="cell-v">자가 수리</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" data-reveal="fade-up" data-delay="100">
+            <div class="card-tag mono">DNA BLUEPRINT</div>
+            <h3 class="card-title">FDSE가 그리는 DNA 설계도</h3>
+            <p>
+              Cell의 유기체적 연결을 위해 필요한 <span class="white">DNA 정보</span>는
+              FDSE(전방배치 엔지니어)가 현장 요구를 반영해 설계합니다.
+              그 결과, 이질 데이터가 <span class="white">살아있는 연산 그래프</span>로 동작합니다.
+            </p>
+
+            <div class="dna-panel mono" aria-hidden="true">
+              <div class="dna-row"><span class="dim">FDSE:</span> blueprint.compose()</div>
+              <div class="dna-row"><span class="dim">DNA:</span> link(space, time, clause)</div>
+              <div class="dna-row"><span class="dim">GRAPH:</span> fuse(data) → compute()</div>
+            </div>
+
+            <div class="note">
+              <span class="note-dot"></span>
+              <span>핵심: 연결(온톨로지)이 곧 계산(전술)로 이어지게 만드는 런타임</span>
+            </div>
+          </article>
         </div>
-        
-        <div class="process-list">
-          <div class="p-item" data-reveal="fade-up">
-            <div class="p-num">01</div>
-            <div class="p-content">
-              <h3>Ingest & Compile</h3>
-              <p>데이터 Cell 통합 및 정책 번들을 실행 가능한 제약식으로 컴파일.</p>
+      </div>
+    </section>
+
+    <!-- C: Compile + Verify + Repair -->
+    <section id="repair" class="section">
+      <div class="container">
+        <header class="sec-head">
+          <div class="sec-kicker mono">C // METHOD</div>
+          <h2 class="sec-title">정책 제약식 컴파일 + 반례 기반 그래프 수리</h2>
+          <p class="sec-desc">
+            유전체(Genome) 정책 번들을 내장한 온톨로지 런타임 위에서,
+            최종 <span class="white">Action Graph</span>를 생성하고 검증·최적화합니다.
+          </p>
+        </header>
+
+        <div class="pipeline" data-stagger>
+          <div class="step" data-reveal="fade-up">
+            <div class="step-num mono">01</div>
+            <div class="step-body">
+              <h3>Ingest & Normalize</h3>
+              <p>규정/문서/센서/수치/생성 데이터를 Cell로 정규화하고 온톨로지에 연결합니다.</p>
+              <div class="step-chip mono">DATA → CELL</div>
             </div>
           </div>
-          <div class="p-item" data-reveal="fade-up">
-            <div class="p-num">02</div>
-            <div class="p-content">
+
+          <div class="step" data-reveal="fade-up" data-delay="70">
+            <div class="step-num mono">02</div>
+            <div class="step-body">
+              <h3>Compile Constraints</h3>
+              <p>정책 번들(Genome)을 실행 가능한 제약식으로 컴파일해, 전술 생성 엔진에 주입합니다.</p>
+              <div class="step-chip mono">POLICY → CONSTRAINTS</div>
+            </div>
+          </div>
+
+          <div class="step" data-reveal="fade-up" data-delay="140">
+            <div class="step-num mono">03</div>
+            <div class="step-body">
               <h3>Generate & Verify</h3>
-              <p>임무 목적과 제약식을 결합해 전술 그래프 생성 및 시뮬레이션 검증.</p>
+              <p>임무 목적 + 제약식을 결합해 전술 그래프를 생성하고, 시뮬레이션으로 위반을 탐지합니다.</p>
+              <div class="step-chip mono">GRAPH → VERIFY</div>
             </div>
           </div>
-          <div class="p-item highlight" data-reveal="fade-up">
-            <div class="p-num">03</div>
-            <div class="p-content">
-              <h3>Auto-Repair (Core)</h3>
-              <p>반례(위반) 발생 시, 최소 수정(Diff) 알고리즘으로 <strong>그래프 자동 수리</strong>.</p>
+
+          <div class="step step-accent" data-reveal="fade-up" data-delay="210">
+            <div class="step-num mono">04</div>
+            <div class="step-body">
+              <h3>Counterexample Auto-Repair</h3>
+              <p>반례(위반)를 입력으로 받아, 최소 수정(Diff) 알고리즘으로 그래프를 자동 수리합니다.</p>
+              <div class="step-chip mono">COUNTEREXAMPLE → DIFF</div>
             </div>
           </div>
-          <div class="p-item" data-reveal="fade-up">
-            <div class="p-num">04</div>
-            <div class="p-content">
+
+          <div class="step" data-reveal="fade-up" data-delay="280">
+            <div class="step-num mono">05</div>
+            <div class="step-body">
               <h3>Audit Pack</h3>
-              <p>최종 전술 실행 후 판단 근거와 교정 이력을 담은 증거 패키지 생성.</p>
+              <p>최종 전술 실행 결과를 근거 중심으로 봉인(Seal)해 감사/보고/책임 소재를 명확히 합니다.</p>
+              <div class="step-chip mono">AUDIT → EVIDENCE</div>
             </div>
+          </div>
+        </div>
+
+        <div class="proof-panel" data-reveal="fade-up">
+          <div class="proof-left">
+            <h3 class="proof-title">“수정 가능”이 아니라, <span class="accent">증명 가능</span>해야 합니다.</h3>
+            <p class="proof-desc">
+              PGE는 위반이 발생해도 즉흥적 판단으로 덮지 않습니다.
+              위반을 반례로 기록하고, 어떤 변경이 왜 적용되었는지 추적 가능하게 남깁니다.
+            </p>
+          </div>
+
+          <div class="proof-right mono" aria-hidden="true">
+            <div class="proof-line"><span class="dim">violation:</span> clause_12.4 / no-fly</div>
+            <div class="proof-line"><span class="dim">repair:</span> reroute(Δ=+2.1km)</div>
+            <div class="proof-line"><span class="dim">verify:</span> pass / risk=low</div>
+            <div class="proof-line"><span class="dim">audit:</span> sealed / hash=0x…</div>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="scenarios" class="section bg-dim">
+    <!-- D: Missions -->
+    <section id="missions" class="section section-dim">
       <div class="container">
-        <div class="sec-head">
-          <span class="sec-idx">04 // FIELD OPERATIONS</span>
+        <header class="sec-head">
+          <div class="sec-kicker mono">D // FIELD OPS</div>
           <h2 class="sec-title">Mission Ready</h2>
+          <p class="sec-desc">
+            상충되는 규정과 예측 불가능한 현장 데이터를 <span class="white">실시간</span>으로 조정하고,
+            전술을 <span class="white">검증</span>하며 <span class="white">근거</span>를 남깁니다.
+          </p>
+        </header>
+
+        <div class="mission-grid" data-stagger>
+          <article class="mission" data-reveal="fade-up">
+            <div class="mission-top">
+              <span class="tag tag-red mono">DISASTER RESPONSE</span>
+              <span class="tag tag-gray mono">PGE ENABLED</span>
+            </div>
+            <h3>재난 감시 (산불/홍수)</h3>
+            <p>인구밀집/민감구역 회피, 통신 음영지역 우회, 임무 변경 시 반례 기반 자동 수리로 재경로화.</p>
+            <ul class="bullets">
+              <li>NO-FLY / 위험구역 즉시 반영</li>
+              <li>우회 경로 자동 생성 + 재검증</li>
+              <li>감사용 증거 패키지 생성</li>
+            </ul>
+          </article>
+
+          <article class="mission" data-reveal="fade-up" data-delay="80">
+            <div class="mission-top">
+              <span class="tag tag-blue mono">INFRASTRUCTURE</span>
+              <span class="tag tag-gray mono">AUDIT PACK</span>
+            </div>
+            <h3>국가 시설 방호 (댐/교량)</h3>
+            <p>보안 등급별 접근 이격거리 준수, 권한(Actor) 기반 실행 제한, 감사용 근거 영상·로그 봉인.</p>
+            <ul class="bullets">
+              <li>보안지침 → 제약식 컴파일</li>
+              <li>Actor 권한 모델 적용</li>
+              <li>영상/로그 증거 체인</li>
+            </ul>
+          </article>
+
+          <article class="mission" data-reveal="fade-up" data-delay="160">
+            <div class="mission-top">
+              <span class="tag tag-amber mono">AIRSPACE COMPLIANCE</span>
+              <span class="tag tag-gray mono">AUTO-REPAIR</span>
+            </div>
+            <h3>공역/규정 준수 전술 운용</h3>
+            <p>다중 기관 규정 상충 시, 우선순위 정책 번들로 컴파일하고 위반 반례를 기반으로 최소 변경 수리.</p>
+            <ul class="bullets">
+              <li>상충 규정 해결 룰 세트</li>
+              <li>위반 발생 시 diff 기반 교정</li>
+              <li>결정 근거 조항 매핑</li>
+            </ul>
+          </article>
         </div>
 
-        <div class="scenario-grid">
-          <div class="ops-card" data-reveal="fade-up">
-            <div class="ops-img img-disaster"></div>
-            <div class="ops-body">
-              <div class="tag red">DISASTER RESPONSE</div>
-              <h3>재난 감시 (산불/홍수)</h3>
-              <p>인구밀집/민감구역 회피, 통신 음영지역 우회 경로 자동 생성.</p>
-            </div>
+        <div class="cta-panel" data-reveal="fade-up">
+          <div class="cta-left">
+            <div class="cta-kicker mono">READY FOR POC</div>
+            <h3 class="cta-title">PGE를 임무 환경에 맞춰 구성해드립니다.</h3>
+            <p class="cta-desc">기관 규정/문서/센서 흐름을 기준으로 정책 번들과 DNA 설계도를 맞춤 구성하고, POC로 검증합니다.</p>
           </div>
-          <div class="ops-card" data-reveal="fade-up" data-delay="100">
-            <div class="ops-img img-defense"></div>
-            <div class="ops-body">
-              <div class="tag blue">INFRASTRUCTURE</div>
-              <h3>국가 시설 방호 (댐/교량)</h3>
-              <p>보안 등급별 접근 이격거리 준수 및 감사용 증거 영상 확보.</p>
-            </div>
+          <div class="cta-right">
+            <a class="btn btn-solid" href="mailto:contact@redclx-defense.com?subject=REDCLX%20PGE%20POC%20Request">REQUEST POC</a>
+            <a class="btn btn-ghost" href="#faq">READ FAQ</a>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section">
+    <!-- FAQ -->
+    <section id="faq" class="section">
       <div class="container">
-        <div class="sec-head">
-          <span class="sec-idx">05 // COMMAND ETHOS</span>
-          <h2 class="sec-title">Forged in Discipline</h2>
+        <header class="sec-head">
+          <div class="sec-kicker mono">FAQ // SEO BOOST</div>
+          <h2 class="sec-title">자주 묻는 질문</h2>
+        </header>
+
+        <div class="faq">
+          <details class="faq-item" data-reveal="fade-up">
+            <summary>Policy Genome Engine(PGE)의 핵심은 뭐예요?</summary>
+            <p>
+              정책 번들을 제약식으로 컴파일하고, 전술 그래프를 생성·검증하며,
+              위반이 발생하면 반례 기반으로 최소 수정(Diff) 자동 수리 후 재검증합니다.
+              마지막으로 Audit Pack으로 근거를 봉인합니다.
+            </p>
+          </details>
+
+          <details class="faq-item" data-reveal="fade-up" data-delay="60">
+            <summary>Genocell Ontology에서 말하는 Cell은 어떤 구조인가요?</summary>
+            <p>
+              Cell은 CORE(내용/종류), DIMENSIONS(연결고리), ACTOR(역할/권한), REPAIR(자가 수리)로 구성됩니다.
+              이 구조 덕분에 규정과 데이터가 “연결 가능한 계산 그래프”로 동작합니다.
+            </p>
+          </details>
+
+          <details class="faq-item" data-reveal="fade-up" data-delay="120">
+            <summary>FDSE의 역할(DNA 설계)은 구체적으로 뭔가요?</summary>
+            <p>
+              현장 요구를 반영해 어떤 데이터들이 어떤 조항·시간·공간·권한과 연결되는지 “DNA(연결 설계도)”를 정의합니다.
+              그 결과, 이질 데이터가 유기적으로 연결되어 융합 계산과 규정준수 검증이 가능해집니다.
+            </p>
+          </details>
         </div>
-        <div class="grid-3" data-stagger>
-          <div class="ethos-box" data-reveal="fade-up">
-            <h4>Interdisciplinary Rigor</h4>
-            <p>법학의 규범적 사고와 공학적 논리를 결합하여, 모호한 규정을 실행 가능한 코드로 번역합니다.</p>
+
+        <div class="final-footer" data-reveal="fade-up">
+          <div class="final-left">
+            <h3>SECURE THE FUTURE.</h3>
+            <p>규정으로 지휘하고, 근거로 증명하십시오.</p>
           </div>
-          <div class="ethos-box" data-reveal="fade-up">
-            <h4>Field-Proven</h4>
-            <p>실전 훈련 교관 경험을 바탕으로, 현장에서 즉시 작동하는 견고한 시스템을 설계합니다.</p>
-          </div>
-          <div class="ethos-box" data-reveal="fade-up">
-            <h4>Evidence-Based</h4>
-            <p>측정 가능하고 검증 가능한 결과(Evidence)만을 신뢰하는 R&D 문화를 지향합니다.</p>
+          <div class="final-right">
+            <a class="btn btn-solid" href="mailto:contact@redclx-defense.com?subject=REDCLX%20PGE%20Demo%20Request">REQUEST DEMO</a>
           </div>
         </div>
       </div>
     </section>
 
     <footer class="footer">
-      <div class="container">
-        <h2>SECURE THE FUTURE.</h2>
-        <p>규정으로 지휘하고, 근거로 증명하십시오.</p>
-        <div class="copy">
-          © 2026 REDCLX DEFENSE SYSTEMS.<br>
-          CLASSIFIED: UNRESTRICTED // VERSION 2.4.1
+      <div class="container footer-inner">
+        <div class="foot-left">
+          <div class="foot-brand mono">REDCLX DEFENSE SYSTEMS</div>
+          <div class="foot-copy mono">© 2026 REDCLX. CLASSIFIED: UNRESTRICTED // VERSION 2.4.1</div>
+        </div>
+        <div class="foot-right">
+          <a class="foot-link" href="#hero">TOP</a>
+          <a class="foot-link" href="mailto:contact@redclx-defense.com">CONTACT</a>
         </div>
       </div>
     </footer>
   </main>
 
-  <div class="mobile-dock">
-    <div class="dock-status">
-      <span class="status-dot"></span> Ready
+  <!-- Mobile dock -->
+  <div class="dock mob-only" role="region" aria-label="모바일 빠른 실행">
+    <div class="dock-left">
+      <span class="dock-dot" aria-hidden="true"></span>
+      <span class="dock-txt mono">Ready</span>
     </div>
-    <a href="mailto:contact@redclx-defense.com" class="dock-btn">
-      REQUEST POC
-    </a>
+    <a class="dock-btn" href="mailto:contact@redclx-defense.com?subject=REDCLX%20PGE%20POC%20Request">REQUEST POC</a>
   </div>
 
   <script>
-    // Reveal Animation
-    const reveals = document.querySelectorAll("[data-reveal]");
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if(e.isIntersecting) e.target.classList.add("active");
-      });
-    }, { threshold: 0.1 });
-    reveals.forEach(el => observer.observe(el));
+    // Respect reduced motion
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // PC Rail Active State
+    // Reveal animation
+    if (!prefersReducedMotion) {
+      const reveals = document.querySelectorAll("[data-reveal]");
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) e.target.classList.add("active");
+        });
+      }, { threshold: 0.12 });
+
+      reveals.forEach(el => {
+        const delay = el.getAttribute("data-delay");
+        if (delay) el.style.transitionDelay = `${delay}ms`;
+        obs.observe(el);
+      });
+
+      // stagger groups
+      const staggers = document.querySelectorAll("[data-stagger]");
+      const stObs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) e.target.classList.add("active");
+        });
+      }, { threshold: 0.15 });
+      staggers.forEach(el => stObs.observe(el));
+    } else {
+      document.documentElement.classList.add("reduced-motion");
+      document.querySelectorAll("[data-reveal],[data-stagger]").forEach(el => el.classList.add("active"));
+    }
+
+    // PC rail active state
     const sections = document.querySelectorAll("section[id]");
     const railLinks = document.querySelectorAll(".rail-links a");
-    const railObs = new IntersectionObserver((entries)=>{
+    const railObs = new IntersectionObserver((entries) => {
       entries.forEach(e => {
-        if(e.isIntersecting && e.intersectionRatio > 0.3){
+        if (e.isIntersecting && e.intersectionRatio > 0.35) {
           railLinks.forEach(link => {
             link.classList.toggle("active", link.getAttribute("href") === `#${e.target.id}`);
           });
         }
       });
-    }, {threshold: [0.3, 0.6]});
+    }, { threshold: [0.35, 0.65] });
     sections.forEach(s => railObs.observe(s));
+
+    // Mobile menu toggle
+    const menuBtn = document.getElementById("menuBtn");
+    const mobileMenu = document.getElementById("mobileMenu");
+    if (menuBtn && mobileMenu) {
+      const closeMenu = () => {
+        menuBtn.setAttribute("aria-expanded", "false");
+        mobileMenu.classList.remove("open");
+      };
+      const openMenu = () => {
+        menuBtn.setAttribute("aria-expanded", "true");
+        mobileMenu.classList.add("open");
+      };
+
+      menuBtn.addEventListener("click", () => {
+        const expanded = menuBtn.getAttribute("aria-expanded") === "true";
+        expanded ? closeMenu() : openMenu();
+      });
+
+      mobileMenu.querySelectorAll("a").forEach(a => {
+        a.addEventListener("click", () => closeMenu());
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeMenu();
+      });
+    }
   </script>
 </body>
 </html>
