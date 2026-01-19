@@ -3,205 +3,304 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>REDCLX 레드클렉스| Genocell Ontology Platform</title>
-  <meta name="description" content="Genocell Runtime 기반의 데이터 융합 및 자동 전술 생성 시스템. 규정 제약식 컴파일과 반례 기반 그래프 수리를 통해 최적의 방어 체계를 제공합니다." />
+  <meta name="theme-color" content="#ffffff">
+  
+  <title>RoosyCozy | 선생님을 위한 지능형 기록 보호 및 사건 재구성 플랫폼</title>
+  <meta name="description" content="흩어진 상담 기록과 학급 일지를 입체적으로 연결하여 완벽한 타임라인을 만듭니다. 선생님의 기억을 논리적으로 방어하는 RoosyCozy." />
+  <meta name="keywords" content="교권보호, 학급일지, 상담기록, 학폭처리, 타임라인, 교사필수앱, RoosyCozy, 온톨로지" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://www.roosycozy.com" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="RoosyCozy - 기록이 방패가 되는 순간" />
+  <meta property="og:description" content="복잡한 학생 사안, 기억에 의존하지 마세요. 기록을 입체적으로 조립하여 논리적 대응을 돕습니다." />
+  <meta property="og:image" content="https://www.roosycozy.com/og-image.jpg" />
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
-  <div class="bg-layer">
-    <div class="bg-grid"></div>
-  </div>
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="#" class="logo">RoosyCozy<span class="dot">.</span></a>
+      
+      <div class="nav-links pc-only">
+        <a href="#problem">Why?</a>
+        <a href="#solution">Logic</a>
+        <a href="#features">Features</a>
+        <a href="#download" class="nav-btn">무료 체험하기</a>
+      </div>
 
-  <nav class="rail pc-only">
-    <div class="rail-logo">R</div>
-    <div class="rail-menu">
-      <a href="#hero" class="active">00_MAIN</a>
-      <a href="#genocell">01_GENOCELL</a>
-      <a href="#tactics">02_TACTICS</a>
-    </div>
-    <div class="rail-status">
-      <span class="status-indicator"></span>
+      <button class="menu-btn mob-only" aria-label="메뉴 열기">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </nav>
-
-  <header class="mobile-head mob-only">
-    <div class="m-logo">REDCLX <span class="m-ver">v3.0 GENOCELL</span></div>
-    <button class="m-menu-btn" aria-label="Menu">
-      <span></span><span></span>
-    </button>
-  </header>
+  
+  <div class="mobile-drawer">
+    <a href="#problem" class="m-link">문제 정의</a>
+    <a href="#solution" class="m-link">해결 방식</a>
+    <a href="#features" class="m-link">주요 기능</a>
+    <a href="#download" class="m-link highlight">다운로드</a>
+  </div>
 
   <main>
-    <section id="hero" class="hero-section">
-      <div class="container hero-grid">
-        <div class="hero-content">
-          <div class="badge-row">
-            <span class="badge badge-solid">SYSTEM ONLINE</span>
-            <span class="badge">GENOCELL RUNTIME v3.0</span>
-          </div>
-          
-          <h1 class="hero-title">
-            LOGIC,<br />
-            <span class="text-outline">EVOLVED.</span>
+    <section class="hero">
+      <div class="bg-decoration"></div>
+      <div class="container hero-container">
+        <div class="hero-text" data-scroll>
+          <span class="capsule">교권 보호 & 기록 관리 솔루션 v3.0</span>
+          <h1>
+            기록은 파편이지만,<br>
+            <span class="highlight">진실은 입체적입니다.</span>
           </h1>
-
-          <div class="mission-box">
-            <div class="mission-label">ARCHITECTURE OVERVIEW</div>
-            <p class="mission-text">
-              유전체(Genome) 정책 번들을 내장한<br />
-              <span class="highlight">셀 기반 운영 온톨로지 런타임</span>
-            </p>
-            <div class="mission-foot">
-              데이터가 살아있는 유기체처럼 연결되고, 스스로 전술을 계산합니다.
-            </div>
-          </div>
-
-          <div class="cta-row">
-            <a href="#contact" class="btn btn-primary">DEPLOY FDSE</a>
-            <a href="#genocell" class="btn btn-outline">EXPLORE ONTOLOGY</a>
-          </div>
-        </div>
-
-        <div class="hero-ui">
-          <div class="ui-panel">
-            <div class="ui-head">
-              <span class="ui-title">RUNTIME LOG :: /var/log/genocell</span>
-            </div>
-            <div class="ui-body mono">
-              <div class="log-line">> Initializing Ontology...</div>
-              <div class="log-line">> Loading Cell Definitions (Docs, Sensors)... <span class="bold">DONE</span></div>
-              <div class="log-line">> FDSE Blueprint Injection... <span class="bold">DONE</span></div>
-              <div class="log-line">> Synthesizing DNA Links (Dim: 4096)...</div>
-              <div class="log-line inverse-line">> [RESULT] Action Graph Generated.</div>
-              <div class="log-line">> Graph Integrity Verified. (0 Errors)</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="genocell" class="section">
-      <div class="container">
-        <div class="sec-head">
-          <span class="sec-sub">01 CORE ENGINE</span>
-          <h2 class="sec-title">Genocell Ontology</h2>
-          <p class="sec-desc">
-            지침, 규정, 센서 데이터 등 파편화된 정보를 하나의 <strong>Cell(세포)</strong> 단위로 정의하고,<br>
-            <strong>FDSE(전방배치 엔지니어)</strong>의 설계도(DNA)를 통해 유기적으로 연결하여 융합 계산합니다.
+          <p class="hero-desc">
+            매일 쏟아지는 상담, 민원, 학생 지도 기록들.<br>
+            RoosyCozy는 흩어진 기록들을 스스로 연결하여<br class="mob-hide">
+            <strong>가장 강력하고 논리적인 타임라인</strong>으로 재구성합니다.
           </p>
+          <div class="btn-group">
+            <a href="#download" class="btn btn-black">지금 시작하기</a>
+            <a href="#solution" class="btn btn-text">작동 원리 보기 &darr;</a>
+          </div>
         </div>
 
-        <div class="cell-grid-container">
-          <div class="cell-diagram">
-            <div class="cell-core">
-              <span class="cell-label">THE CELL</span>
-              <div class="cell-inner-grid">
-                <div class="c-part">
-                  <strong>CORE</strong>
-                  <span>Content Type</span>
-                </div>
-                <div class="c-part">
-                  <strong>DIMENSIONS</strong>
-                  <span>Links & Context</span>
-                </div>
-                <div class="c-part">
-                  <strong>ACTOR</strong>
-                  <span>Role & Auth</span>
-                </div>
-                <div class="c-part">
-                  <strong>REPAIR</strong>
-                  <span>Self-Healing</span>
-                </div>
+        <div class="hero-visual">
+          <div class="layer-stack">
+            <div class="layer layer-bottom">
+              <span class="layer-tag">LEVEL 01</span>
+              <div class="layer-content">
+                <span>통화 녹음</span>
+                <span>알림장</span>
+                <span>상담 일지</span>
               </div>
             </div>
-            <div class="dna-connector">
-              <div class="dna-line"></div>
-              <span class="dna-tag">DNA Injection by FDSE</span>
+            <div class="layer layer-mid">
+              <span class="layer-tag">CORE ENGINE</span>
+              <div class="layer-content">
+                <strong>맥락 추적 & 연결</strong>
+                <small>(Ontology System)</small>
+              </div>
+              <div class="connect-lines"></div>
+            </div>
+            <div class="layer layer-top">
+              <span class="layer-tag">LEVEL 02</span>
+              <div class="layer-content">
+                <strong>완벽한 대응 시나리오</strong>
+                <div class="mini-ui-bar"></div>
+                <div class="mini-ui-bar w-70"></div>
+              </div>
+            </div>
+          </div>
+          <p class="visual-caption">▲ 마우스를 올려 데이터가 입체적으로 조립되는 과정을 확인하세요.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="problem" class="section">
+      <div class="container">
+        <div class="text-center" data-scroll>
+          <span class="sec-subtitle">THE PROBLEM</span>
+          <h2 class="sec-title">"선생님, 그때 분명 그렇게 말씀하셨잖아요."</h2>
+          <p class="sec-desc">
+            기억은 왜곡되기 쉽고, 메모지나 카카오톡에 흩어진 기록은<br>
+            결정적인 순간에 나를 지켜주지 못합니다.
+          </p>
+        </div>
+        
+        <div class="pain-points grid-3">
+          <div class="card bg-gray" data-scroll>
+            <div class="emoji">🧩</div>
+            <h3>파편화된 기록</h3>
+            <p>나이스(NEIS), 수첩, 문자메시지...<br>어디에 적었는지 찾을 수 없는 현실.</p>
+          </div>
+          <div class="card bg-gray" data-scroll>
+            <div class="emoji">🕸️</div>
+            <h3>복잡한 인과관계</h3>
+            <p>단순한 다툼인 줄 알았는데,<br>알고 보니 3달 전부터 시작된 갈등?</p>
+          </div>
+          <div class="card bg-gray" data-scroll>
+            <div class="emoji">🛡️</div>
+            <h3>입증의 어려움</h3>
+            <p>학폭위나 민원 발생 시,<br>일관된 타임라인을 만들기 어렵습니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="solution" class="section">
+      <div class="container">
+        <div class="split-layout reverse-mob">
+          <div class="split-visual" data-scroll>
+            <div class="logic-diagram">
+              <div class="node n1">학생 A 상담</div>
+              <div class="node n2">학부모 전화</div>
+              <div class="node n3">보건실 기록</div>
+              <div class="node n-center">사건 #2024-01</div>
+              
+              <svg class="svg-connect" viewBox="0 0 400 300">
+                <line x1="80" y1="60" x2="200" y2="150" />
+                <line x1="80" y1="240" x2="200" y2="150" />
+                <line x1="320" y1="150" x2="200" y2="150" />
+              </svg>
             </div>
           </div>
           
-          <div class="cell-desc-list">
-            <article class="feature-item">
-              <h3>Atomized Data Management</h3>
-              <p>모든 비정형 문서와 실시간 데이터를 독립적인 Cell로 변환하여 관리합니다.</p>
-            </article>
-            <article class="feature-item">
-              <h3>Organic Connection</h3>
-              <p>FDSE가 설계한 DNA 정보를 통해 Cell 간의 차원(Dimension)을 연결, 복잡한 인과관계를 계산 가능한 상태로 만듭니다.</p>
-            </article>
-            <article class="feature-item">
-              <h3>Fusion Calculation</h3>
-              <p>단순 검색이 아닌, 이종 데이터 간의 유기적 결합을 통해 새로운 맥락을 도출합니다.</p>
-            </article>
+          <div class="split-content" data-scroll>
+            <span class="sec-subtitle">SOLUTION : ONTOLOGY TRACKING</span>
+            <h2 class="sec-title">기록이 스스로<br>맥락을 찾아냅니다.</h2>
+            <p class="sec-desc">
+              RoosyCozy의 <strong>온톨로지(Ontology) 엔진</strong>은 선생님이 입력한 단순한 메모들 사이에서 '누가', '언제', '무엇을', '어떻게' 연결되는지를 분석합니다.
+            </p>
+            <ul class="feature-list">
+              <li>
+                <strong>자동 타임라인 생성:</strong> 
+                <br>특정 학생 이름을 클릭하면, 그 학생과 관련된 1년 치의 상담, 갈등, 학부모 통화가 시간순으로 정렬됩니다.
+              </li>
+              <li>
+                <strong>인과관계 추적:</strong> 
+                <br>오늘 발생한 사건의 원인이 지난달의 사소한 다툼에 있었음을 시스템이 감지하고 연결해줍니다.
+              </li>
+            </ul>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="tactics" class="section dark-bg">
+    <section id="features" class="section bg-dark text-white">
       <div class="container">
-        <div class="sec-head">
-          <span class="sec-sub">02 FINAL OUTPUT</span>
-          <h2 class="sec-title">Policy Constraint Compilation<br>& Graph Repair</h2>
-          <p class="sec-desc">
-            Genocell 알고리즘이 도출한 데이터를 기반으로, <br>
-            <strong>정책 제약식 컴파일 및 반례 기반 그래프 수리</strong>를 수행하여 최적의 전술을 확정합니다.
-          </p>
+        <div class="sec-header text-center" data-scroll>
+          <h2>입체적 분해 기술의 핵심</h2>
+          <p class="op-70">복잡한 기술이지만, 사용은 메모장처럼 간편합니다.</p>
         </div>
 
-        <div class="process-flow">
-          <div class="flow-card">
-            <div class="flow-num">01</div>
-            <div class="flow-content">
-              <h3>Constraint Compilation</h3>
-              <p class="mono-sm">Genocell Input -> Math Logic</p>
-              <p>Genocell에서 융합된 데이터를 기반으로 규정을 수학적 제약식으로 컴파일합니다. 실행 불가능한 명령을 원천 차단합니다.</p>
-            </div>
+        <div class="grid-4">
+          <div class="tech-item" data-scroll>
+            <div class="tech-num">01</div>
+            <h3>Atomizing</h3>
+            <p>긴 상담 녹취나 문서를 문장 단위의 '사실(Fact)'로 잘게 쪼개어 저장합니다.</p>
           </div>
-          <div class="flow-arrow">&rarr;</div>
-          <div class="flow-card">
-            <div class="flow-num">02</div>
-            <div class="flow-content">
-              <h3>Graph Repair (Counter-Example)</h3>
-              <p class="mono-sm">Violation -> Auto Fix</p>
-              <p>반례(규정 위반)가 감지되면, 그래프 수리 알고리즘이 작동하여 임무를 중단하지 않고 경로를 자동 수정합니다.</p>
-            </div>
+          <div class="tech-item" data-scroll>
+            <div class="tech-num">02</div>
+            <h3>Layering</h3>
+            <p>쪼개진 사실 위에 '감정', '규정', '대응' 레이어를 겹쳐 입체적으로 분석합니다.</p>
           </div>
-          <div class="flow-arrow">&rarr;</div>
-          <div class="flow-card active-flow">
-            <div class="flow-num">03</div>
-            <div class="flow-content">
-              <h3>Final Action Graph</h3>
-              <p class="mono-sm">Verified Tactics</p>
-              <p>검증이 완료된 최종 액션 그래프를 생성합니다. 이것이 현장에서 즉시 실행 가능한 전술이자, 가장 강력한 방어체계입니다.</p>
-            </div>
+          <div class="tech-item" data-scroll>
+            <div class="tech-num">03</div>
+            <h3>Tracing</h3>
+            <p>이 사건이 어디서 시작되었는지 역추적하여 빈틈없는 방어 논리를 만듭니다.</p>
+          </div>
+          <div class="tech-item" data-scroll>
+            <div class="tech-num">04</div>
+            <h3>Reporting</h3>
+            <p>클릭 한 번으로 교육청 제출용 '사안 조사 보고서' 초안을 완성합니다.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <footer class="footer">
+    <section class="section">
+      <div class="container">
+        <div class="review-box" data-scroll>
+          <div class="quote-mark">“</div>
+          <h3>"학폭위가 열렸을 때, RoosyCozy가 만들어준 타임라인 한 장을 제출했습니다. <br class="pc-only">위원분들이 '이렇게 완벽한 기록은 처음 본다'며 제 지도 과정의 정당성을 인정해주셨어요."</h3>
+          <div class="reviewer">
+            <strong>김00 선생님</strong>
+            <span>12년차 초등 교사 / 생활부장</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section bg-light">
+      <div class="container small-container">
+        <h2 class="sec-title text-center mb-50">자주 묻는 질문</h2>
+        
+        <div class="faq-item" data-scroll>
+          <div class="faq-q">Q. ICT를 잘 모르는 컴맹 선생님도 쓸 수 있나요?</div>
+          <div class="faq-a">네, 카카오톡이나 메모장을 쓸 줄 아신다면 충분합니다. 복잡한 분석은 RoosyCozy가 알아서 처리하고, 선생님은 그저 '오늘 있었던 일'을 적기만 하면 됩니다.</div>
+        </div>
+        <div class="faq-item" data-scroll>
+          <div class="faq-q">Q. 학생 개인정보 보안은 안전한가요?</div>
+          <div class="faq-a">금융기관 수준의 암호화 기술이 적용됩니다. 또한 모든 데이터는 선생님의 로컬 기기(PC/태블릿)를 중심으로 저장되며, 민감한 정보는 자동 마스킹 처리 기능을 제공합니다.</div>
+        </div>
+        <div class="faq-item" data-scroll>
+          <div class="faq-q">Q. 나이스(NEIS)와 연동되나요?</div>
+          <div class="faq-a">보안 정책상 직접 연동은 불가능하지만, 나이스에 입력할 수 있도록 깔끔하게 정리된 텍스트 양식을 제공하여 '복사+붙여넣기'만 하면 되도록 돕습니다.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="download" class="section cta-section">
+      <div class="container align-center" data-scroll>
+        <h2 class="cta-title">선생님의 기록을<br>가장 안전한 방패로 만드세요.</h2>
+        <p class="cta-desc">논리적인 사건 재구성, RoosyCozy가 대신하겠습니다.</p>
+        
+        <div class="download-btns">
+          <a href="#" class="btn btn-large btn-white">
+            <span class="os-icon">🍎</span> macOS 다운로드
+          </a>
+          <a href="#" class="btn btn-large btn-outline-white">
+            <span class="os-icon">🪟</span> Windows 다운로드
+          </a>
+        </div>
+        <p class="cta-note">* 현재 베타 기간으로 모든 기능을 무료로 사용하실 수 있습니다.</p>
+      </div>
+    </section>
+
+    <footer>
       <div class="container footer-inner">
-        <div class="f-left">
-          <strong>REDCLX DEFENSE SYSTEMS</strong>
-          <span class="copyright">© 2026 REDCLX. All rights reserved.</span>
+        <div class="f-info">
+          <div class="f-logo">RoosyCozy</div>
+          <p>경기도 용인시 기흥구 ... (주)RoosyCozy<br>사업자등록번호: 000-00-00000 | 대표: 홍길동</p>
+          <p>문의: support@roosycozy.com</p>
         </div>
-        <div class="f-right">
-          <span class="mono">SYSTEM STATUS: NORMAL</span>
+        <div class="f-links">
+          <a href="#">이용약관</a>
+          <a href="#">개인정보처리방침</a>
         </div>
+      </div>
+      <div class="copyright text-center">
+        © 2026 RoosyCozy Inc. All rights reserved. Logic Driven Defense.
       </div>
     </footer>
   </main>
 
-  <div class="mob-dock mob-only">
-    <div class="dock-status">
-      <span class="dot"></span> Online
-    </div>
-    <a href="#contact" class="dock-btn">DEPLOY FDSE</a>
-  </div>
+  <script>
+    // 1. Mobile Menu Toggle
+    const menuBtn = document.querySelector('.menu-btn');
+    const drawer = document.querySelector('.mobile-drawer');
+    const links = document.querySelectorAll('.m-link');
+
+    menuBtn.addEventListener('click', () => {
+      drawer.classList.toggle('active');
+      menuBtn.classList.toggle('open');
+    });
+
+    // Close drawer when link clicked
+    links.forEach(link => {
+      link.addEventListener('click', () => {
+        drawer.classList.remove('active');
+        menuBtn.classList.remove('open');
+      });
+    });
+
+    // 2. Scroll Animation Observer
+    const scrollObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('scrolled');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('[data-scroll]').forEach(el => {
+      scrollObserver.observe(el);
+    });
+  </script>
 </body>
 </html>
