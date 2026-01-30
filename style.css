@@ -357,14 +357,6 @@ ul { list-style: none; }
   100% { opacity: 0; }
 }
 
-/* �섎떒 由щ럭 諛뺤뒪 �ㅽ��쇱� 洹몃�濡� �좎� */
-.review-box {
-  background: #fff; padding: 60px 40px; border-radius: 30px; text-align: center;
-  max-width: 900px; margin: 0 auto; border: 1px solid var(--line);
-}
-.quote-mark { font-size: 5rem; line-height: 0; color: var(--sakura); opacity: 0.2; font-family: serif; display: block; margin-bottom: 30px; }
-.review-box h3 { font-size: 1.5rem; line-height: 1.6; font-weight: 500; margin-bottom: 30px; }
-.reviewer strong { display: block; font-size: 1.1rem; margin-bottom: 4px; }
 
 .user-node {
   width: 90px; height: 120px; text-align: center; font-weight: 700; z-index: 2;
@@ -827,4 +819,169 @@ ul { list-style: none; }
 .text-center .sec-desc {
   margin-left: auto;
   margin-right: auto;
+}
+
+/* =========================================
+   TECH PROOF SECTION (REAL IMAGE VER - FIXED)
+   ========================================= */
+.tech-proof-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 50px;
+  align-items: center;
+  margin-top: 40px;
+}
+
+/* 이미지 영역 컨테이너 */
+.papers-visual-real {
+  position: relative;
+  height: 540px; /* 높이를 늘려서 논문이 더 시원하게 보이도록 수정 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 1000px;
+}
+
+/* 개별 논문 카드 프레임 */
+.real-paper {
+  position: absolute;
+  width: 380px; /* 너비 확대 (가독성 향상) */
+  height: auto;
+  border-radius: 2px; /* 종이 질감을 위해 라운드 축소 */
+  box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+  background: #fff;
+  transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+}
+
+.paper-img {
+  width: 100%;
+  display: block;
+  /* 아래쪽만 부드럽게 사라지게 처리 (제목 강조) */
+  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+}
+
+/* 뒤쪽 논문 (DATASET MKSL) */
+.p-back {
+  transform: rotate(-6deg) translate(-40px, -20px) scale(0.95);
+  z-index: 1;
+  opacity: 0.8;
+  filter: grayscale(100%) contrast(0.9); /* 뒤쪽은 흑백으로 눌러줌 */
+}
+
+/* 앞쪽 논문 (AI GEN - 메인) */
+.p-front {
+  transform: rotate(3deg) translate(20px, 10px);
+  z-index: 2;
+  border-top: 4px solid var(--sakura);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.2); /* 그림자 강화 */
+}
+
+/* 마우스 올렸을 때 인터랙션 (종이가 앞으로 튀어나옴) */
+.papers-visual-real:hover .p-front {
+  transform: rotate(0deg) translate(40px, 0px) scale(1.05);
+  z-index: 10;
+}
+.papers-visual-real:hover .p-back {
+  transform: rotate(-10deg) translate(-60px, 10px) scale(0.95);
+}
+
+/* =========================================
+   저자 가리기 (Redaction Blur) - 위치 정밀 조정
+   ========================================= */
+.blur-cover {
+  position: absolute;
+  left: 8%; 
+  width: 84%; /* 좌우 너비 맞춤 */
+  background: rgba(255, 255, 255, 0.1); /* 투명도 높임 */
+  backdrop-filter: blur(5px); /* 글자가 뭉개져 보이도록 */
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  
+  /* 보안 문서 패턴 */
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.03),
+    rgba(0, 0, 0, 0.03) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+/* 스탬프 효과 (이미지 버전) */
+.p-stamp-real {
+  position: absolute;
+  bottom: 25%; /* 위치 상향 조정 */
+  right: 20px;
+  width: 90px;
+  height: 90px;
+  border: 4px solid var(--sakura); /* 테두리 강화 */
+  border-radius: 50%;
+  background: rgba(255,255,255,0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--sakura);
+  font-weight: 900;
+  transform: rotate(-15deg);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  backdrop-filter: blur(4px);
+  mix-blend-mode: multiply; /* 종이에 도장 찍힌 듯한 효과 */
+}
+.p-stamp-real span { font-size: 0.9rem; line-height: 1; letter-spacing: -0.05em; }
+.p-stamp-real small { font-size: 0.7rem; margin-top: 4px; font-family: var(--font-serif); }
+
+/* =========================================
+   NEW PHILOSOPHY SECTION (담백한 버전)
+   ========================================= */
+.philosophy-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 60px 0;
+  text-align: center;
+  border-top: 1px solid #eee; /* 아주 연한 구분선 */
+  border-bottom: 1px solid #eee;
+}
+
+.ph-text {
+  font-size: 1.35rem;
+  line-height: 1.8;
+  color: #333;
+  word-break: keep-all;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+.ph-text strong {
+  font-weight: 700;
+  color: #191f28; /* 진한 검정 */
+  box-shadow: inset 0 -10px 0 rgba(255, 79, 147, 0.1); /* 벚꽃색 형광펜 효과 아주 연하게 */
+}
+
+.ph-author {
+  margin-top: 40px;
+  font-size: 0.9rem;
+  color: #888;
+  font-family: var(--font-main);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.ph-author::before {
+  content: '';
+  display: block;
+  width: 30px;
+  height: 1px;
+  background: #ddd;
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+  .ph-text { font-size: 1.1rem; line-height: 1.7; }
+  .philosophy-wrapper { padding: 40px 20px; border: none; background: #fdfdfd; border-radius: 12px; }
 }
