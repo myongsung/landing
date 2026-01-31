@@ -985,3 +985,37 @@ ul { list-style: none; }
   .ph-text { font-size: 1.1rem; line-height: 1.7; }
   .philosophy-wrapper { padding: 40px 20px; border: none; background: #fdfdfd; border-radius: 12px; }
 }
+
+/* =========================================
+   [모바일 수정] 논문 이미지 겹침 해결 & 최적화
+   ========================================= */
+@media (max-width: 768px) {
+  /* 1. 좌우 배치를 위아래(1열)로 변경하여 공간 확보 */
+  .tech-proof-grid {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important; /* 이미지와 글자 사이 간격 */
+  }
+
+  /* 2. 이미지 들어가는 박스 높이를 모바일에 맞게 조절 */
+  .papers-visual-real {
+    height: 380px !important; /* 540px은 너무 커서 줄임 */
+    margin-bottom: 20px;
+  }
+
+  /* 3. 논문 이미지 크기를 화면 폭에 맞춰 줄임 (가장 중요!) */
+  .real-paper {
+    width: 80% !important;       /* 화면의 80%만 차지 */
+    max-width: 320px !important; /* 최대 크기 제한 */
+    left: 50% !important;
+    top: 50% !important;
+    /* absolute 상태 유지하되 중앙 정렬 */
+  }
+
+  /* 4. 겹쳐진 논문들의 위치를 중앙으로 예쁘게 재조정 */
+  .p-back {
+    transform: translate(-55%, -55%) rotate(-6deg) scale(0.9) !important;
+  }
+  .p-front {
+    transform: translate(-45%, -45%) rotate(3deg) !important;
+  }
+}
