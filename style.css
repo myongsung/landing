@@ -239,7 +239,7 @@ ul { list-style: none; }
    HANDOFF & REVIEW (IMPACT VER.)
    ========================================= */
 
-/* 而⑦뀒�대꼫 �ㅼ젙 */
+/* 컨테이너 설정 */
 .network-visual-impact {
   position: relative;
   height: 250px;
@@ -249,7 +249,7 @@ ul { list-style: none; }
   padding: 0 20px;
 }
 
-/* �몃뱶 怨듯넻 �ㅽ��� */
+/* 노드 공통 스타일 */
 .user-node {
   width: 90px;
   height: 120px;
@@ -267,7 +267,7 @@ ul { list-style: none; }
   font-size: 0.9rem;
 }
 
-/* 異쒕컻 �몃뱶 �꾩튂 */
+/* 출발 노드 위치 */
 .source-node {
   position: absolute;
   left: 0;
@@ -275,7 +275,7 @@ ul { list-style: none; }
   transform: translateY(-50%);
 }
 
-/* ��寃� �몃뱶�� �꾩튂 �↔린 */
+/* 타겟 노드들 위치 크기 */
 .target-nodes {
   position: absolute;
   right: 0;
@@ -287,7 +287,7 @@ ul { list-style: none; }
   padding: 20px 0;
 }
 .target-node {
-  height: 100px; /* �믪씠 �쎄컙 議곗젅 */
+  height: 100px; /* 높이 약간 조절 */
 }
 
 /* SVG �곌껐�� �ㅽ��� */
