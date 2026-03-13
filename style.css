@@ -1371,45 +1371,25 @@ ul { list-style: none; }
 }
 
 /* =========================================
-   VIDEO SHOWCASE (Antigravity Expand Effect)
+   STEP CARD VIDEO STYLE
    ========================================= */
-.video-showcase {
-  background-color: #0b0f19; /* 위쪽 히어로 섹션과 자연스럽게 이어지는 다크 우주 배경 */
-  padding: 40px 0 100px 0;
-  overflow: hidden;
-}
-
-.video-container {
-  position: relative;
+.step-video {
   width: 100%;
-  margin: 0 auto;
-  
-  /* 🚨 핵심: 처음엔 작고 밑에 숨어있으며, 모서리가 아주 둥근 상태 */
-  transform: scale(0.75) translateY(60px);
-  opacity: 0;
-  border-radius: 40px; 
-  overflow: hidden;
-  
-  box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255, 79, 147, 0.15);
-  border: 1px solid rgba(255, 79, 147, 0.3);
-  
-  /* 아주 부드럽고 쫀득하게 커지는 트랜지션 (1.5초) */
-  transition: transform 1.0s cubic-bezier(0.25, 1, 0.5, 1), 
-              opacity 1.0s cubic-bezier(0.25, 1, 0.5, 1),
-              border-radius 1.0s cubic-bezier(0.25, 1, 0.5, 1);
+  height: 100%;
+  object-fit: cover; /* 영상을 박스에 꽉 채웁니다 */
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.04);
+  transition: transform 0.4s ease;
 }
 
-/* 🚨 스크롤해서 화면에 보일 때 발동되는 마법 (원래 크기로 커짐) */
-.video-container.active {
-  transform: scale(1) translateY(0);
-  opacity: 1;
-  border-radius: 16px; /* 커지면서 모서리가 세련되게 펴짐 */
+/* 마우스를 올렸을 때 영상이 살짝 커지는 효과 */
+.step-card:hover .step-video {
+  transform: scale(1.03);
 }
 
-.video-container video {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: cover;
-  background-color: #000;
+/* 영상 박스 크기 조절 (비율 유지) */
+.step-img-box {
+  aspect-ratio: 16 / 10; /* 영상 비율에 맞춰 조정 */
+  padding: 20px;
 }
