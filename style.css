@@ -1173,3 +1173,243 @@ ul { list-style: none; }
   .process-steps { grid-template-columns: 1fr; gap: 30px; }
   .step-img-box { padding: 15px; }
 }
+
+/* =========================================
+   INTEGRITY SECTION (Dark Cybernetic Style)
+   ========================================= */
+.integrity-dark {
+  background-color: #05070a; /* 아주 깊은 블랙 */
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 79, 147, 0.15);
+  border-bottom: 1px solid rgba(255, 79, 147, 0.15);
+  background-image: radial-gradient(circle at 50% 50%, rgba(255, 79, 147, 0.05) 0%, transparent 60%);
+}
+
+.integrity-visual {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* 터미널 스타일 애니메이션 창 */
+.terminal-box {
+  background: rgba(11, 15, 25, 0.9);
+  border: 1px solid rgba(255, 79, 147, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 79, 147, 0.1);
+  overflow: hidden;
+  font-family: var(--font-mono);
+}
+
+.terminal-header {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 79, 147, 0.2);
+}
+
+.terminal-header .dot {
+  width: 12px; height: 12px; border-radius: 50%; margin-right: 8px;
+}
+.dot.red { background: #ff5f56; }
+.dot.yellow { background: #ffbd2e; }
+.dot.green { background: #27c93f; }
+.terminal-title { margin-left: auto; margin-right: auto; font-size: 0.85rem; color: #8892b0; letter-spacing: 1px;}
+
+.terminal-body {
+  padding: 30px;
+  color: #a8b2d1;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.text-success { color: #27c93f; font-weight: 700; }
+
+.hash-output {
+  margin-top: 15px;
+  padding: 15px;
+  background: rgba(255, 79, 147, 0.1);
+  border-left: 3px solid var(--sakura);
+  color: #ffb6c1;
+  word-break: break-all;
+  font-size: 1.1rem;
+  text-shadow: 0 0 10px rgba(255, 79, 147, 0.4);
+}
+
+.lock-status {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 20px var(--sakura);
+}
+
+.lock-icon { font-size: 2rem; vertical-align: middle; margin-right: 10px; }
+
+/* 3가지 핵심 기능 카드 (다크모드) */
+.integrity-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 40px 30px;
+  border-radius: 20px;
+  transition: 0.3s;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* 카드 상단에 마우스를 올리면 스윽 나타나는 핑크색 빛 라인 */
+.integrity-card::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--sakura), transparent);
+  opacity: 0; transition: 0.3s;
+}
+
+.integrity-card:hover {
+  background: rgba(255, 79, 147, 0.05);
+  border-color: rgba(255, 79, 147, 0.2);
+  transform: translateY(-5px);
+}
+.integrity-card:hover::before { opacity: 1; }
+
+.i-icon {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  display: inline-block;
+  filter: drop-shadow(0 0 10px rgba(255, 79, 147, 0.4));
+}
+
+.integrity-card h3 { color: #fff; font-size: 1.3rem; margin-bottom: 15px; font-weight: 700; }
+.integrity-card p { color: #94a3b8; font-size: 0.95rem; line-height: 1.6; margin: 0; }
+
+/* =========================================
+   STEP 03: 보안 뱃지(Seal Badge) 스타일
+   ========================================= */
+.seal-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 14px;
+  padding: 6px 12px;
+  background: rgba(39, 201, 63, 0.1); /* 안정감을 주는 연한 초록색 배경 */
+  color: #1b8a2b; /* 가독성 높은 진한 초록색 텍스트 */
+  border: 1px solid rgba(39, 201, 63, 0.3);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  box-shadow: 0 4px 10px rgba(39, 201, 63, 0.05);
+  transition: all 0.3s ease;
+}
+
+/* 마우스를 올렸을 때 살짝 더 선명해지는 효과 */
+.step-card:hover .seal-badge {
+  background: rgba(39, 201, 63, 0.15);
+  border-color: rgba(39, 201, 63, 0.5);
+}
+
+/* =========================================
+   HERO SECTION: Trust Badge (신뢰의 방패 뱃지)
+   ========================================= */
+.hero-trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 24px;
+  border-radius: 50px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+/* 마우스를 올리면 로지코지 핑크빛으로 반응합니다 */
+.hero-trust-badge:hover {
+  background: rgba(255, 79, 147, 0.05);
+  border-color: rgba(255, 79, 147, 0.3);
+  box-shadow: 0 0 20px rgba(255, 79, 147, 0.2);
+  transform: translateY(-2px);
+}
+
+.tb-icon { font-size: 1.2rem; }
+
+.tb-title {
+  font-weight: 700;
+  color: #ffb6c1; /* 네온 핑크 텍스트 */
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+.tb-line {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.tb-desc {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.mt-30 { margin-top: 30px; } /* 버튼 간격 띄우기용 */
+
+/* 모바일 화면에서는 세로로 예쁘게 정렬 */
+@media (max-width: 768px) {
+  .hero-trust-badge {
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 20px;
+    border-radius: 16px;
+  }
+  .tb-line { display: none; }
+}
+
+/* =========================================
+   VIDEO SHOWCASE (Antigravity Expand Effect)
+   ========================================= */
+.video-showcase {
+  background-color: #0b0f19; /* 위쪽 히어로 섹션과 자연스럽게 이어지는 다크 우주 배경 */
+  padding: 40px 0 100px 0;
+  overflow: hidden;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  
+  /* 🚨 핵심: 처음엔 작고 밑에 숨어있으며, 모서리가 아주 둥근 상태 */
+  transform: scale(0.75) translateY(60px);
+  opacity: 0;
+  border-radius: 40px; 
+  overflow: hidden;
+  
+  box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255, 79, 147, 0.15);
+  border: 1px solid rgba(255, 79, 147, 0.3);
+  
+  /* 아주 부드럽고 쫀득하게 커지는 트랜지션 (1.5초) */
+  transition: transform 1.0s cubic-bezier(0.25, 1, 0.5, 1), 
+              opacity 1.0s cubic-bezier(0.25, 1, 0.5, 1),
+              border-radius 1.0s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* 🚨 스크롤해서 화면에 보일 때 발동되는 마법 (원래 크기로 커짐) */
+.video-container.active {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+  border-radius: 16px; /* 커지면서 모서리가 세련되게 펴짐 */
+}
+
+.video-container video {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  background-color: #000;
+}

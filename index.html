@@ -50,6 +50,14 @@
             RoosyCozy는 흩어진 기록들을 스스로 연결하여<br class="pc-only">
             <strong style="color: #fff; font-weight: 700;">가장 강력하고 논리적인 타임라인</strong>으로 재구성합니다.
           </p>
+
+          <div class="hero-trust-badge reveal">
+            <span class="tb-icon">🛡️</span>
+            <span class="tb-title eng">Military-Grade Integrity</span>
+            <span class="tb-line"></span>
+            <span class="tb-desc">전자서명 기반 위변조 검증 기술 탑재</span>
+          </div>
+
           <div class="btn-group justify-center">
             <a href="https://jimdungyyi.github.io/roosycozy-beta2/beta.html" class="btn-primary btn-glow">지금 시작하기</a>
             <a href="#solution" class="btn-text btn-text-light">작동 원리 보기 ↓</a>
@@ -83,6 +91,14 @@
             </div>
           </div>
           <p class="visual-caption" style="color: #8892b0;">▲ 데이터가 입체적인 방패로 조립되는 과정을 확인하세요.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="video-showcase">
+      <div class="container" style="max-width: 1200px;">
+        <div class="video-container reveal-video">
+          <video id="demo-video" muted playsinline autoplay></video>
         </div>
       </div>
     </section>
@@ -254,6 +270,54 @@
       </div>
     </section>
 
+    <section id="integrity" class="section integrity-dark">
+      <div class="container">
+        <div class="text-center reveal" style="margin-bottom: 60px;">
+          <span class="sec-subtitle" style="color: #ffb6c1; text-shadow: 0 0 10px rgba(255, 182, 193, 0.5);">MILITARY-GRADE INTEGRITY</span>
+          <h2 class="sec-title text-glow-sakura" style="margin-bottom: 20px;">
+            선생님의 기록을<br>완벽하게 봉인합니다.
+          </h2>
+          <p class="sec-desc text-muted-light" style="max-width: 650px; margin: 0 auto;">
+            단순한 메모장이 아닙니다. RoosyCozy는 입력된 모든 기록을 암호화하고 위변조를 검증하여, <strong>법적 효력을 갖춘 확실한 디지털 증거</strong>로 만듭니다.
+          </p>
+        </div>
+
+        <div class="integrity-visual reveal">
+          <div class="terminal-box">
+            <div class="terminal-header">
+              <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+              <span class="terminal-title">RoosyCozy Security Engine</span>
+            </div>
+            <div class="terminal-body mono">
+              <div class="typing-line">> Generating Signature Key... <span class="text-success">[OK]</span></div>
+              <div class="typing-line">> Encrypting Record Data... <span class="text-success">[OK]</span></div>
+              <div class="typing-line">> Sealing with SHA-256 Hash...</div>
+              <div class="hash-output blink">a13c871721a45cf620f4cdafa2c2ac1f7bf1796375a0ebdb6765f57d70f51741</div>
+              <div class="lock-status"><span class="lock-icon">🔒</span> SECURELY SEALED</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-3 reveal mt-60">
+          <div class="integrity-card">
+            <div class="i-icon">🔑</div>
+            <h3>전자서명 기반 봉인</h3>
+            <p>단순 저장이 아닙니다. 기기 또는 서명키를 기준으로 기록을 강력하게 봉인하고 검증하는 구조를 갖췄습니다.</p>
+          </div>
+          <div class="integrity-card">
+            <div class="i-icon">🛡️</div>
+            <h3>기록 위변조 검증</h3>
+            <p>메모나 기록이 저장된 뒤 단 한 글자라도 임의로 바뀌었는지 즉시 확인합니다. 기록 신뢰성의 가장 핵심적인 방패입니다.</p>
+          </div>
+          <div class="integrity-card">
+            <div class="i-icon">⏱️</div>
+            <h3>수정 이력(Revision) 추적</h3>
+            <p>최초 작성본과 이후 수정본이 덮어씌워지지 않고 리비전 형태로 연결됩니다. 언제 무엇이 바뀌었는지 명확히 증빙할 수 있습니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="section bg-dark">
       <div class="container">
         <div class="text-center reveal" style="margin-bottom:60px;">
@@ -393,7 +457,8 @@
             <div class="step-header">
               <span class="step-badge">STEP 03</span>
               <h3>원클릭 문서 생성</h3>
-              <p>완벽한 PDF 보고서를 출력합니다.</p>
+              <p>위변조 검증이 완료된 <strong>법적 증빙용 PDF</strong>를 출력합니다.</p>
+              <div class="seal-badge">🔒 전자서명 봉인 완료</div>
             </div>
             <div class="step-img-box">
               <img src="3단계 기록문서 생성하기.png" alt="문서 생성 결과" class="step-img">
@@ -501,6 +566,57 @@
     
     const impactSection = document.querySelector('.impact-banner');
     if (impactSection) counterObserver.observe(impactSection);
+
+    // =========================================
+    // 6. Antigravity 비디오 팽창/수축 양방향 애니메이션
+    // =========================================
+    const videoObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // 화면에 일정 부분 들어오면 팽창!
+          entry.target.classList.add('active'); 
+        } else {
+          // 🚨 [핵심 추가] 화면에서 벗어나면 다시 작아지도록 스위치 끄기!
+          entry.target.classList.remove('active'); 
+        }
+      });
+    }, { threshold: 0.15 }); // 영상이 화면에 15% 보일 때 부드럽게 발동
+
+    const vContainer = document.querySelector('.reveal-video');
+    if (vContainer) videoObserver.observe(vContainer);
+
+    // =========================================
+    // 7. 3개 영상 랜덤 무한 반복 재생 로직
+    // =========================================
+    const videoElement = document.getElementById('demo-video');
+    if (videoElement) {
+      // 선생님이 올려주신 파일명과 똑같이 세팅합니다.
+      const videoSources = [
+        '무결정해시기반 증거보존.mp4',
+        '최적화알고리즘 기반 사건정리.mp4',
+        'PDF 보고서 뽑기.mp4'
+      ];
+      
+      let lastVideoIndex = -1;
+
+      function playRandomVideo() {
+        let nextIndex;
+        // 방금 튼 영상이 또 나오지 않게 똑똑하게 고르기
+        do {
+          nextIndex = Math.floor(Math.random() * videoSources.length);
+        } while (nextIndex === lastVideoIndex);
+        
+        lastVideoIndex = nextIndex;
+        videoElement.src = videoSources[nextIndex];
+        videoElement.play().catch(e => console.log("자동재생 방지됨:", e));
+      }
+
+      // 1. 처음 시작할 때 랜덤 재생
+      playRandomVideo();
+
+      // 2. 영상이 끝날 때마다 귀신같이 다음 영상 랜덤 재생
+      videoElement.addEventListener('ended', playRandomVideo);
+    }
 
   </script>
 </body>
