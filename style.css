@@ -1080,64 +1080,59 @@ ul { list-style: none; }
 }
 
 /* =========================================
-   PROCESS FLOW SECTION (3-STEP) - Layout & Glow Fix
+   PROCESS FLOW SECTION (3-STEP) - Antigravity Sharp Glow
    ========================================= */
 
-/* 1. 카드를 3열로 나란히 배치 (깨짐 방지) */
 .process-steps {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* PC에서는 무조건 3칸으로 나눔 */
+  grid-template-columns: repeat(3, 1fr);
   gap: 30px;
   position: relative;
   z-index: 10;
 }
 
-/* 2. 카드 뼈대 및 글로우 효과 */
+/* 🚨 1. Antigravity 스타일의 선명한 2px 네온 테두리 */
 .step-card {
   position: relative;
-  background: #ffffff;
   border-radius: 24px;
-  border: none;
-  box-shadow: none;
+  /* 테두리가 들어갈 2px 공간 확보 */
+  border: 2px solid transparent; 
+  /* 안쪽은 흰색, 바깥쪽 테두리는 그라데이션으로 칠하는 마법의 코드 */
+  background: 
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(135deg, #ff4f93, #ffb6c1, #a1c4fd, #ff4f93) border-box;
+  background-size: 300% 300%;
+  
+  /* 테두리에서 은은하게 뿜어져 나오는 글로우 */
+  box-shadow: 0 10px 30px rgba(255, 79, 147, 0.12);
+  
   display: flex;
   flex-direction: column;
-  z-index: 1;
   height: 100%;
-}
-
-.step-card::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 26px;
-  background: linear-gradient(135deg, rgba(255, 79, 147, 0.7), rgba(255, 182, 193, 0.4), rgba(200, 210, 255, 0.6), rgba(255, 79, 147, 0.7));
-  background-size: 200% 200%;
-  z-index: -1;
-  filter: blur(6px);
-  opacity: 0.5;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  /* 테두리 색상이 스르륵 움직이는 애니메이션 */
+  animation: moveGradient 6s ease infinite;
 }
 
-.step-card:hover::before {
-  opacity: 1;
-  filter: blur(12px);
-  background-position: 100% 100%;
+/* 테두리 색상이 흐르는 애니메이션 */
+@keyframes moveGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-.step-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: #ffffff;
-  border-radius: 24px;
-  z-index: -1;
+/* 🚨 2. 마우스를 올렸을 때 빛이 폭발하는 효과 */
+.step-card:hover {
+  transform: translateY(-8px);
+  /* 마우스 올리면 테두리 빛이 확 강해집니다 */
+  box-shadow: 0 20px 50px rgba(255, 79, 147, 0.35);
 }
 
-/* 3. 텍스트 및 이미지 영역 최적화 */
+/* 3. 텍스트 및 이미지 영역 (변경 없음) */
 .step-header {
   padding: 32px;
   background: transparent;
-  border-bottom: 1px solid rgba(0,0,0,0.03);
+  border-bottom: 1px solid rgba(0,0,0,0.04);
 }
 
 .step-badge {
@@ -1162,7 +1157,6 @@ ul { list-style: none; }
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden; /* 이미지가 카드 밖으로 삐져나오지 않게 방어 */
 }
 
 .step-img {
@@ -1172,14 +1166,9 @@ ul { list-style: none; }
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.06);
   border: 1px solid rgba(0,0,0,0.04);
-  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.step-card:hover .step-img {
-  transform: translateY(-5px) scale(1.02);
-}
-
-/* 4. 모바일 화면(작은 화면)일 때는 1열로 예쁘게 정렬 */
+/* 모바일 대응 */
 @media (max-width: 992px) {
   .process-steps { grid-template-columns: 1fr; gap: 30px; }
   .step-img-box { padding: 15px; }
