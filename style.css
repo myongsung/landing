@@ -406,6 +406,13 @@ ul { list-style: none; }
 }
 .quote-text { font-size: 1.4rem; font-weight: 600; line-height: 1.5; color: var(--text-main); }
 
+/* 🚨 [추가된 부분] 모바일 화면에서는 위아래 1단으로 배치하고 여백을 줄입니다 */
+@media (max-width: 768px) {
+  .grid-2 { grid-template-columns: 1fr; gap: 40px; }
+  .quote-card { padding: 30px; } /* 모바일에서는 여백을 조금 줄여서 꽉 차 보이게 */
+  .quote-text { font-size: 1.2rem; } /* 글씨 크기도 모바일에 맞게 살짝 조절 */
+}
+
 /* =========================================
    8. SOLUTION (ONTOLOGY DIAGRAM)
    ========================================= */
