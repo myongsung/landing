@@ -104,6 +104,38 @@ ul { list-style: none; }
   background: #ff3380; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(255, 79, 147, 0.3); 
 }
 
+/* 🚨 아키텍트 (개발자 센터) 버튼 스타일 */
+.nav-btn-architect {
+  display: flex; 
+  align-items: center; 
+  gap: 6px;
+  font-family: var(--font-eng); /* 영문 폰트 적용 */
+  font-size: 0.85rem; 
+  font-weight: 700; 
+  padding: 8px 16px; 
+  color: var(--text-main); 
+  background: transparent;
+  border: 1px solid var(--text-main); /* 로지코지에 어울리는 깔끔한 다크 라인 */
+  border-radius: 8px; 
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* </> 아이콘에 아키텍트 큐브의 블루 컬러 포인트 적용 */
+.nav-btn-architect .code-icon {
+  color: #3b82f6; 
+  font-weight: 900;
+  font-family: var(--font-mono);
+}
+
+/* 마우스를 올렸을 때(Hover): 아키텍트의 다크 테마로 부드럽게 변신 */
+.nav-btn-architect:hover {
+  background: #0b1120; /* 아키텍트 사이트의 다크 네이비 배경색 */
+  color: #ffffff;
+  border-color: #0b1120;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(11, 17, 32, 0.2), 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
 /* =========================================
    3. SECTIONS (Global)
    ========================================= */
