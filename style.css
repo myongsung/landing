@@ -760,9 +760,32 @@ footer { padding: 60px 0 0 0; background: var(--bg-paper); border-top: 1px solid
   .ph-text { font-size: 1.1rem; line-height: 1.7; } 
   .philosophy-wrapper { padding: 40px 20px; border: none; background: #fdfdfd; border-radius: 12px; }
 
-  /* Element Visibility Control */
-  .nav-actions { display: none !important; } /* 상단 네비게이션 버튼 숨김 */
-  .hero-dark .btn-primary { display: none; } /* 히어로 섹션 메인 버튼 숨김 */
+/* =======================================
+     모바일 상단 네비게이션 및 로고 최적화 
+     ======================================= */
+  /* 1. 로고 크기를 줄여서 우측 버튼 들어갈 공간 확보 */
+  .logo { font-size: 1rem !important; gap: 6px; }
+  .logo span { width: 8px; height: 8px; }
+
+  /* 2. 네비게이션 액션바 살리기 (대신 핑크 버튼만 숨김) */
+  .nav-actions { display: flex !important; }
+  .nav-actions .nav-btn-solid { display: none !important; } /* 우측 상단 핑크 버튼 숨김 */
+  
+/* 3. 아키텍트 버튼을 모바일에 맞게 작고 귀엽게 축소 (위치 절대 고정) */
+  .nav-btn-architect { 
+    font-size: 0.7rem; 
+    padding: 6px 10px; 
+    gap: 4px; 
+    white-space: nowrap; /* 🚨 글씨가 두 줄로 꺾이는 현상 완벽 차단 */
+    flex-shrink: 0;      /* 🚨 화면이 아무리 좁아져도 버튼 크기가 찌그러지지 않게 방어 */
+  }
+  .nav-btn-architect .code-icon { font-size: 0.75rem; }
+
+  /* =======================================
+     모바일 히어로 섹션 큰 버튼 제거 
+     ======================================= */
+  /* 첫 화면의 커다란 '지금 시작하기' / '바로 사용해보기' 버튼을 모두 숨김 */
+  .hero-light .btn-group { display: none !important; }
 
   /* Mobile Sticky CTA */
   .mobile-sticky-cta {
@@ -786,6 +809,4 @@ footer { padding: 60px 0 0 0; background: var(--bg-paper); border-top: 1px solid
     transform: translateY(2px); box-shadow: 0 5px 15px rgba(255, 79, 147, 0.4);
   }
 
-  /* 푸터가 고정 버튼에 가려지지 않게 여백 추가 */
-  footer { padding-bottom: 100px !important; }
 }
