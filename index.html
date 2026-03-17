@@ -89,9 +89,10 @@
           <p class="impact-subtitle">ROOSYCOZY WITH TEACHERS</p>
           <h2 class="impact-number"><span id="count-number">0</span><span>+</span></h2>
           <p class="impact-text">
-            현재 <strong>400명 이상의 선생님</strong>이<br class="mob-only">
+            현재 약<strong>500명 이상의 선생님</strong>이<br class="mob-only">
             로지코지와 함께 안전한 교실을 만들고 있습니다.
           </p>
+          <p class="impact-disclaimer">* 자체 추산 방식 적용</p>
         </div>
       </div>
     </section>
@@ -525,13 +526,13 @@
     }
     animate();
 
-    // 3. 400+ 카운팅 애니메이션
+    // 3. 500+ 카운팅 애니메이션
     const counterObserver = new IntersectionObserver((entries, observer) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const target = document.getElementById('count-number');
           let count = 0;
-          const max = 400;
+          const max = 500;
           const interval = setInterval(() => {
             count += 20; 
             if (count >= max) {
