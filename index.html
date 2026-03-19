@@ -114,7 +114,7 @@
             <div class="video-case case-1">
               <div class="mockup-window">
                 <div class="mockup-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-                <img src="1.무결정해시기반 증거보존.png" alt="해시 기반 기록 보존">
+                <img src="1.무결정해시기반 증거보존.png" alt="해시 기반 기록 보존" loading="lazy" decoding="async">
               </div>
             </div>
           </div>
@@ -135,7 +135,7 @@
             <div class="video-case case-2">
               <div class="mockup-window">
                 <div class="mockup-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-                <img src="2.최적화알고리즘 기반 사건정리.png" alt="알고리즘 기반 사건 정리">
+                <img src="2.최적화알고리즘 기반 사건정리.png" alt="알고리즘 기반 사건 정리" loading="lazy" decoding="async">
               </div>
             </div>
           </div>
@@ -157,7 +157,7 @@
             <div class="video-case case-3">
               <div class="mockup-window">
                 <div class="mockup-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-                <img src="3.PDF 보고서 뽑기.png" alt="제출용 증빙 보고서 출력">
+                <img src="3.PDF 보고서 뽑기.png" alt="제출용 증빙 보고서 출력" loading="lazy" decoding="async">
               </div>
             </div>
           </div>
@@ -255,11 +255,11 @@
         <div class="tech-proof-grid reveal">
           <div class="papers-visual-real">
             <div class="real-paper p-back">
-              <img src="paper_sub.png" alt="Sub Paper" class="paper-img">
+              <img src="paper_sub.png" alt="Sub Paper" class="paper-img" loading="lazy" decoding="async">
               <div class="blur-cover" style="top: 18%; height: 8%;"></div>
             </div>
             <div class="real-paper p-front">
-              <img src="paper_main.png" alt="Main Paper" class="paper-img">
+              <img src="paper_main.png" alt="Main Paper" class="paper-img" loading="lazy" decoding="async">
               <div class="blur-cover" style="top: 22%; height: 9%;"></div>
               <div class="p-stamp-real">
                 <span>VERIFIED</span>
@@ -517,7 +517,7 @@
       }
     }
 
-    for(let i=0; i<50; i++) particles.push(new Particle());
+    for(let i=0; i<15; i++) particles.push(new Particle()); // 👈 15개로 확 줄임!
     function animate() {
       ctx.clearRect(0, 0, w, h);
       particles.forEach(p => { p.update(); p.draw(); });

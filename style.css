@@ -386,30 +386,6 @@ ul { list-style: none; }
   height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;
   perspective: 1000px;
 }
-.layer-stack {
-  position: relative; width: 280px; height: 320px;
-  transform-style: preserve-3d; transform: rotateX(55deg) rotateZ(-35deg);
-  transition: transform 0.5s ease; animation: float 6s ease-in-out infinite;
-}
-@keyframes float {
-  0%, 100% { transform: rotateX(55deg) rotateZ(-35deg) translateY(0); }
-  50% { transform: rotateX(55deg) rotateZ(-35deg) translateY(-20px); }
-}
-.layer {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  transition: 0.4s; box-shadow: 10px 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05);
-}
-.layer-dark-top { background: rgba(11, 15, 25, 0.85); border: 2px solid var(--sakura); box-shadow: 0 0 30px rgba(255, 79, 147, 0.3); color: #fff; backdrop-filter: blur(12px); transform: translateZ(100px); z-index: 3;}
-.layer-dark-mid { background: rgba(255, 79, 147, 0.05); border: 1px dashed var(--sakura); color: #ffb6c1; transform: translateZ(50px); z-index: 2;}
-.layer-dark-bottom { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); color: #64748b; transform: translateZ(0); z-index: 1;}
-.hero-visual:hover .layer-stack { transform: rotateX(55deg) rotateZ(-35deg) scale(0.95); }
-.hero-visual:hover .layer-dark-top { transform: translateZ(160px); }
-.hero-visual:hover .layer-dark-mid { transform: translateZ(80px); }
-.layer-tag { position: absolute; top: -10px; left: 20px; background: #000; color: #fff; font-size: 0.6rem; padding: 4px 8px; font-weight: 700; border-radius: 4px; }
-.layer-dark-mid .layer-tag { background: var(--sakura); }
-.layer-content { text-align: center; display: flex; flex-direction: column; gap: 8px; font-size: 0.9rem; }
-.visual-caption { margin-top: 40px; font-size: 0.8rem; color: #aaa; text-align: center; }
 
 /* =========================================
    5. IMPACT BANNER (400+ Teachers)
@@ -786,27 +762,5 @@ footer { padding: 60px 0 0 0; background: var(--bg-paper); border-top: 1px solid
      ======================================= */
   /* 첫 화면의 커다란 '지금 시작하기' / '바로 사용해보기' 버튼을 모두 숨김 */
   .hero-light .btn-group { display: none !important; }
-
-  /* Mobile Sticky CTA */
-  .mobile-sticky-cta {
-    display: block; 
-    position: fixed;
-    bottom: max(24px, env(safe-area-inset-bottom)); 
-    left: 20px;
-    right: 20px;
-    z-index: 9999;
-    transform: translateZ(0); 
-    -webkit-transform: translateZ(0);
-  }
-  .sticky-btn {
-    display: flex; justify-content: center; align-items: center;
-    background: var(--sakura); color: #fff; font-size: 1.1rem; font-weight: 700;
-    padding: 16px 0; border-radius: 16px; text-decoration: none;
-    box-shadow: 0 10px 25px rgba(255, 79, 147, 0.4), inset 0 2px 5px rgba(255, 255, 255, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .sticky-btn:active {
-    transform: translateY(2px); box-shadow: 0 5px 15px rgba(255, 79, 147, 0.4);
-  }
 
 }
