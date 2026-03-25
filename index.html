@@ -533,14 +533,14 @@
           let count = 0;
           const max = 1000;
           const interval = setInterval(() => {
-            count += 20; 
+            count += 50; // 🚨 한 번에 50씩 시원하게 팍팍 올라감!
             if (count >= max) {
               target.innerText = max;
               clearInterval(interval);
             } else {
               target.innerText = count;
             }
-          }, 40);
+          }, 25); // 🚨 25밀리초마다 갱신 (약 0.5초 만에 1000 도달!)
           observer.unobserve(entry.target); 
         }
       });
