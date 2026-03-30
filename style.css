@@ -388,31 +388,85 @@ ul { list-style: none; }
 }
 
 /* =========================================
-   5. IMPACT BANNER (400+ Teachers)
+   5. LEGAL PARTNER SECTION (다크 최적화 v2.0)
    ========================================= */
-.impact-banner {
-  padding: 80px 0;
-  background: linear-gradient(180deg, #ffffff 0%, #fff5f8 100%);
-  border-bottom: 1px solid var(--line);
+/* 🚨 1. 섹션 배경을 묵직한 네이비 컬러로 변경 */
+.legal-dark {
+  background-color: #0b1120 !important; /* 군사급 보안 느낌의 네이비 */
+  color: rgba(255,255,255,0.8);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.impact-subtitle {
-  font-family: var(--font-eng); font-size: 0.95rem; font-weight: 800;
-  color: var(--sakura); letter-spacing: 2px; margin-bottom: 12px;
+
+.partner-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 80px;
+  align-items: center;
 }
-.impact-number {
-  font-size: clamp(4.5rem, 8vw, 7rem); font-weight: 900; font-family: var(--font-eng);
-  color: var(--sakura); line-height: 1; margin-bottom: 20px;
-  text-shadow: 0 10px 30px var(--sakura-dim);
+
+/* 텍스트 가독성용 유틸리티 클래스 */
+.text-white { color: #fff !important; }
+.text-white-80 { color: rgba(255,255,255,0.8) !important; }
+.text-white-60 { color: rgba(255,255,255,0.6) !important; }
+
+/* 🚨 2. 사진 프레임을 다크 톤에 맞게 수정 */
+.photo-frame {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  border-radius: 20px;
+  padding: 12px;
+  background: #161d31; /* 살짝 연한 네이비 배경 */
+  border: 1px solid rgba(255,255,255,0.05);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.3); /* 그림자를 더 묵직하게 */
+  z-index: 2;
 }
-.impact-number span:last-child {
-  font-size: 0.6em; vertical-align: top; color: var(--sakura);
+.photo-frame img {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+  object-fit: cover;
+  aspect-ratio: 4 / 5;
 }
-.impact-text {
-  font-size: 1.3rem; color: var(--text-main); line-height: 1.6;
+
+/* 🚨 3. 사진 장식 포인트 컬러 수정 (핑크 앤 화이트 포인터) */
+.photo-deco {
+  position: absolute; top: -20px; left: -20px;
+  width: 120px; height: 120px;
+  border-top: 5px solid var(--sakura); border-left: 5px solid var(--sakura);
+  border-radius: 24px 0 0 0; z-index: -1;
+  opacity: 0.8;
 }
-.impact-text strong {
-  color: var(--text-main); font-weight: 800;
-  box-shadow: inset 0 -12px 0 rgba(255, 79, 147, 0.2); 
+.photo-frame::after {
+  content: ''; position: absolute; bottom: -20px; right: -20px;
+  width: 120px; height: 120px;
+  border-bottom: 5px solid var(--sakura); border-right: 5px solid var(--sakura);
+  border-radius: 0 0 24px 0; z-index: -1;
+  opacity: 0.8;
+}
+
+/* 🚨 4. 이력 박스를 다크 톤으로 변경 */
+.lawyer-profile-dark {
+  background: #161d31; 
+  padding: 32px; 
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.05) !important; 
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1) !important;
+}
+.lawyer-name {
+  border-bottom: 2px solid rgba(255,255,255,0.1) !important;
+}
+.lawyer-history li { color: rgba(255,255,255,0.7) !important; }
+.lawyer-history li strong { color: #fff !important; }
+.lawyer-history li::before { color: var(--sakura); } /* 여전히 핑크 포인트 */
+
+/* 모바일 반응형 */
+@media (max-width: 992px) {
+  .partner-grid { grid-template-columns: 1fr; gap: 50px; text-align: center; }
+  .photo-deco, .photo-frame::after { display: none; }
+  .lawyer-history li { text-align: left; }
+  .lawyer-profile-dark { text-align: left; }
 }
 
 /* =========================================
