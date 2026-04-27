@@ -10,14 +10,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#ffffff">
   
-  <title>RoosyCozy 루지코지 | 선생님을 위한 지능형 기록 보호 및 사건 재구성 플랫폼</title>
-  <meta name="description" content="흩어진 상담 기록과 학급 일지를 입체적으로 연결하여 완벽한 타임라인을 만듭니다. 선생님의 기억을 논리적으로 방어하는 RoosyCozy." />
+  <title>RoosyCozy 루지코지 | 온디바이스 AI 에이전트 기반 분쟁기록관리 시스템</title>
+  <meta name="description" content="RoosyCozy는 온디바이스 AI 에이전트로 교사의 분쟁 기록을 안전하게 보존하고, 사건의 맥락을 재구성하는 기록관리 시스템입니다." />
   
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Noto+Serif+KR:wght@400;600;700&amp;display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -26,60 +26,68 @@
 
   <nav class="navbar">
     <div class="container nav-inner">
-      <a href="#" class="logo">
-        <span></span> RoosyCozy
+      <a href="#" class="nav-wordmark" aria-label="RoosyCozy 홈">ROOSYCOZY</a>
+      <a href="https://jimdungyyi.github.io/guide/" class="nav-cta">
+        <span>바로 사용해보기</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12h12"></path>
+          <path d="m13 8 4 4-4 4"></path>
+        </svg>
       </a>
-      <div class="nav-actions">
-        <a href="https://jimdungyyi.github.io/guide/" class="nav-btn-solid">바로 사용해보기</a>
-        <!-- <a href="https://roosycozychat.com/" class="nav-btn-architect">
-          <span class="code-icon">&lt;/&gt;</span> 무료법률자문
-        </a> -->
-        <!-- <a href="https://architectrc.com/" class="nav-btn-architect">
-          <span class="code-icon">&lt;/&gt;</span> 개발자 모임
-        </a> -->
-      </div>
     </div>
   </nav>
 
   <main>
-    <section class="hero hero-light">
-      <div class="hero-grid-bg"></div> <div class="hero-glow-bg-light"></div>
-      
-      <div class="container hero-container-center text-center">
-        <div class="hero-text reveal">
-          <span class="kicker eng kicker-light">Intelligent Defense System v4.0</span>
-          <h1 class="hero-title">
-            이미 전국 1,000명 이상의 선생님이<br>
-            <span class="text-sakura">선택했습니다.</span>
-          </h1>
-          <p class="hero-desc">
-            파편화된 기록을 알아서 연결하는 AI로,<br class="pc-only">
-            <strong>가장 안전한 교실</strong>을 만들어보세요.
-          </p>
+    <section class="hero-device" aria-labelledby="device-hero-title">
+      <div class="container device-hero-inner">
+        <div class="device-watermark" aria-hidden="true">ROOSYCOZY</div>
+        <div class="device-stage reveal">
+          <img src="ondevice.png" alt="RoosyCozy 온디바이스 AI 엔진 칩셋" class="device-chip">
+        </div>
+        <div class="device-copy reveal">
+          <p class="device-engine eng">Engine By DRACE</p>
+          <h1 id="device-hero-title">온디바이스 AI 에이전트 기반 분쟁기록관리 시스템</h1>
+          <p>기록은 기기 안에서 보존되고, 사건의 맥락은 에이전트가 정리합니다.</p>
+        </div>
+      </div>
+    </section>
 
-          <div class="hero-trust-badge reveal">
-            <span class="tb-icon">🛡️</span>
-            <span class="tb-title eng">Military-Grade Integrity</span>
-            <span class="tb-line"></span>
-            <span class="tb-desc">전자서명 기반 위변조 검증 기술 탑재</span>
+    <section id="benchmark-performance" class="section benchmark-performance">
+      <div class="container benchmark-shell">
+        <div class="benchmark-copy reveal">
+          <p class="benchmark-eyebrow">DRACE | On-device AI Performance</p>
+          <p class="benchmark-context">Baseline Hybrid vs DRACE</p>
+
+          <div class="benchmark-stat-list">
+            <article class="benchmark-stat">
+              <div class="benchmark-value">55<span>s</span></div>
+              <p>E2E Latency | Baseline 180s -> DRACE 55s | 3.27x faster</p>
+            </article>
+            <article class="benchmark-stat">
+              <div class="benchmark-value">9<span>s</span></div>
+              <p>TTFT | Baseline 30s -> DRACE 9s | 3.33x faster</p>
+            </article>
+            <article class="benchmark-stat">
+              <div class="benchmark-value">90.8</div>
+              <p>ERQS | Baseline 91.2 | quality parity</p>
+            </article>
+            <article class="benchmark-stat">
+              <div class="benchmark-value">7.1<span>TPS</span></div>
+              <p>Output TPS | Baseline 2.4 -> DRACE 7.1 | 2.96x higher</p>
+            </article>
           </div>
 
-          <div class="btn-group justify-center">
-            <a href="#solution" class="btn-text btn-text-dark">작동 원리 보기 ↓</a>
-          </div>
+          <button type="button" class="benchmark-detail-btn" data-open-benchmark>
+            <span>벤치마크 자세히 보기</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h12"></path>
+              <path d="m13 8 4 4-4 4"></path>
+            </svg>
+          </button>
         </div>
 
-        <div class="hero-visual reveal mt-60">
-          <div class="hero-app-showcase-wrapper">
-            
-            <div class="hero-float-card float-1">📞 학부모 통화 기록</div>
-            <div class="hero-float-card float-2">✨ 최적화 타임라인 분석</div>
-            <div class="hero-float-card float-3">📄 제3자 제출용 리포트</div>
-            
-            <div class="hero-app-showcase">
-              <img src="로지코지 메인.png" alt="RoosyCozy 메인 홈 피드">
-            </div>
-          </div>
+        <div class="benchmark-art reveal">
+          <img src="Performance-benchmark.png" alt="DRACE 온디바이스 AI 벤치마크 시각화">
         </div>
       </div>
     </section>
@@ -97,7 +105,7 @@
 
           <div class="partner-info reveal">
             <span class="kicker kicker-light eng text-white" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);">루지코지 법률 자문 변호사</span>
-            <h2 class="sec-title text-white" style="margin-bottom: 16px; font-size: clamp(2rem, 3.5vw, 2.8rem);">
+            <h2 class="sec-title text-white" style="margin-bottom: 16px;">
               선생님의 무결한 기록을 지키는<br>
               <span class="text-sakura">전서현 변호사</span>가 함께합니다.
             </h2>
@@ -485,6 +493,239 @@
 
   </main>
 
+  <div class="benchmark-modal" id="benchmarkModal" hidden>
+    <div class="benchmark-modal-scrim" data-close-benchmark></div>
+    <div class="benchmark-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="benchmark-modal-title" tabindex="-1">
+      <div class="benchmark-modal-head">
+        <div class="benchmark-modal-meta">
+          <p class="benchmark-modal-label">DRACE Benchmark</p>
+          <div class="benchmark-modal-tabs" role="tablist" aria-label="벤치마크 패널">
+            <button class="benchmark-tab is-active" id="benchmark-tab-data" type="button" role="tab" aria-selected="true" aria-controls="benchmark-panel-data" data-benchmark-tab="data">벤치마크 데이터</button>
+            <button class="benchmark-tab" id="benchmark-tab-summary" type="button" role="tab" aria-selected="false" aria-controls="benchmark-panel-summary" data-benchmark-tab="summary">판정 요약</button>
+          </div>
+        </div>
+        <button class="benchmark-modal-close" type="button" aria-label="벤치마크 패널 닫기" data-close-benchmark>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6 18 18"></path>
+            <path d="M18 6 6 18"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="benchmark-modal-body">
+        <section class="benchmark-modal-panel is-active" id="benchmark-panel-data" role="tabpanel" aria-labelledby="benchmark-tab-data">
+          <div class="benchmark-summary-card">
+            <div class="benchmark-summary-visual">
+              <img src="Performance-benchmark.png" alt="DRACE 벤치마크 AI 칩셋 시각화">
+            </div>
+            <div class="benchmark-summary-grid">
+              <article class="benchmark-summary-item">
+                <span class="benchmark-summary-label">E2E Latency</span>
+                <strong>55 s</strong>
+                <p>Baseline 180s -> DRACE 55s</p>
+              </article>
+              <article class="benchmark-summary-item">
+                <span class="benchmark-summary-label">TTFT</span>
+                <strong>9 s</strong>
+                <p>Baseline 30s -> DRACE 9s</p>
+              </article>
+              <article class="benchmark-summary-item">
+                <span class="benchmark-summary-label">Output TPS</span>
+                <strong>7.1</strong>
+                <p>2.96x higher throughput</p>
+              </article>
+              <article class="benchmark-summary-item">
+                <span class="benchmark-summary-label">ERQS</span>
+                <strong>90.8</strong>
+                <p>Quality parity maintained</p>
+              </article>
+            </div>
+          </div>
+
+          <details class="benchmark-accordion" open>
+            <summary>Latency</summary>
+            <div class="benchmark-spec-table-wrap">
+              <table class="benchmark-spec-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Baseline Hybrid</th>
+                    <th>DRACE</th>
+                    <th>Improvement</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>E2E Latency</td><td>180s</td><td>55s</td><td>3.27x</td></tr>
+                  <tr><td>TTFT</td><td>30s</td><td>9s</td><td>3.33x</td></tr>
+                  <tr><td>TPOT</td><td>420ms</td><td>140ms</td><td>3.0x</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <details class="benchmark-accordion">
+            <summary>Throughput</summary>
+            <div class="benchmark-spec-table-wrap">
+              <table class="benchmark-spec-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Baseline Hybrid</th>
+                    <th>DRACE</th>
+                    <th>Improvement</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Output TPS</td><td>2.4</td><td>7.1</td><td>2.96x</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <details class="benchmark-accordion">
+            <summary>CPU Efficiency</summary>
+            <div class="benchmark-spec-table-wrap">
+              <table class="benchmark-spec-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Baseline Hybrid</th>
+                    <th>DRACE</th>
+                    <th>Improvement</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>CPU-sec / case</td><td>620</td><td>240</td><td>61%↓</td></tr>
+                  <tr><td>Tokens / CPU-sec</td><td>0.38</td><td>1.05</td><td>2.76x</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <details class="benchmark-accordion">
+            <summary>Memory</summary>
+            <div class="benchmark-spec-table-wrap">
+              <table class="benchmark-spec-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Baseline Hybrid</th>
+                    <th>DRACE</th>
+                    <th>Improvement</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Peak Working Set</td><td>2.8GB</td><td>3.2GB</td><td>+0.4GB</td></tr>
+                  <tr><td>Cache Pack Size</td><td>0MB</td><td>150MB</td><td>bounded</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <details class="benchmark-accordion">
+            <summary>Quality</summary>
+            <div class="benchmark-spec-table-wrap">
+              <table class="benchmark-spec-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Baseline Hybrid</th>
+                    <th>DRACE</th>
+                    <th>Improvement</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>ERQS</td><td>91.2</td><td>90.8</td><td>parity</td></tr>
+                  <tr><td>Quality Parity Rate</td><td>-</td><td>96%</td><td>pass</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <details class="benchmark-accordion">
+            <summary>Safety</summary>
+            <div class="benchmark-spec-table-wrap">
+              <table class="benchmark-spec-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Baseline Hybrid</th>
+                    <th>DRACE</th>
+                    <th>Improvement</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Input-fact Hallucination</td><td>1.2%</td><td>1.1%</td><td>parity</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <details class="benchmark-accordion">
+            <summary>Stability</summary>
+            <div class="benchmark-spec-table-wrap">
+              <table class="benchmark-spec-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Baseline Hybrid</th>
+                    <th>DRACE</th>
+                    <th>Improvement</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Timeout Rate</td><td>4.0%</td><td>0.5%</td><td>87%↓</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <p class="benchmark-modal-note">표기 순서는 Metric / Baseline Hybrid / DRACE / Improvement 기준입니다.</p>
+        </section>
+
+        <section class="benchmark-modal-panel" id="benchmark-panel-summary" role="tabpanel" aria-labelledby="benchmark-tab-summary" hidden>
+          <div class="benchmark-judgement-grid">
+            <article class="benchmark-judgement-card">
+              <span class="benchmark-judgement-kicker">Latency</span>
+              <h3>3.27x faster E2E response</h3>
+              <p>기존 180초 파이프라인을 55초까지 줄여 사건 정리 응답 시간을 대폭 단축했습니다.</p>
+            </article>
+            <article class="benchmark-judgement-card">
+              <span class="benchmark-judgement-kicker">First Token</span>
+              <h3>9초 TTFT</h3>
+              <p>첫 토큰이 30초에서 9초로 줄어 사용자가 체감하는 시작 지연이 크게 낮아졌습니다.</p>
+            </article>
+            <article class="benchmark-judgement-card">
+              <span class="benchmark-judgement-kicker">Throughput</span>
+              <h3>2.96x higher output rate</h3>
+              <p>Output TPS가 2.4에서 7.1로 올라가 동시 처리량과 마무리 속도가 함께 개선됐습니다.</p>
+            </article>
+            <article class="benchmark-judgement-card">
+              <span class="benchmark-judgement-kicker">CPU Efficiency</span>
+              <h3>61% lower CPU-sec / case</h3>
+              <p>케이스당 CPU 사용량은 줄이고, CPU 1초당 생성 토큰 수는 2.76배까지 끌어올렸습니다.</p>
+            </article>
+            <article class="benchmark-judgement-card">
+              <span class="benchmark-judgement-kicker">Quality</span>
+              <h3>90.8 ERQS with 96% parity pass</h3>
+              <p>온디바이스 최적화 이후에도 품질 저하 없이 거의 동일한 정답 성향을 유지했습니다.</p>
+            </article>
+            <article class="benchmark-judgement-card">
+              <span class="benchmark-judgement-kicker">Stability</span>
+              <h3>Timeout rate down to 0.5%</h3>
+              <p>타임아웃 비율을 4.0%에서 0.5%로 낮춰 실제 운영 환경에서의 신뢰성을 높였습니다.</p>
+            </article>
+            <article class="benchmark-judgement-card">
+              <span class="benchmark-judgement-kicker">Memory</span>
+              <h3>3.2GB peak with bounded cache</h3>
+              <p>피크 메모리는 소폭 늘었지만, 캐시 팩을 150MB 범위로 제한해 운영 가능성을 확보했습니다.</p>
+            </article>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <footer>
     <div class="container footer-inner">
       <div class="f-info">
@@ -580,6 +821,90 @@
     
     const impactSection = document.querySelector('.impact-banner');
     if (impactSection) counterObserver.observe(impactSection);
+
+    // 4. Benchmark modal interactions
+    const benchmarkModal = document.getElementById('benchmarkModal');
+    const benchmarkSheet = benchmarkModal?.querySelector('.benchmark-modal-sheet');
+    const benchmarkOpeners = document.querySelectorAll('[data-open-benchmark]');
+    const benchmarkClosers = document.querySelectorAll('[data-close-benchmark]');
+    const benchmarkTabs = benchmarkModal ? Array.from(benchmarkModal.querySelectorAll('[data-benchmark-tab]')) : [];
+    const benchmarkPanels = benchmarkModal ? Array.from(benchmarkModal.querySelectorAll('.benchmark-modal-panel')) : [];
+    const benchmarkAccordions = benchmarkModal ? Array.from(benchmarkModal.querySelectorAll('.benchmark-accordion')) : [];
+    let benchmarkReturnFocus = null;
+    let benchmarkCloseTimer = null;
+
+    function setBenchmarkTab(target) {
+      benchmarkTabs.forEach(tab => {
+        const isActive = tab.dataset.benchmarkTab === target;
+        tab.classList.toggle('is-active', isActive);
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+
+      benchmarkPanels.forEach(panel => {
+        const isActive = panel.id === `benchmark-panel-${target}`;
+        panel.classList.toggle('is-active', isActive);
+        panel.hidden = !isActive;
+      });
+    }
+
+    function openBenchmarkModal() {
+      if (!benchmarkModal) return;
+      window.clearTimeout(benchmarkCloseTimer);
+      benchmarkReturnFocus = document.activeElement;
+      benchmarkModal.hidden = false;
+      document.body.classList.add('modal-open');
+      window.requestAnimationFrame(() => benchmarkModal.classList.add('is-open'));
+      setBenchmarkTab('data');
+      if (window.location.hash !== '#benchmark-details') {
+        window.history.replaceState(null, '', '#benchmark-details');
+      }
+      benchmarkSheet?.focus();
+    }
+
+    function closeBenchmarkModal() {
+      if (!benchmarkModal) return;
+      benchmarkModal.classList.remove('is-open');
+      document.body.classList.remove('modal-open');
+      benchmarkCloseTimer = window.setTimeout(() => {
+        benchmarkModal.hidden = true;
+        if (benchmarkReturnFocus instanceof HTMLElement) benchmarkReturnFocus.focus();
+      }, 320);
+      if (window.location.hash === '#benchmark-details') {
+        const url = `${window.location.pathname}${window.location.search}`;
+        window.history.replaceState(null, '', url);
+      }
+    }
+
+    benchmarkOpeners.forEach(button => {
+      button.addEventListener('click', openBenchmarkModal);
+    });
+
+    benchmarkClosers.forEach(button => {
+      button.addEventListener('click', closeBenchmarkModal);
+    });
+
+    benchmarkTabs.forEach(tab => {
+      tab.addEventListener('click', () => setBenchmarkTab(tab.dataset.benchmarkTab));
+    });
+
+    benchmarkAccordions.forEach(item => {
+      item.addEventListener('toggle', () => {
+        if (!item.open) return;
+        benchmarkAccordions.forEach(other => {
+          if (other !== item) other.open = false;
+        });
+      });
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && benchmarkModal && !benchmarkModal.hidden) {
+        closeBenchmarkModal();
+      }
+    });
+
+    if (window.location.hash === '#benchmark-details') {
+      window.addEventListener('load', () => window.setTimeout(openBenchmarkModal, 60), { once: true });
+    }
   </script>
 </body>
 </html>
