@@ -20,7 +20,7 @@
 
   /* Layout */
   --max-w: 1100px;
-  --header-h: 92px;
+  --header-h: 72px;
   --radius-lg: 24px;
   --radius-md: 16px;
   
@@ -116,7 +116,7 @@ ul { list-style: none; }
   grid-column: 2;
   padding-left: 0;
   font-family: var(--font-eng);
-  font-size: 1.42rem;
+  font-size: 1.34rem;
   line-height: 1;
   letter-spacing: 0;
   font-weight: 600;
@@ -131,8 +131,8 @@ ul { list-style: none; }
   justify-content: center;
   gap: 10px;
   min-width: 150px;
-  min-height: 44px;
-  padding: 0 18px;
+  min-height: 38px;
+  padding: 0 16px;
   border: 1px solid rgba(17, 17, 17, 0.28);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.72);
@@ -270,7 +270,7 @@ ul { list-style: none; }
 .hero-device {
   position: relative;
   min-height: 92svh;
-  padding: calc(var(--header-h) + 34px) 0 42px;
+  padding: calc(var(--header-h) + 78px) 0 42px;
   display: flex;
   align-items: stretch;
   overflow: hidden;
@@ -287,7 +287,7 @@ ul { list-style: none; }
 
 .device-hero-inner {
   width: 100%;
-  min-height: calc(92svh - var(--header-h) - 76px);
+  min-height: calc(92svh - var(--header-h) - 120px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -299,7 +299,7 @@ ul { list-style: none; }
   position: relative;
   z-index: 1;
   width: 100%;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   font-family: var(--font-eng);
   font-size: 9.4rem;
   line-height: 0.76;
@@ -390,11 +390,11 @@ ul { list-style: none; }
 
 @media (max-width: 1180px) {
   .hero-device {
-    padding-top: calc(var(--header-h) + 30px);
+    padding-top: calc(var(--header-h) + 64px);
   }
 
   .device-hero-inner {
-    min-height: calc(92svh - var(--header-h) - 72px);
+    min-height: calc(92svh - var(--header-h) - 106px);
   }
 
   .device-watermark {
