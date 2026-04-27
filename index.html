@@ -14,6 +14,8 @@
   <meta name="description" content="RoosyCozy는 온디바이스 AI 에이전트로 교사의 분쟁 기록을 안전하게 보존하고, 사건의 맥락을 재구성하는 기록관리 시스템입니다." />
   
   <link rel="stylesheet" href="style.css" />
+  <link rel="preload" as="image" href="ondevice.webp" type="image/webp" fetchpriority="high">
+  <link rel="preload" as="image" href="Performance-benchmark.webp" type="image/webp">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,7 +44,10 @@
       <div class="container device-hero-inner">
         <div class="device-watermark" aria-hidden="true">ROOSYCOZY</div>
         <div class="device-stage reveal">
-          <img src="ondevice.png" alt="RoosyCozy 온디바이스 AI 엔진 칩셋" class="device-chip">
+          <picture>
+            <source srcset="ondevice.webp" type="image/webp">
+            <img src="ondevice.png" width="4342" height="992" alt="RoosyCozy 온디바이스 AI 엔진 칩셋" class="device-chip" decoding="async" fetchpriority="high">
+          </picture>
         </div>
         <div class="device-copy reveal">
           <p class="device-engine eng">Engine By DRACE</p>
@@ -60,20 +65,34 @@
 
           <div class="benchmark-stat-list">
             <article class="benchmark-stat">
-              <div class="benchmark-value">55<span>s</span></div>
-              <p>E2E Latency | Baseline 180s -> DRACE 55s | 3.27x faster</p>
+              <div class="benchmark-value" data-count-value="55" data-count-decimals="0" aria-label="55 s">
+                <span class="benchmark-number">0</span><span class="benchmark-unit">s</span>
+              </div>
+              <p>E2E Latency | Baseline 180s → DRACE 55s | 3.27× faster</p>
             </article>
             <article class="benchmark-stat">
-              <div class="benchmark-value">9<span>s</span></div>
-              <p>TTFT | Baseline 30s -> DRACE 9s | 3.33x faster</p>
+              <div class="benchmark-value" data-count-value="9" data-count-decimals="0" aria-label="9 s">
+                <span class="benchmark-number">0</span><span class="benchmark-unit">s</span>
+              </div>
+              <p>TTFT | Baseline 30s → DRACE 9s | 3.33× faster</p>
             </article>
             <article class="benchmark-stat">
-              <div class="benchmark-value">90.8</div>
+              <div class="benchmark-value" data-count-value="90.8" data-count-decimals="1" aria-label="90.8">
+                <span class="benchmark-number">0.0</span>
+              </div>
               <p>ERQS | Baseline 91.2 | quality parity</p>
             </article>
             <article class="benchmark-stat">
-              <div class="benchmark-value">7.1<span>TPS</span></div>
-              <p>Output TPS | Baseline 2.4 -> DRACE 7.1 | 2.96x higher</p>
+              <div class="benchmark-value" data-count-value="746" data-count-decimals="0" aria-label="746 MB">
+                <span class="benchmark-number">0</span><span class="benchmark-unit">MB</span>
+              </div>
+              <p>Memory footprint</p>
+            </article>
+            <article class="benchmark-stat">
+              <div class="benchmark-value" data-count-value="7.1" data-count-decimals="1" aria-label="7.1 TPS">
+                <span class="benchmark-number">0.0</span><span class="benchmark-unit">TPS</span>
+              </div>
+              <p>Output TPS | Baseline 2.4 → DRACE 7.1 | 2.96× higher</p>
             </article>
           </div>
 
@@ -87,7 +106,10 @@
         </div>
 
         <div class="benchmark-art reveal">
-          <img src="Performance-benchmark.png" alt="DRACE 온디바이스 AI 벤치마크 시각화">
+          <picture>
+            <source srcset="Performance-benchmark.webp" type="image/webp">
+            <img src="Performance-benchmark.png" width="2161" height="1405" alt="DRACE 온디바이스 AI 벤치마크 시각화" decoding="async">
+          </picture>
         </div>
       </div>
     </section>
@@ -104,17 +126,17 @@
           </div>
 
           <div class="partner-info reveal">
-            <span class="kicker kicker-light eng text-white" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);">루지코지 법률 자문 변호사</span>
-            <h2 class="sec-title text-white" style="margin-bottom: 16px;">
+            <span class="kicker kicker-light legal-kicker eng">루지코지 법률 자문 변호사</span>
+            <h2 class="sec-title legal-title">
               선생님의 무결한 기록을 지키는<br>
               <span class="text-sakura">전서현 변호사</span>가 함께합니다.
             </h2>
-            <p class="sec-desc text-white-80" style="font-size: 1.1rem; margin-bottom: 30px; opacity: 0.8;">
+            <p class="sec-desc legal-desc">
               RoosyCozy가 증명하는 무결한 기록을 바탕으로, 학교폭력 및 형사 소송에서 입증된 전문 법률 자문이 선생님의 안전을 이중으로 보장합니다.
             </p>
 
             <div class="lawyer-profile lawyer-profile-dark">
-              <h3 class="lawyer-name text-white">전서현 변호사</h3>
+              <h3 class="lawyer-name">전서현 변호사</h3>
               <div class="lawyer-history">
                 <ul>
                   <li><strong>現)</strong> 대한변호사협회 등록 <strong>학교폭력</strong>전문변호사</li>
@@ -122,7 +144,7 @@
                   <li><strong>現)</strong> 교육청 <strong>학교폭력대책심의위원회</strong> 위원</li>
                   <li><strong>現)</strong> 대법원 국선변호인 / 국가인권위원회 전문상담위원</li>
                 </ul>
-                <ul class="lawyer-edu text-white-60" style="opacity: 0.6;">
+                <ul class="lawyer-edu">
                   <li>한양대학교 정책학과 졸업 / 서울시립대학교 법학전문대학원 석사</li>
                   <li><strong>다양한 학교폭력 사건 수행,</strong></li>
                   <li><strong>교권보호위원회 피해교사 조력 등 다수의 소송진행</strong></li>
@@ -142,7 +164,7 @@
         <div class="feature-row reveal">
           <div class="feature-text">
             <span class="step-kicker">STEP 01</span>
-            <h2 class="feature-title">해시 기반<br>기록 보존</h2>
+            <h2 class="feature-title">에이전트<br>기록 생성</h2>
             <p class="feature-desc">작성하신 모든 기록은 <strong>SHA-256 해시 알고리즘</strong>을 통해 안전하게 암호화되어 저장됩니다.</p>
             <ul class="feature-list-mini">
               <li><span class="check">✓</span> 데이터 임의 수정 및 훼손 방지</li>
@@ -154,7 +176,7 @@
             <div class="video-case case-1">
               <div class="mockup-window">
                 <div class="mockup-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-                <img src="1.무결정해시기반 증거보존.png" alt="해시 기반 기록 보존" loading="lazy" decoding="async">
+                <img src="1.에이전트 기록생성.png" alt="에이전트 기록 생성" loading="lazy" decoding="async">
               </div>
             </div>
           </div>
@@ -163,7 +185,7 @@
         <div class="feature-row reveal">
           <div class="feature-text">
             <span class="step-kicker">STEP 02</span>
-            <h2 class="feature-title">알고리즘 기반<br>사건 정리</h2>
+            <h2 class="feature-title">에이전트<br>기록 관리</h2>
             <p class="feature-desc">파편화되어 흩어진 여러 기록들을 <strong>최적화 알고리즘</strong>이 분석하여 하나의 맥락으로 연결합니다.</p>
             <ul class="feature-list-mini">
               <li><span class="check">✓</span> 인물 및 시간순 맥락 자동 파악</li>
@@ -516,7 +538,10 @@
         <section class="benchmark-modal-panel is-active" id="benchmark-panel-data" role="tabpanel" aria-labelledby="benchmark-tab-data">
           <div class="benchmark-summary-card">
             <div class="benchmark-summary-visual">
-              <img src="Performance-benchmark.png" alt="DRACE 벤치마크 AI 칩셋 시각화">
+              <picture>
+                <source srcset="Performance-benchmark.webp" type="image/webp">
+                <img src="Performance-benchmark.png" width="2161" height="1405" alt="DRACE 벤치마크 AI 칩셋 시각화" loading="lazy" decoding="async">
+              </picture>
             </div>
             <div class="benchmark-summary-grid">
               <article class="benchmark-summary-item">
@@ -538,6 +563,11 @@
                 <span class="benchmark-summary-label">ERQS</span>
                 <strong>90.8</strong>
                 <p>Quality parity maintained</p>
+              </article>
+              <article class="benchmark-summary-item">
+                <span class="benchmark-summary-label">Memory footprint</span>
+                <strong>746 MB</strong>
+                <p>Compact on-device runtime</p>
               </article>
             </div>
           </div>
@@ -615,6 +645,7 @@
                   </tr>
                 </thead>
                 <tbody>
+                  <tr><td>Memory footprint</td><td>-</td><td>746MB</td><td>compact runtime</td></tr>
                   <tr><td>Peak Working Set</td><td>2.8GB</td><td>3.2GB</td><td>+0.4GB</td></tr>
                   <tr><td>Cache Pack Size</td><td>0MB</td><td>150MB</td><td>bounded</td></tr>
                 </tbody>
@@ -822,7 +853,70 @@
     const impactSection = document.querySelector('.impact-banner');
     if (impactSection) counterObserver.observe(impactSection);
 
-    // 4. Benchmark modal interactions
+    // 4. Benchmark metric count-up
+    const benchmarkValues = Array.from(document.querySelectorAll('.benchmark-value[data-count-value]'));
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function formatBenchmarkValue(value, decimals) {
+      if (decimals > 0) return value.toFixed(decimals);
+      return Math.round(value).toLocaleString('en-US');
+    }
+
+    function setBenchmarkValue(element, value) {
+      const number = element.querySelector('.benchmark-number');
+      const decimals = Number(element.dataset.countDecimals || 0);
+      if (number) number.textContent = formatBenchmarkValue(value, decimals);
+    }
+
+    function runBenchmarkCount(element) {
+      if (element.dataset.countAnimated === 'true') return;
+      element.dataset.countAnimated = 'true';
+
+      const target = Number(element.dataset.countValue || 0);
+      const duration = 1200;
+      const startedAt = performance.now();
+
+      if (reduceMotion) {
+        setBenchmarkValue(element, target);
+        return;
+      }
+
+      function tick(now) {
+        const progress = Math.min((now - startedAt) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setBenchmarkValue(element, target * eased);
+
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          setBenchmarkValue(element, target);
+        }
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    benchmarkValues.forEach(value => {
+      const target = Number(value.dataset.countValue || 0);
+      const decimals = Number(value.dataset.countDecimals || 0);
+      const number = value.querySelector('.benchmark-number');
+      if (number) number.style.minWidth = `${formatBenchmarkValue(target, decimals).length}ch`;
+      setBenchmarkValue(value, 0);
+    });
+
+    if (benchmarkValues.length) {
+      const benchmarkCountObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          runBenchmarkCount(entry.target);
+          benchmarkCountObserver.unobserve(entry.target);
+        });
+      }, { threshold: 0.35 });
+
+      benchmarkValues.forEach(value => benchmarkCountObserver.observe(value));
+    }
+
+    // 5. Benchmark modal interactions
     const benchmarkModal = document.getElementById('benchmarkModal');
     const benchmarkSheet = benchmarkModal?.querySelector('.benchmark-modal-sheet');
     const benchmarkOpeners = document.querySelectorAll('[data-open-benchmark]');
