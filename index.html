@@ -54,6 +54,92 @@
           <h1 id="device-hero-title"><span class="mobile-line">온디바이스 AI 에이전트 기반</span> <span class="mobile-line">분쟁기록관리 시스템</span></h1>
           <p>기록은 기기 안에서 보존되고, 사건의 맥락은 에이전트가 정리합니다.</p>
         </div>
+        <div class="hero-showcase reveal" aria-label="RoosyCozy 주요 기능 흐름">
+          <div class="hero-showcase-head">
+            <div class="hero-showcase-tabs" role="group" aria-label="기능 단계 선택">
+              <button class="hero-showcase-tab is-active" type="button" aria-pressed="true" data-hero-showcase-tab="0">기록 생성</button>
+              <button class="hero-showcase-tab" type="button" aria-pressed="false" data-hero-showcase-tab="1">기록 관리</button>
+              <button class="hero-showcase-tab" type="button" aria-pressed="false" data-hero-showcase-tab="2">PDF 출력</button>
+            </div>
+            <div class="hero-showcase-nav" role="group" aria-label="기능 카드 이동">
+              <button class="hero-showcase-arrow" type="button" data-hero-showcase-prev aria-label="이전 카드">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M15 6 9 12l6 6"></path>
+                </svg>
+              </button>
+              <button class="hero-showcase-arrow" type="button" data-hero-showcase-next aria-label="다음 카드">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m9 6 6 6-6 6"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="hero-showcase-viewport" data-hero-showcase-viewport>
+            <article class="hero-showcase-card" data-hero-showcase-slide="0" aria-label="에이전트 기록 생성">
+              <div class="hero-showcase-visual">
+                <div class="hero-showcase-shell shell-step-1">
+                  <div class="mockup-window">
+                    <div class="mockup-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+                    <img src="feature-agent-create.webp" alt="에이전트 기록 생성" loading="lazy" decoding="async">
+                  </div>
+                </div>
+              </div>
+              <div class="hero-showcase-body">
+                <h2 class="hero-showcase-title">에이전트 기록 생성</h2>
+                <p class="hero-showcase-desc">작성하신 모든 기록은 <strong>SHA-256 해시 알고리즘</strong>을 통해 안전하게 암호화되어 저장됩니다.</p>
+                <ul class="feature-list-mini hero-showcase-list">
+                  <li><span class="check">✓</span> 데이터 임의 수정 및 훼손 방지</li>
+                  <li><span class="check">✓</span> 객관적인 소명 근거 자료로 활용</li>
+                </ul>
+              </div>
+            </article>
+
+            <article class="hero-showcase-card" data-hero-showcase-slide="1" aria-label="에이전트 기록 관리">
+              <div class="hero-showcase-visual">
+                <div class="hero-showcase-shell shell-step-2">
+                  <div class="mockup-window">
+                    <div class="mockup-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+                    <img src="feature-agent-manage.webp" alt="에이전트 기록 관리" loading="lazy" decoding="async">
+                  </div>
+                </div>
+              </div>
+              <div class="hero-showcase-body">
+                <h2 class="hero-showcase-title">에이전트 기록 관리</h2>
+                <p class="hero-showcase-desc">파편화되어 흩어진 여러 기록들을 <strong>최적화 알고리즘</strong>이 분석하여 하나의 맥락으로 연결합니다.</p>
+                <ul class="feature-list-mini hero-showcase-list">
+                  <li><span class="check">✓</span> 인물 및 시간순 맥락 자동 파악</li>
+                  <li><span class="check">✓</span> 복잡한 사안도 한눈에 보이는 타임라인</li>
+                </ul>
+              </div>
+            </article>
+
+            <article class="hero-showcase-card" data-hero-showcase-slide="2" aria-label="제출용 증빙 보고서 출력">
+              <div class="hero-showcase-visual">
+                <div class="hero-showcase-shell shell-step-3">
+                  <div class="mockup-window">
+                    <div class="mockup-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+                    <img src="feature-report-export.png" alt="제출용 증빙 보고서 출력" loading="lazy" decoding="async">
+                  </div>
+                </div>
+              </div>
+              <div class="hero-showcase-body">
+                <h2 class="hero-showcase-title">제출용 증빙 보고서 출력</h2>
+                <p class="hero-showcase-desc">수집된 기록을 바탕으로 <strong>정형화된 PDF 문서</strong>를 생성하여 서류 작성의 번거로움을 덜어줍니다.</p>
+                <ul class="feature-list-mini hero-showcase-list">
+                  <li><span class="check">✓</span> 교육청 및 내부 보고용 양식 지원</li>
+                  <li><span class="check">✓</span> 타임스탬프 이력이 포함된 공신력</li>
+                </ul>
+              </div>
+            </article>
+          </div>
+
+          <div class="hero-showcase-dots" role="group" aria-label="기능 카드 페이지">
+            <button class="hero-showcase-dot is-active" type="button" aria-label="1번 카드 보기" data-hero-showcase-dot="0"></button>
+            <button class="hero-showcase-dot" type="button" aria-label="2번 카드 보기" data-hero-showcase-dot="1"></button>
+            <button class="hero-showcase-dot" type="button" aria-label="3번 카드 보기" data-hero-showcase-dot="2"></button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -158,7 +244,7 @@
       </div>
     </section>
 
-    <section class="section showcase-features">
+    <section class="section showcase-features" hidden>
       <div class="container">
         
         <div class="feature-row reveal">
@@ -916,7 +1002,83 @@
       benchmarkValues.forEach(value => benchmarkCountObserver.observe(value));
     }
 
-    // 5. Benchmark modal interactions
+    // 5. Hero showcase carousel
+    const heroShowcaseViewport = document.querySelector('[data-hero-showcase-viewport]');
+    const heroShowcaseSlides = heroShowcaseViewport
+      ? Array.from(heroShowcaseViewport.querySelectorAll('[data-hero-showcase-slide]'))
+      : [];
+    const heroShowcaseTabs = Array.from(document.querySelectorAll('[data-hero-showcase-tab]'));
+    const heroShowcaseDots = Array.from(document.querySelectorAll('[data-hero-showcase-dot]'));
+    const heroShowcasePrev = document.querySelector('[data-hero-showcase-prev]');
+    const heroShowcaseNext = document.querySelector('[data-hero-showcase-next]');
+    let heroShowcaseIndex = 0;
+
+    function setHeroShowcaseActive(index) {
+      heroShowcaseIndex = index;
+
+      heroShowcaseTabs.forEach(tab => {
+        const isActive = Number(tab.dataset.heroShowcaseTab) === index;
+        tab.classList.toggle('is-active', isActive);
+        tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+
+      heroShowcaseDots.forEach(dot => {
+        const isActive = Number(dot.dataset.heroShowcaseDot) === index;
+        dot.classList.toggle('is-active', isActive);
+      });
+    }
+
+    function scrollHeroShowcaseTo(index) {
+      if (!heroShowcaseSlides.length) return;
+      const clampedIndex = (index + heroShowcaseSlides.length) % heroShowcaseSlides.length;
+      const target = heroShowcaseSlides[clampedIndex];
+      setHeroShowcaseActive(clampedIndex);
+
+      target.scrollIntoView({
+        behavior: reduceMotion ? 'auto' : 'smooth',
+        block: 'nearest',
+        inline: 'start'
+      });
+    }
+
+    if (heroShowcaseSlides.length) {
+      setHeroShowcaseActive(0);
+
+      const heroShowcaseObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const index = Number(entry.target.dataset.heroShowcaseSlide);
+          if (!Number.isNaN(index)) setHeroShowcaseActive(index);
+        });
+      }, {
+        root: heroShowcaseViewport,
+        threshold: 0.65
+      });
+
+      heroShowcaseSlides.forEach(slide => heroShowcaseObserver.observe(slide));
+
+      heroShowcaseTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          scrollHeroShowcaseTo(Number(tab.dataset.heroShowcaseTab));
+        });
+      });
+
+      heroShowcaseDots.forEach(dot => {
+        dot.addEventListener('click', () => {
+          scrollHeroShowcaseTo(Number(dot.dataset.heroShowcaseDot));
+        });
+      });
+
+      heroShowcasePrev?.addEventListener('click', () => {
+        scrollHeroShowcaseTo(heroShowcaseIndex - 1);
+      });
+
+      heroShowcaseNext?.addEventListener('click', () => {
+        scrollHeroShowcaseTo(heroShowcaseIndex + 1);
+      });
+    }
+
+    // 6. Benchmark modal interactions
     const benchmarkModal = document.getElementById('benchmarkModal');
     const benchmarkSheet = benchmarkModal?.querySelector('.benchmark-modal-sheet');
     const benchmarkOpeners = document.querySelectorAll('[data-open-benchmark]');
