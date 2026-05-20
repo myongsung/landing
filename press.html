@@ -142,12 +142,28 @@
     const navMenuToggle = document.querySelector('[data-nav-toggle]');
     const primaryNav = document.getElementById('primaryNav');
 
-    function setNavMenuOpen(isOpen) {
+    function syncNavMenuState() {
       if (!navbar || !navMenuToggle || !primaryNav) return;
-      navbar.classList.toggle('is-open', isOpen);
+      const isDesktop = window.innerWidth > 768;
+      const isOpen = navbar.classList.contains('is-open');
+
+      if (isDesktop) {
+        navbar.classList.remove('is-open');
+        primaryNav.setAttribute('aria-hidden', 'false');
+        navMenuToggle.setAttribute('aria-expanded', 'false');
+        navMenuToggle.setAttribute('aria-label', '메뉴 열기');
+        return;
+      }
+
       primaryNav.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
       navMenuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       navMenuToggle.setAttribute('aria-label', isOpen ? '메뉴 닫기' : '메뉴 열기');
+    }
+
+    function setNavMenuOpen(isOpen) {
+      if (!navbar || !navMenuToggle || !primaryNav) return;
+      navbar.classList.toggle('is-open', isOpen);
+      syncNavMenuState();
     }
 
     navMenuToggle?.addEventListener('click', () => {
@@ -172,8 +188,10 @@
     });
 
     window.addEventListener('resize', () => {
-      if (window.innerWidth > 768) setNavMenuOpen(false);
+      syncNavMenuState();
     });
+
+    syncNavMenuState();
   </script>
 </body>
 </html>
