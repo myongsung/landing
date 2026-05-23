@@ -9,10 +9,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#ffffff">
-  <title>RoosyCozy 루지코지 | AI 전사, 사건 묶음, 변호사 연결까지</title>
-  <meta name="description" content="RoosyCozy는 구글 로그인으로 바로 시작하고, AI가 녹음을 텍스트로 바꾸고, 사건별로 자동 묶고, 변호사 연결까지 이어주는 교사용 분쟁기록관리 시스템입니다." />
+  <title>RoosyCozy 루지코지 | 스마트 증거수집과 기록검색</title>
+  <meta name="description" content="RoosyCozy는 녹음·사진·메모를 스마트하게 모으고, AI 전사와 자동 정리로 필요한 기록을 빠르게 찾게 해주는 스마트 증거수집·기록검색 시스템입니다." />
   <link rel="stylesheet" href="style.css" />
-  <link rel="preload" as="image" href="assets/brand/roosycozy-app-icon.png" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/brand/roosycozy-rc-logo.png" fetchpriority="high">
   <link rel="preload" as="image" href="assets/app-screens/home-login.jpeg" fetchpriority="high">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,10 @@
 
   <nav class="navbar">
     <div class="container nav-inner">
-      <a href="#main-hero" class="nav-wordmark" aria-label="RoosyCozy 홈">ROOSYCOZY</a>
+      <a href="#main-hero" class="nav-wordmark" aria-label="RoosyCozy 홈">
+        <img src="assets/brand/roosycozy-rc-logo.png" alt="" width="34" height="34">
+        <span>RoosyCozy</span>
+      </a>
       <button class="nav-menu-toggle" type="button" aria-expanded="false" aria-controls="primaryNav" aria-label="메뉴 열기" data-nav-toggle>
         <span></span>
         <span></span>
@@ -46,18 +49,18 @@
       <div class="container app-hero-shell">
         <div class="app-hero-copy reveal">
           <div class="app-hero-brand">
-            <img src="assets/brand/roosycozy-app-icon.png" alt="RoosyCozy 앱 아이콘" width="84" height="84" fetchpriority="high">
+            <img src="assets/brand/roosycozy-rc-logo.png" alt="RoosyCozy 로고" width="84" height="84" fetchpriority="high">
           </div>
 
           <h1 id="app-hero-title" class="app-hero-title">
-            클릭한번으로<br>
-            전사, 사건 묶음,<br>
-            변호사 연결까지.
+            스마트 증거수집,<br>
+            필요한 순간<br>
+            기록검색.
           </h1>
 
           <p class="app-hero-desc">
-            녹음·사진·메모를 넣으면 AI가 전사하고 사건별로 정리합니다.
-            필요한 순간에는 기록 패키지를 바로 변호사에게 넘길 수 있습니다.
+            녹음·사진·메모를 모으면 AI가 전사하고 정리해,
+            이름·날짜·사건 기준으로 필요한 기록을 바로 찾을 수 있게 만듭니다.
           </p>
 
           <div class="app-hero-actions">
@@ -66,19 +69,19 @@
           </div>
 
           <div class="app-hero-chips">
-            <span>구글 로그인 적용</span>
-            <span>프로 라이선스 적용</span>
-            <span>AI 녹음 전사</span>
+            <span>스마트 증거수집</span>
+            <span>AI 전사 정리</span>
             <span>사건별 자동 묶음</span>
-            <span>변호사 즉시 연결</span>
+            <span>이름·날짜 기록검색</span>
+            <span>필요 기록 바로 공유</span>
           </div>
         </div>
 
         <div class="app-hero-visual reveal" aria-label="RoosyCozy 모바일 앱 화면">
           <div class="app-device-cloud">
             <div class="app-floating-note app-floating-note-top">
-              <strong>프로 기능까지 바로</strong>
-              <span>인디스쿨 쪽지 안내 후 바로 적용</span>
+              <strong>모으는 순간 정리</strong>
+              <span>흩어진 기록을 다시 찾기 쉽게 만듭니다</span>
             </div>
 
             <figure class="app-device-shot app-device-main">
@@ -94,8 +97,8 @@
             </figure>
 
             <div class="app-floating-note app-floating-note-bottom">
-              <strong>전사부터 전달까지</strong>
-              <span>직접 정리하지 않아도 바로 이어집니다</span>
+              <strong>수집부터 검색까지</strong>
+              <span>필요한 기록을 바로 꺼내 확인합니다</span>
             </div>
           </div>
         </div>
@@ -106,44 +109,44 @@
       <div class="container">
         <div class="app-section-head reveal">
           <h2 id="app-convenience-title" class="app-section-title">
-            좋은 기능보다<br>
-            먼저 편해야 합니다
+            모으는 순간,<br>
+            찾기 쉬워집니다
           </h2>
           <p class="app-section-desc">
-            회원가입, 전사, 분류, 전달까지 복잡한 단계를 줄였습니다.
-            처음 써도 바로 이해되고, 급할수록 더 빠르게 움직입니다.
+            현장에서 중요한 건 남기는 속도와 다시 찾는 속도입니다.
+            루지코지는 스마트 증거수집과 기록검색을 한 흐름으로 이어줍니다.
           </p>
         </div>
 
         <div class="app-feature-grid reveal">
           <article class="app-feature-card app-feature-card-accent">
             <span class="app-feature-num eng">01</span>
-            <h3>구글 로그인으로 시작</h3>
-            <p>복잡한 가입 없이 바로 들어와 기록을 남깁니다.</p>
+            <h3>스마트 증거수집</h3>
+            <p>녹음·사진·메모를 현장에서 바로 모을 수 있습니다.</p>
           </article>
 
           <article class="app-feature-card">
             <span class="app-feature-num eng">02</span>
-            <h3>프로 라이선스 적용</h3>
-            <p>인디스쿨 쪽지로 안내받고 바로 사용 흐름에 연결됩니다.</p>
+            <h3>AI 전사 자동화</h3>
+            <p>필요한 녹음만 골라 빠르게 텍스트로 바꿔줍니다.</p>
           </article>
 
           <article class="app-feature-card">
             <span class="app-feature-num eng">03</span>
-            <h3>AI가 녹음을 텍스트로</h3>
-            <p>필요한 녹음만 고르면 바로 텍스트로 바꿔줍니다.</p>
+            <h3>사건별 자동 묶음</h3>
+            <p>이름과 주체를 읽고 사건 단위로 기록을 정리합니다.</p>
           </article>
 
           <article class="app-feature-card">
             <span class="app-feature-num eng">04</span>
-            <h3>자동으로 사건별 묶음</h3>
-            <p>이름과 주체를 읽고 사건 단위로 바로 정리합니다.</p>
+            <h3>이름·날짜 기록검색</h3>
+            <p>학생 이름, 날짜, 사건 기준으로 필요한 기록을 바로 찾습니다.</p>
           </article>
 
           <article class="app-feature-card">
             <span class="app-feature-num eng">05</span>
-            <h3>변호사 즉시 연결</h3>
-            <p>필요한 기록을 바로 묶어 자문 변호사에게 전달합니다.</p>
+            <h3>필요 기록 바로 공유</h3>
+            <p>찾은 기록을 자문이나 보고용으로 빠르게 꺼내 전달합니다.</p>
           </article>
         </div>
       </div>
@@ -153,11 +156,11 @@
       <div class="container">
         <div class="app-section-head reveal">
           <h2 id="app-flow-title" class="app-section-title">
-            수집부터 전달까지<br>
-            한 흐름으로
+            모으고, 정리하고,<br>
+            바로 찾습니다
           </h2>
           <p class="app-section-desc">
-            남기고, 읽고, 묶고, 보내는 동선이 끊기지 않게 정리했습니다.
+            현장에서 남긴 기록이 그대로 검색 가능한 증거가 되도록 설계했습니다.
           </p>
         </div>
 
@@ -167,8 +170,8 @@
               <img src="assets/app-screens/package-transcribe.jpeg" alt="AI 전사 실행과 패키징 화면" width="946" height="2048" loading="lazy">
             </div>
             <div class="app-flow-body">
-              <h3>AI가 먼저 전사합니다</h3>
-              <p>필요한 녹음만 골라 바로 AI 텍스트 변환을 실행합니다.</p>
+              <h3>수집한 녹음을 바로 전사</h3>
+              <p>필요한 녹음만 골라 AI 전사로 빠르게 정리합니다.</p>
             </div>
           </article>
 
@@ -177,18 +180,18 @@
               <img src="assets/app-screens/record-detail.jpeg" alt="전사 결과와 사용자 메모 화면" width="946" height="2048" loading="lazy">
             </div>
             <div class="app-flow-body">
-              <h3>전사와 메모가 한 화면에</h3>
-              <p>전사 결과와 사용자 메모를 같은 화면에서 바로 정리합니다.</p>
+              <h3>전사와 메모를 함께 정리</h3>
+              <p>전사 결과와 메모를 같은 맥락에서 바로 묶습니다.</p>
             </div>
           </article>
 
           <article class="app-flow-card reveal">
             <div class="app-flow-media">
-              <img src="assets/app-screens/case-grouping.jpeg" alt="사건 중심 자동 묶음과 전달 화면" width="946" height="2048" loading="lazy">
+              <img src="assets/app-screens/archive-calendar.jpeg" alt="날짜별 기록검색 화면" width="946" height="2048" loading="lazy">
             </div>
             <div class="app-flow-body">
-              <h3>사건별 묶음 후 바로 전달</h3>
-              <p>묶인 기록을 선택해 변호사에게 즉시 전달합니다.</p>
+              <h3>기록검색으로 바로 찾기</h3>
+              <p>날짜, 사건, 주체 기준으로 필요한 기록을 곧바로 꺼냅니다.</p>
             </div>
           </article>
         </div>
@@ -199,17 +202,17 @@
       <div class="container app-showcase-shell">
         <div class="app-showcase-copy reveal">
           <h2 id="app-showcase-title" class="app-section-title">
-            기록을 찾는 시간도<br>
-            짧게 만듭니다
+            기록검색은 더 빠르고<br>
+            더 명확해야 합니다
           </h2>
           <p class="app-section-desc">
-            날짜별 보관함과 사건 묶음으로 필요한 기록을 바로 찾고 이어서 확인합니다.
+            날짜별 보관함과 사건 묶음으로 필요한 기록을 즉시 찾고, 바로 이어서 확인합니다.
           </p>
 
           <ul class="app-proof-list">
-            <li>날짜별 기록 수를 한눈에 확인</li>
-            <li>메모·사진·녹음 상태를 바로 확인</li>
-            <li>사건 묶음과 개별 기록을 빠르게 탐색</li>
+            <li>날짜별 기록검색이 빠릅니다</li>
+            <li>학생·주체 기준으로 묶음을 탐색합니다</li>
+            <li>찾은 기록을 바로 열어 확인합니다</li>
           </ul>
         </div>
 
@@ -218,7 +221,7 @@
             <img src="assets/app-screens/archive-calendar.jpeg" alt="날짜별 보관함 캘린더 화면" width="946" height="2048" loading="lazy">
           </figure>
           <figure class="app-showcase-shot app-showcase-shot-small">
-            <img src="assets/app-screens/lawyer-connect.jpeg" alt="변호사 연결 화면 상세" width="946" height="2048" loading="lazy">
+            <img src="assets/app-screens/case-grouping.jpeg" alt="사건별 기록 탐색 화면" width="946" height="2048" loading="lazy">
           </figure>
         </div>
       </div>
@@ -228,29 +231,29 @@
       <div class="container app-license-shell">
         <div class="app-license-copy reveal">
           <h2 id="app-license-title" class="app-section-title">
-            프로 기능도<br>
-            바로 연결됩니다
+            Pro 코드로<br>
+            더 넓게 시작합니다
           </h2>
           <p class="app-section-desc">
-            프로 라이선스는 인디스쿨 쪽지로 안내받고 즉시 적용하는 흐름으로 준비 중입니다.
+            인디스쿨 쪽지로 Pro 코드를 안내받으면 스마트 증거수집과 기록검색 흐름을 바로 시작할 수 있습니다.
           </p>
         </div>
 
         <div class="app-license-steps reveal">
           <article class="app-license-step">
             <span class="eng">01</span>
-            <h3>구글 로그인</h3>
-            <p>계정 생성 없이 바로 시작합니다.</p>
+            <h3>쪽지 보내기</h3>
+            <p>인디스쿨에서 시작 의사를 남깁니다.</p>
           </article>
           <article class="app-license-step">
             <span class="eng">02</span>
-            <h3>인디스쿨 쪽지 안내</h3>
-            <p>프로 라이선스 안내를 인디스쿨 쪽지로 받습니다.</p>
+            <h3>Pro 코드 안내</h3>
+            <p>회신으로 필요한 코드와 시작 흐름을 받습니다.</p>
           </article>
           <article class="app-license-step">
             <span class="eng">03</span>
-            <h3>즉시 사용</h3>
-            <p>전사, 자동 묶음, 변호사 연결까지 바로 이어서 씁니다.</p>
+            <h3>바로 사용</h3>
+            <p>증거를 모으고 검색하는 흐름을 즉시 시작합니다.</p>
           </article>
         </div>
       </div>
@@ -259,13 +262,13 @@
     <section class="section app-final-cta">
       <div class="container">
         <div class="app-final-shell reveal">
-          <h2>설명보다,<br>바로 써보는 쪽이 빠릅니다.</h2>
+          <h2>모은 기록이,<br>바로 찾을 수 있는 증거가 됩니다.</h2>
           <p>
-            구글 로그인 후 기록을 남기면 AI가 정리하고, 필요한 순간 바로 연결합니다.
+            스마트 증거수집과 기록검색이 연결되면, 필요한 순간 더 빠르게 꺼낼 수 있습니다.
           </p>
           <div class="app-hero-actions">
             <a href="contact.html" class="btn-primary app-cta-primary">시작하기</a>
-            <a href="legal-partner.html" class="btn-primary app-cta-secondary">자문변호사소개</a>
+            <a href="press.html" class="btn-primary app-cta-secondary">언론보도 보기</a>
           </div>
         </div>
       </div>
@@ -275,9 +278,13 @@
   <footer>
     <div class="container footer-inner">
       <div class="f-info">
-        <div class="logo" style="margin-bottom:10px; font-size:1.1rem;"><span></span> RoosyCozy</div>
+        <div class="logo" style="margin-bottom:10px; font-size:1.1rem;">
+          <img src="assets/brand/roosycozy-rc-logo.png" alt="" width="30" height="30">
+          <strong>RoosyCozy</strong>
+        </div>
         <p>
-          Logic Driven Defense.<br>
+          스마트 증거수집.<br>
+          필요한 순간 기록검색.<br>
           문의: myongsungcs@gmail.com
         </p>
       </div>
