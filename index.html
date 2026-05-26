@@ -13,7 +13,8 @@
   <meta name="description" content="RoosyCozy는 녹음·사진·메모를 모으고 AI 전사, 스마트검색, 패키지 보관함으로 이어주는 스마트 증거수집·기록검색 앱입니다." />
   <link rel="stylesheet" href="style.css" />
   <link rel="preload" as="image" href="assets/brand/roosycozy-rc-logo.png" fetchpriority="high">
-  <link rel="preload" as="image" href="assets/app-screens/hero-voice.jpeg" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/hero/roosycozy-main-hero.jpg" media="(min-width: 769px)" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/hero/roosycozy-main-hero-mobile.jpg" media="(max-width: 768px)" fetchpriority="high">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,12 +47,11 @@
 
   <main>
     <section id="main-hero" class="section app-hero" aria-labelledby="app-hero-title">
+      <div class="app-hero-photo">
+        <span class="app-hero-model-caption">루지코지의 AI가상모델 '루지'</span>
+      </div>
       <div class="container app-hero-shell">
         <div class="app-hero-copy reveal">
-          <div class="app-hero-brand">
-            <img src="assets/brand/roosycozy-rc-logo.png" alt="RoosyCozy 로고" width="84" height="84" fetchpriority="high">
-          </div>
-
           <h1 id="app-hero-title" class="app-hero-title">
             스마트 증거수집,<br>
             스마트검색,<br>
@@ -62,45 +62,6 @@
             녹음·사진·메모를 남기면 AI가 전사와 주체 추론을 돕고,
             찾고 싶은 상황을 입력했을 때 관련 기록을 패키지로 묶어 다시 꺼내 쓰기 쉽게 만듭니다.
           </p>
-
-          <div class="app-hero-actions">
-            <a href="contact.html" class="btn-primary app-cta-primary">지금 시작하기</a>
-            <a href="press.html" class="btn-primary app-cta-secondary">언론보도 보기</a>
-          </div>
-
-          <div class="app-hero-chips">
-            <span>녹음 · 사진 · 메모 수집</span>
-            <span>메모 기반 저장 구조</span>
-            <span>AI 전사</span>
-            <span>스마트검색 PRO</span>
-            <span>패키지 보관함</span>
-          </div>
-        </div>
-
-        <div class="app-hero-visual reveal" aria-label="RoosyCozy 모바일 앱 화면">
-          <div class="app-device-cloud">
-            <div class="app-floating-note app-floating-note-top">
-              <strong>기록을 남기는 홈</strong>
-              <span>녹음 종료 후 메모까지 이어져 사실관계를 빠뜨리지 않습니다</span>
-            </div>
-
-            <figure class="app-device-shot app-device-main">
-              <img src="assets/app-screens/hero-voice.jpeg" alt="녹음과 메모 중심의 증거수집 홈 화면" width="1080" height="2340" fetchpriority="high">
-            </figure>
-
-            <figure class="app-device-shot app-device-left">
-              <img src="assets/app-screens/hero-smart-search.jpeg" alt="스마트검색으로 관련 기록을 묶는 화면" width="1080" height="2340" loading="lazy">
-            </figure>
-
-            <figure class="app-device-shot app-device-right">
-              <img src="assets/app-screens/hero-package.jpeg" alt="패키지 보관함에서 정리된 기록을 확인하는 화면" width="1080" height="2340" loading="lazy">
-            </figure>
-
-            <div class="app-floating-note app-floating-note-bottom">
-              <strong>검색하면 패키지 생성</strong>
-              <span>관련 기록만 묶어 패키지 보관함으로 바로 넘길 수 있습니다</span>
-            </div>
-          </div>
         </div>
       </div>
     </section>

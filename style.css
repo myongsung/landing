@@ -5477,8 +5477,9 @@ footer { padding: 60px 0 0 0; background: var(--bg-paper); border-top: 1px solid
 }
 
 .app-home .navbar {
-  background: #ffffff;
-  backdrop-filter: blur(20px);
+  background: transparent;
+  border-bottom-color: transparent;
+  backdrop-filter: none;
 }
 
 .app-home main {
@@ -5529,55 +5530,91 @@ footer { padding: 60px 0 0 0; background: var(--bg-paper); border-top: 1px solid
 
 .app-hero {
   position: relative;
-  padding: calc(var(--header-h) + 34px) 0 56px;
+  min-height: min(760px, 92svh);
+  padding: calc(var(--header-h) + 46px) 0 48px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background: #ffffff;
 }
 
 .app-hero::before {
   content: none;
   position: absolute;
   inset: 0;
+  z-index: 1;
   pointer-events: none;
+}
+
+.app-hero::after {
+  content: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  height: 28%;
+  pointer-events: none;
+}
+
+.app-hero-photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background-image: url("assets/hero/roosycozy-main-hero.jpg");
+  background-repeat: no-repeat;
+  background-position: right top;
+  background-size: min(82vw, 1180px) auto;
+}
+
+.app-hero-model-caption {
+  position: absolute;
+  right: clamp(20px, 3vw, 44px);
+  bottom: 26px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 999px;
+  background: rgba(16, 23, 33, 0.46);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(8px);
 }
 
 .app-hero-shell {
   position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.02fr) minmax(380px, 0.98fr);
-  gap: 36px;
-  align-items: center;
+  z-index: 2;
+  width: 100%;
+  display: block;
 }
 
 .app-hero-copy {
-  max-width: 580px;
-}
-
-.app-hero-brand {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  margin-bottom: 18px;
-}
-
-.app-hero-brand img {
-  width: 76px;
-  height: 76px;
-  display: block;
-  object-fit: contain;
+  max-width: 560px;
+  padding-top: 4px;
 }
 
 .app-hero-title {
   margin: 0 0 16px;
-  font-size: clamp(2.48rem, 4.4vw, 4.15rem);
-  line-height: 0.98;
+  max-width: 8.6em;
+  font-size: clamp(2.56rem, 4.9vw, 4.65rem);
+  line-height: 0.97;
   letter-spacing: -0.06em;
 }
 
 .app-hero-desc {
   margin: 0 0 22px;
-  max-width: 540px;
-  color: var(--text-sub);
-  font-size: 0.96rem;
+  max-width: 500px;
+  color: #3e4654;
+  font-size: 1rem;
   line-height: 1.68;
 }
 
@@ -5621,127 +5658,6 @@ footer { padding: 60px 0 0 0; background: var(--bg-paper); border-top: 1px solid
 .app-cta-secondary:hover {
   transform: translateY(-2px);
   box-shadow: 0 16px 34px rgba(18, 84, 191, 0.12);
-}
-
-.app-hero-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 18px;
-}
-
-.app-hero-chips span {
-  min-height: 34px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: #ffffff;
-  border: 1px solid rgba(32, 98, 218, 0.12);
-  color: #1d5bc0;
-  font-size: 0.8rem;
-  font-weight: 700;
-  box-shadow: 0 10px 24px rgba(18, 84, 191, 0.06);
-}
-
-.app-device-cloud {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(84px, 0.42fr) minmax(180px, 1fr) minmax(84px, 0.42fr);
-  grid-template-areas:
-    "deviceLeft deviceMain deviceRight";
-  align-items: end;
-  gap: 16px;
-  min-height: 0;
-  padding: 0;
-}
-
-.app-device-cloud::before {
-  content: none;
-  position: absolute;
-  inset: 13% 8% 10% 12%;
-  border-radius: 44px;
-  filter: blur(28px);
-  opacity: 0.9;
-}
-
-.app-device-shot {
-  position: relative;
-  margin: 0;
-  overflow: hidden;
-  border-radius: 30px;
-  background: #ffffff;
-  border: 1px solid rgba(32, 98, 218, 0.11);
-  box-shadow: 0 24px 44px rgba(18, 84, 191, 0.11);
-}
-
-.app-device-shot img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.app-device-main {
-  grid-area: deviceMain;
-  width: 100%;
-  max-width: 300px;
-  justify-self: center;
-  z-index: 3;
-  transform: none;
-}
-
-.app-device-left {
-  grid-area: deviceLeft;
-  width: 100%;
-  max-width: 180px;
-  justify-self: end;
-  z-index: 2;
-  transform: none;
-}
-
-.app-device-right {
-  grid-area: deviceRight;
-  width: 100%;
-  max-width: 174px;
-  justify-self: start;
-  z-index: 1;
-  transform: none;
-}
-
-.app-floating-note {
-  position: relative;
-  z-index: 4;
-  display: none;
-  gap: 5px;
-  padding: 12px 14px;
-  border-radius: 18px;
-  background: #ffffff;
-  border: 1px solid rgba(32, 98, 218, 0.12);
-  box-shadow: 0 18px 36px rgba(18, 84, 191, 0.08);
-}
-
-.app-floating-note strong {
-  color: #195dc6;
-  font-size: 0.86rem;
-  line-height: 1.2;
-}
-
-.app-floating-note span {
-  color: var(--text-sub);
-  font-size: 0.76rem;
-  line-height: 1.45;
-}
-
-.app-floating-note-top {
-  grid-area: noteTop;
-  justify-self: end;
-  max-width: 220px;
-}
-
-.app-floating-note-bottom {
-  grid-area: noteBottom;
-  justify-self: start;
-  max-width: 250px;
 }
 
 .app-convenience {
@@ -6033,26 +5949,19 @@ footer { padding: 60px 0 0 0; background: var(--bg-paper); border-top: 1px solid
 }
 
 @media (max-width: 1200px) {
-  .app-hero-shell,
   .app-showcase-shell,
   .app-license-shell {
     grid-template-columns: 1fr;
+  }
+
+  .app-hero {
+    min-height: min(740px, 90svh);
   }
 
   .app-hero-copy,
   .app-section-head,
   .app-license-copy {
     max-width: none;
-  }
-
-  .app-hero-visual {
-    order: -1;
-  }
-
-  .app-device-cloud {
-    min-height: 0;
-    max-width: 640px;
-    margin: 0 auto;
   }
 
   .app-showcase-visual {
@@ -6062,6 +5971,23 @@ footer { padding: 60px 0 0 0; background: var(--bg-paper); border-top: 1px solid
 }
 
 @media (max-width: 992px) {
+  .app-hero {
+    min-height: 0;
+    padding-top: clamp(300px, 59vw, 590px);
+    padding-bottom: 48px;
+    display: block;
+    align-items: initial;
+  }
+
+  .app-hero::before {
+    content: none;
+  }
+
+  .app-hero-photo {
+    inset: 0 0 auto;
+    height: clamp(266px, 56.3vw, 558px);
+  }
+
   .app-feature-grid,
   .app-flow-grid,
   .app-license-steps {
@@ -6080,9 +6006,12 @@ footer { padding: 60px 0 0 0; background: var(--bg-paper); border-top: 1px solid
     text-align: center;
   }
 
-  .app-hero-brand,
-  .app-hero-actions,
-  .app-hero-chips {
+  .app-hero-copy {
+    max-width: 620px;
+    margin: 0 auto;
+  }
+
+  .app-hero-actions {
     justify-content: center;
   }
 
@@ -6097,23 +6026,44 @@ footer { padding: 60px 0 0 0; background: var(--bg-paper); border-top: 1px solid
 
 @media (max-width: 768px) {
   .app-hero {
-    padding-top: calc(var(--header-h) + 20px);
-    padding-bottom: 42px;
+    padding-top: clamp(520px, 73svh, 650px);
+    padding-bottom: 46px;
+  }
+
+  .app-hero-photo {
+    background-image: url("assets/hero/roosycozy-main-hero-mobile.jpg");
+    background-size: cover;
+    background-position: 50% 0%;
+    height: clamp(500px, 70svh, 632px);
+  }
+
+  .app-hero-model-caption {
+    right: 16px;
+    bottom: 16px;
+    min-height: 28px;
+    padding: 0 10px;
+    font-size: 0.72rem;
+  }
+
+  .app-hero-copy {
+    max-width: 22rem;
+    padding-top: 0;
+    text-align: left;
   }
 
   .app-hero-title {
-    max-width: 11em;
-    margin-left: auto;
-    margin-right: auto;
-    font-size: clamp(1.72rem, 7.4vw, 2.35rem);
-    line-height: 1.06;
-    letter-spacing: -0.045em;
+    max-width: 9.3em;
+    margin-left: 0;
+    margin-right: 0;
+    font-size: clamp(2.02rem, 10.8vw, 2.86rem);
+    line-height: 0.98;
+    letter-spacing: -0.055em;
   }
 
   .app-hero-desc,
   .app-section-desc,
   .app-final-shell p {
-    max-width: 17rem;
+    max-width: 19rem;
     margin-left: auto;
     margin-right: auto;
     font-size: 0.9rem;
@@ -6122,64 +6072,17 @@ footer { padding: 60px 0 0 0; background: var(--bg-paper); border-top: 1px solid
     overflow-wrap: anywhere;
   }
 
-  .app-hero-brand {
-    gap: 14px;
-    margin-bottom: 18px;
-  }
-
-  .app-hero-brand img {
-    width: 64px;
-    height: 64px;
-    border-radius: 18px;
+  .app-hero-desc {
+    max-width: 21rem;
+    margin-left: 0;
+    margin-right: 0;
+    font-size: 0.95rem;
+    line-height: 1.62;
   }
 
   .app-cta-primary,
   .app-cta-secondary {
     width: 100%;
-  }
-
-  .app-device-cloud {
-    grid-template-columns: minmax(68px, 0.5fr) minmax(150px, 0.95fr) minmax(68px, 0.5fr);
-    gap: 10px;
-    min-height: 0;
-    max-width: 100%;
-  }
-
-  .app-device-main {
-    width: 100%;
-    max-width: 220px;
-  }
-
-  .app-device-left {
-    width: 100%;
-    max-width: 128px;
-  }
-
-  .app-device-right {
-    width: 100%;
-    max-width: 122px;
-  }
-
-  .app-floating-note {
-    max-width: 180px;
-    padding: 12px 13px;
-    border-radius: 16px;
-  }
-
-  .app-floating-note strong {
-    font-size: 0.84rem;
-  }
-
-  .app-floating-note span {
-    font-size: 0.76rem;
-  }
-
-  .app-floating-note-top {
-    justify-self: end;
-  }
-
-  .app-floating-note-bottom {
-    justify-self: start;
   }
 
   .app-section-head {
@@ -6234,42 +6137,30 @@ footer { padding: 60px 0 0 0; background: var(--bg-paper); border-top: 1px solid
     font-size: 1.02rem;
   }
 
+  .app-hero {
+    min-height: 0;
+    padding-top: clamp(486px, 136vw, 548px);
+    padding-bottom: 38px;
+  }
+
+  .app-hero-photo {
+    height: clamp(468px, 132vw, 532px);
+  }
+
+  .app-hero-model-caption {
+    right: 14px;
+    bottom: 14px;
+  }
+
   .app-hero-title {
-    max-width: 10.4em;
-    font-size: clamp(1.5rem, 7vw, 1.74rem);
+    max-width: 8.9em;
+    font-size: clamp(2rem, 10.7vw, 2.66rem);
   }
 
   .app-hero-desc {
-    max-width: 16rem;
-    font-size: 0.84rem;
+    max-width: 20rem;
+    font-size: 0.92rem;
     overflow-wrap: anywhere;
-  }
-
-  .app-hero-chips span {
-    min-height: 32px;
-    font-size: 0.76rem;
-  }
-
-  .app-device-cloud {
-    grid-template-columns: minmax(48px, 0.48fr) minmax(130px, 0.95fr) minmax(48px, 0.48fr);
-    gap: 8px;
-    min-height: 0;
-    max-width: 320px;
-  }
-
-  .app-floating-note {
-    display: none;
-  }
-
-  .app-device-main {
-    width: 100%;
-    max-width: 170px;
-  }
-
-  .app-device-left,
-  .app-device-right {
-    width: 100%;
-    max-width: 96px;
   }
 
   .app-feature-card h3,
