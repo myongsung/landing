@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.redclexperice.com/sitemap.xml
-
+Sitemap: https://www.roosycozy.com/sitemap.xml
