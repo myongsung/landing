@@ -304,22 +304,6 @@ a {
   opacity: 0.55;
 }
 
-.case-upgrade-form.is-coming-soon {
-  border-color: rgba(15, 23, 42, 0.1);
-  background: #f8fafc;
-}
-
-.case-upgrade-form.is-coming-soon input {
-  color: #94a3b8;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.case-upgrade-form.is-coming-soon button {
-  background: #e2e8f0;
-  color: #64748b;
-}
-
 .case-upgrade-form p {
   margin: 0;
   color: #64748b;

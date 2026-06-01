@@ -766,7 +766,60 @@ async function saveCaseSet() {
 
 async function redeemTeacherUpgradeCode(event) {
   event.preventDefault();
-  setUpgradeMessage('초등교원 Teacher 프로승급 코드는 곧 오픈예정입니다.', 'idle');
+
+  if (!session?.user) {
+    setUpgradeMessage('Google 로그인 후 프로코드를 입력해 주세요.', 'error');
+    return;
+  }
+
+  const code = dom.teacherCodeInput?.value.trim().toUpperCase() ?? '';
+
+  if (!/^[A-Z0-9]{6}$/.test(code)) {
+    setUpgradeMessage('프로코드는 영문 대문자와 숫자 6자리입니다.', 'error');
+    return;
+  }
+
+  const client = ensureClient();
+  if (!client) return;
+
+  const submitButton = dom.teacherUpgradeForm.querySelector('button[type="submit"]');
+  const idleLabel = submitButton.textContent;
+  submitButton.disabled = true;
+  submitButton.textContent = '확인 중';
+  setUpgradeMessage('프로코드를 확인하고 있습니다.', 'loading');
+
+  try {
+    const { data, error } = await withTimeout(
+      client.rpc('redeem_teacher_upgrade_code', {
+        input_code: code,
+      }),
+      12000,
+      '프로코드 승급 RPC 응답이 지연되고 있습니다. Database Function redeem_teacher_upgrade_code 상태를 확인해 주세요.'
+    );
+
+    if (error) throw error;
+
+    dom.teacherCodeInput.value = '';
+    applyUsageState({
+      tier: data?.tier ?? 'teacher',
+      used: data?.used ?? usageState.used,
+      limit: data?.limit ?? tierConfig.teacher.limit,
+      period: data?.period ?? usageState.period,
+    });
+    await withTimeout(
+      loadUsage(),
+      8000,
+      '사용량 갱신 응답이 지연되고 있습니다.'
+    ).catch(() => null);
+    setUpgradeMessage('Teacher 계정으로 승급되었습니다. 사용량이 갱신되었습니다.', 'success');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '승급 처리에 실패했습니다.';
+    setUpgradeMessage(`승급 오류: ${message}`, 'error');
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = idleLabel;
+    syncInteractionState();
+  }
 }
 
 async function deleteConversation(id) {
@@ -845,7 +898,8 @@ function setLicenseOpen(isOpen) {
   dom.licenseModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
 
   if (isOpen) {
-    setUpgradeMessage('초등교원 Teacher 프로승급 코드는 곧 오픈예정입니다. 오픈 후 인디스쿨에서 루지코지by노명성을 찾아 쪽지를 보내면 안내받을 수 있습니다.', 'idle');
+    setUpgradeMessage('프로코드는 인디스쿨에서 루지코지by노명성을 찾아 쪽지를 보내면 안내받을 수 있습니다.', 'idle');
+    setTimeout(() => dom.teacherCodeInput?.focus(), 60);
     return;
   }
 
