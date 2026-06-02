@@ -39,11 +39,7 @@
         <button class="case-save-button" type="button" data-save-case data-idle-label="저장">저장</button>
 
         <section class="case-auth-card" data-auth-panel>
-          <button class="case-google-button" type="button" data-sign-in-google>
-            <span>G</span>
-            Google로 계속하기
-          </button>
-          <p class="case-auth-message" data-auth-message></p>
+          <button class="case-login-button" type="button" data-auth-open>로그인하기</button>
         </section>
 
         <section class="case-user-card is-hidden" data-user-panel>
@@ -67,6 +63,64 @@
       <nav class="case-list case-history-list" data-conversation-list aria-label="저장된 상담"></nav>
     </aside>
 
+    <div class="case-auth-backdrop" data-auth-backdrop hidden></div>
+    <section class="case-auth-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="auth-modal-title" data-auth-modal hidden>
+      <header>
+        <div>
+          <span>Account</span>
+          <h2 id="auth-modal-title">로그인하기</h2>
+        </div>
+        <button type="button" data-auth-close>닫기</button>
+      </header>
+
+      <div class="case-auth-google-row" data-google-auth-row>
+        <button class="case-google-button" type="button" data-sign-in-google>
+          <span>G</span>
+          Google로 시작하기
+        </button>
+      </div>
+
+      <p class="case-auth-embedded-note">네이버앱, 카카오톡 등 앱 안의 브라우저에서는 Google 로그인이 차단될 수 있어 이메일 로그인만 사용할 수 있습니다. Google 계정으로 들어오려면 Chrome 브라우저에서 다시 열어 주세요.</p>
+
+      <div class="case-auth-divider">또는 이메일로 시작하기</div>
+
+      <div class="case-auth-tabs" role="tablist" aria-label="이메일 인증 방식">
+        <button type="button" class="is-active" data-auth-mode="login">로그인</button>
+        <button type="button" data-auth-mode="signup">회원가입</button>
+      </div>
+
+      <form class="case-email-auth-form" data-email-auth-form>
+        <input type="email" inputmode="email" autocomplete="email" placeholder="이메일 주소" data-auth-email>
+        <input type="password" autocomplete="current-password" placeholder="비밀번호" data-auth-password>
+        <input class="case-signup-only" type="password" autocomplete="new-password" placeholder="비밀번호 확인" data-auth-password-confirm>
+        <p class="case-password-hint case-signup-only" data-password-match-message aria-live="polite"></p>
+        <div class="case-terms-wrap case-signup-only">
+          <label class="case-terms-check">
+            <input type="checkbox" data-auth-terms>
+            <span>개인정보처리방침 및 이용약관에 동의합니다.</span>
+          </label>
+          <div class="case-auth-legal-actions" aria-label="약관 확인">
+            <button type="button" data-auth-legal-open="privacy">개인정보처리방침 보기</button>
+            <button type="button" data-auth-legal-open="terms">이용약관 보기</button>
+          </div>
+        </div>
+        <button type="submit" data-auth-submit>이메일로 로그인</button>
+      </form>
+
+      <p class="case-auth-message" data-auth-message></p>
+      <button class="case-auth-resend" type="button" data-auth-resend hidden>인증 메일 다시 보내기</button>
+      <small>회원가입 후 받은 메일의 인증 링크를 누른 뒤, 같은 이메일과 비밀번호로 PC와 모바일에서 로그인할 수 있습니다.</small>
+    </section>
+
+    <div class="case-auth-legal-backdrop" data-auth-legal-backdrop hidden></div>
+    <section class="case-auth-legal-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="auth-legal-title" data-auth-legal-modal hidden>
+      <header>
+        <h2 id="auth-legal-title" data-auth-legal-title>약관</h2>
+        <button type="button" data-auth-legal-close>닫기</button>
+      </header>
+      <div class="case-auth-legal-content" data-auth-legal-content></div>
+    </section>
+
     <div class="case-license-backdrop" data-license-backdrop hidden></div>
     <section class="case-license-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="license-modal-title" data-license-modal hidden>
       <header>
@@ -77,7 +131,7 @@
         <button type="button" data-license-close>닫기</button>
       </header>
 
-      <p class="case-license-summary">비로그인 사용자는 대화할 수 없습니다. Google 로그인 후 일반 계정으로 시작할 수 있으며, 초등교원은 프로코드 입력으로 Teacher 계정으로 승급할 수 있습니다.</p>
+      <p class="case-license-summary">비로그인 사용자는 대화할 수 없습니다. Google 또는 이메일 로그인 후 일반 계정으로 시작할 수 있으며, 초등교원은 프로코드 입력으로 Teacher 계정으로 승급할 수 있습니다.</p>
 
       <div class="case-license-table-wrap">
         <table class="case-license-table">
@@ -92,7 +146,7 @@
           <tbody>
             <tr>
               <th scope="row">대상</th>
-              <td>Google 로그인 사용자</td>
+              <td>Google 또는 이메일 로그인 사용자</td>
               <td>초등교원</td>
               <td>전문 사용자</td>
             </tr>
@@ -147,7 +201,7 @@
             <h3>제3조 개인정보의 처리 목적</h3>
             <p>회사는 다음 목적을 위하여 필요한 최소한의 개인정보를 처리하며, 다음 목적 이외의 용도로 이용하지 않습니다. 처리 목적이 변경되는 경우에는 관계 법령에 따라 별도 동의를 받거나 필요한 조치를 이행합니다.</p>
             <ol>
-              <li>회원 인증 및 계정 관리: Google OAuth 로그인, 이용자 식별, 세션 유지, 로그아웃 처리</li>
+              <li>회원 인증 및 계정 관리: Google OAuth 또는 이메일 로그인, 이용자 식별, 세션 유지, 로그아웃 처리</li>
               <li>AI 상담 및 보고서 생성: 이용자가 입력한 상담 내용 분석, 추가 질문 생성, 사건 개요·경위·쟁점·요청사항 정리</li>
               <li>대화 및 보고서 저장: 이용자가 저장하거나 서비스 이용 과정에서 생성된 상담 기록, 보고서, 제목, 상태값의 조회·삭제 지원</li>
               <li>라이선스 및 사용량 관리: 일반·Teacher·PRO 계정 구분, 월 사용량 산정, 프로코드 사용 여부 확인, 오남용 방지</li>
@@ -158,7 +212,7 @@
             <h3>제4조 처리하는 개인정보 항목</h3>
             <p>회사는 서비스 제공에 필요한 범위에서 아래 항목을 처리할 수 있습니다.</p>
             <ul>
-              <li>Google 로그인 정보: 이메일 주소, Google 계정 식별자, 프로필 이름 또는 프로필 이미지가 제공되는 경우 해당 정보</li>
+              <li>로그인 정보: 이메일 주소, Google 계정 식별자, 프로필 이름 또는 프로필 이미지가 제공되는 경우 해당 정보, 이메일 가입 시 인증 및 비밀번호 기반 로그인에 필요한 인증 정보</li>
               <li>계정·라이선스 정보: 내부 사용자 식별자, 회원 등급, Teacher 또는 PRO 승급 코드 사용 여부, 사용량, 생성·수정 시각</li>
               <li>상담 정보: 이용자가 입력한 문답, AI가 생성한 질문과 답변, 보고서 본문, 상담 제목, 상담 상태, 저장 여부, 삭제 여부</li>
               <li>서비스 이용 정보: 접속 일시, 브라우저 및 기기 정보, IP 주소, 오류 기록, 인증 토큰 및 세션 유지에 필요한 로컬 저장 정보</li>
@@ -169,7 +223,7 @@
             <h3>제5조 개인정보의 처리 및 보유 기간</h3>
             <p>회사는 개인정보의 처리 목적이 달성되거나 이용자가 삭제·탈퇴를 요청한 때에는 지체 없이 해당 개인정보를 파기합니다. 다만 관계 법령에 따라 보존할 필요가 있거나 분쟁 대응을 위하여 필요한 경우에는 아래 기간 동안 보관할 수 있습니다.</p>
             <ul>
-              <li>계정 정보: 회원 탈퇴 또는 Google 로그인 연결 해제 요청 시까지</li>
+              <li>계정 정보: 회원 탈퇴, Google 로그인 연결 해제 또는 이메일 계정 삭제 요청 시까지</li>
               <li>상담 문답 및 보고서: 이용자가 직접 삭제하거나 계정 삭제를 요청할 때까지</li>
               <li>라이선스·프로코드 사용 이력: 부정 사용 방지 및 중복 사용 제한을 위하여 계정 유지 기간 동안, 탈퇴 후에는 분쟁 대응에 필요한 범위에서 최대 1년</li>
               <li>접속·보안 로그: 보안 점검 및 장애 대응을 위하여 원칙적으로 3개월, 사고 조사 또는 법령상 보존 필요가 있는 경우 해당 기간</li>
@@ -221,8 +275,8 @@
             <h3>제2조 정의</h3>
             <ol>
               <li>"서비스"란 이용자가 AI와 문답하면서 사건·분쟁·민원 관련 사실관계를 정리하고 보고서 형태의 정리본을 생성·저장할 수 있는 웹 기반 기능을 말합니다.</li>
-              <li>"이용자"란 본 약관에 따라 서비스를 이용하는 자를 말하며, 비로그인 이용자와 Google 로그인 이용자를 포함합니다.</li>
-              <li>"회원"이란 Google 로그인을 통하여 회사가 이용자를 식별할 수 있는 상태의 이용자를 말합니다.</li>
+              <li>"이용자"란 본 약관에 따라 서비스를 이용하는 자를 말하며, 비로그인 이용자와 Google 또는 이메일 로그인 이용자를 포함합니다.</li>
+              <li>"회원"이란 Google 또는 이메일 로그인을 통하여 회사가 이용자를 식별할 수 있는 상태의 이용자를 말합니다.</li>
               <li>"상담 문답"이란 이용자가 입력한 내용과 AI가 생성한 질문·답변을 말합니다.</li>
               <li>"보고서"란 상담 문답을 바탕으로 AI가 사건 개요, 경위, 쟁점, 요청사항 등을 구조화하여 생성한 정리본을 말합니다.</li>
               <li>"라이선스"란 이용 가능한 기능과 월 사용량을 정하는 계정 등급을 말하며, 일반, Teacher, PRO 등급으로 구분될 수 있습니다.</li>
@@ -244,11 +298,11 @@
             <p>회사는 서비스 개선, 보안, 운영상 필요에 따라 기능의 전부 또는 일부를 변경·중단할 수 있습니다.</p>
 
             <h3>제5조 회원가입 및 로그인</h3>
-            <p>서비스의 상담 기능은 Google 로그인을 완료한 회원에게 제공됩니다. 비로그인 이용자는 서비스 소개, 약관 확인 등 제한된 기능만 이용할 수 있으며, AI 상담 입력 및 보고서 저장은 이용할 수 없습니다. 회원은 본인 계정을 안전하게 관리하여야 하며, 계정의 제3자 사용으로 발생한 손해에 대하여 회사에 고의 또는 중대한 과실이 없는 한 회원이 책임을 부담합니다.</p>
+            <p>서비스의 상담 기능은 Google 또는 이메일 로그인을 완료한 회원에게 제공됩니다. 이메일로 가입하는 회원은 회사가 발송하는 인증 링크를 통하여 이메일 소유 여부를 확인해야 하며, 인증이 완료되지 않은 경우 로그인이 제한될 수 있습니다. 비로그인 이용자는 서비스 소개, 약관 확인 등 제한된 기능만 이용할 수 있으며, AI 상담 입력 및 보고서 저장은 이용할 수 없습니다. 회원은 본인 계정을 안전하게 관리하여야 하며, 계정의 제3자 사용으로 발생한 손해에 대하여 회사에 고의 또는 중대한 과실이 없는 한 회원이 책임을 부담합니다.</p>
 
             <h3>제6조 라이선스 및 사용량</h3>
             <ol>
-              <li>일반 계정은 Google 로그인 후 기본 제공되는 등급이며, 회사가 정한 월 사용량 범위 내에서 상담 기능을 이용할 수 있습니다.</li>
+              <li>일반 계정은 Google 또는 이메일 로그인 후 기본 제공되는 등급이며, 회사가 정한 월 사용량 범위 내에서 상담 기능을 이용할 수 있습니다.</li>
               <li>Teacher 계정은 초등교원 등 회사가 정한 대상에게 제공되는 등급이며, 프로코드 입력 또는 회사가 정한 절차를 통하여 승급할 수 있습니다.</li>
               <li>PRO 계정은 회사가 정한 전문 사용자용 등급이며, 제공 시기, 사용량, 요금, 기능은 별도 안내에 따릅니다.</li>
               <li>프로코드는 본인에게만 사용할 수 있으며, 양도, 판매, 공유, 자동 입력, 무단 생성 또는 우회 사용을 금지합니다.</li>
@@ -317,7 +371,7 @@
         <textarea rows="1" placeholder="상황을 적거나 AI 질문에 답변하세요" data-chat-input></textarea>
         <button type="submit" aria-label="전송">↑</button>
       </form>
-      <p class="case-composer-note" data-composer-note>Google 로그인 후 상담을 시작할 수 있습니다.</p>
+      <p class="case-composer-note" data-composer-note>로그인 후 상담을 시작할 수 있습니다.</p>
     </section>
 
     <div class="case-report-backdrop" data-report-backdrop hidden></div>

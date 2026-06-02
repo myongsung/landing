@@ -12,6 +12,25 @@ const dom = {
   userPanel: document.querySelector('[data-user-panel]'),
   authMessage: document.querySelector('[data-auth-message]'),
   serviceStatus: document.querySelector('[data-service-status]'),
+  authOpen: document.querySelector('[data-auth-open]'),
+  authBackdrop: document.querySelector('[data-auth-backdrop]'),
+  authModal: document.querySelector('[data-auth-modal]'),
+  authClose: document.querySelector('[data-auth-close]'),
+  authModeButtons: document.querySelectorAll('[data-auth-mode]'),
+  emailAuthForm: document.querySelector('[data-email-auth-form]'),
+  authEmail: document.querySelector('[data-auth-email]'),
+  authPassword: document.querySelector('[data-auth-password]'),
+  authPasswordConfirm: document.querySelector('[data-auth-password-confirm]'),
+  passwordMatchMessage: document.querySelector('[data-password-match-message]'),
+  authTerms: document.querySelector('[data-auth-terms]'),
+  authSubmit: document.querySelector('[data-auth-submit]'),
+  authLegalOpenButtons: document.querySelectorAll('[data-auth-legal-open]'),
+  authLegalBackdrop: document.querySelector('[data-auth-legal-backdrop]'),
+  authLegalModal: document.querySelector('[data-auth-legal-modal]'),
+  authLegalTitle: document.querySelector('[data-auth-legal-title]'),
+  authLegalContent: document.querySelector('[data-auth-legal-content]'),
+  authLegalClose: document.querySelector('[data-auth-legal-close]'),
+  authResend: document.querySelector('[data-auth-resend]'),
   signInGoogle: document.querySelector('[data-sign-in-google]'),
   signOut: document.querySelector('[data-sign-out]'),
   userEmail: document.querySelector('[data-user-email]'),
@@ -93,11 +112,114 @@ let usageState = {
   limit: 0,
   period: '',
 };
+let authMode = 'login';
+let lastVerificationEmail = '';
 
 function setAuthMessage(message, isError = false) {
   if (!dom.authMessage) return;
   dom.authMessage.textContent = message;
   dom.authMessage.style.color = isError ? '#b42318' : '#667085';
+}
+
+function setAuthResendVisible(isVisible, email = '') {
+  if (!dom.authResend) return;
+  if (email) lastVerificationEmail = email;
+  dom.authResend.hidden = !isVisible;
+  dom.authResend.disabled = false;
+}
+
+function setPasswordMatchMessage(message = '', status = 'idle') {
+  if (!dom.passwordMatchMessage) return;
+  dom.passwordMatchMessage.textContent = message;
+  dom.passwordMatchMessage.dataset.status = status;
+}
+
+function syncPasswordMatchMessage() {
+  if (authMode !== 'signup') {
+    setPasswordMatchMessage();
+    return true;
+  }
+
+  const password = dom.authPassword?.value ?? '';
+  const passwordConfirm = dom.authPasswordConfirm?.value ?? '';
+
+  if (!password && !passwordConfirm) {
+    setPasswordMatchMessage();
+    return false;
+  }
+
+  if (password.length > 0 && password.length < 8) {
+    setPasswordMatchMessage('비밀번호는 8자 이상이어야 합니다.', 'error');
+    return false;
+  }
+
+  if (!passwordConfirm) {
+    setPasswordMatchMessage('비밀번호 확인을 입력해 주세요.', 'idle');
+    return false;
+  }
+
+  if (password === passwordConfirm) {
+    setPasswordMatchMessage('비밀번호가 일치합니다.', 'success');
+    return true;
+  }
+
+  setPasswordMatchMessage('비밀번호가 일치하지 않습니다.', 'error');
+  return false;
+}
+
+function isEmailNotConfirmedMessage(message) {
+  return /email not confirmed|email_not_confirmed|not confirmed|not_confirmed/i.test(String(message ?? ''));
+}
+
+function friendlyAuthError(error, mode = authMode) {
+  const message = String(error?.message ?? error ?? '');
+
+  if (/already registered|already exists|user already/i.test(message)) {
+    return '이미 가입된 이메일입니다. 로그인 탭에서 이메일과 비밀번호로 로그인해 주세요.';
+  }
+
+  if (isEmailNotConfirmedMessage(message)) {
+    return '이메일 인증이 완료되지 않아 로그인할 수 없습니다. 메일함에서 RoosyCozy 또는 Supabase 인증 메일을 먼저 열고 인증 링크를 누른 뒤 다시 로그인해 주세요. 메일이 보이지 않으면 스팸함이나 프로모션함을 확인하거나 아래에서 다시 보낼 수 있습니다.';
+  }
+
+  if (/invalid login credentials|invalid credentials/i.test(message)) {
+    return mode === 'login'
+      ? '이메일 또는 비밀번호가 올바르지 않습니다. 가입 직후 아직 인증하지 않았다면 메일함에서 인증을 먼저 진행해 주세요.'
+      : '이미 가입된 이메일이거나 비밀번호를 확인할 수 없습니다. 로그인 탭에서 다시 시도해 주세요.';
+  }
+
+  if (/password/i.test(message) && /weak|short|length/i.test(message)) {
+    return '비밀번호는 8자 이상으로 입력해 주세요.';
+  }
+
+  if (/rate limit|too many/i.test(message)) {
+    return '요청이 잠시 많습니다. 잠깐 뒤 다시 시도해 주세요.';
+  }
+
+  if (/fetch|network|failed/i.test(message)) {
+    return '네트워크 연결이 불안정합니다. 연결 상태를 확인한 뒤 다시 시도해 주세요.';
+  }
+
+  return message || '인증 처리 중 오류가 발생했습니다. 잠시 뒤 다시 시도해 주세요.';
+}
+
+function isExistingEmailSignUp(data) {
+  const identities = data?.user?.identities;
+  return Array.isArray(identities) && identities.length === 0;
+}
+
+function isUnconfirmedEmailUser(user) {
+  if (!user) return false;
+  const providers = [
+    user.app_metadata?.provider,
+    ...(Array.isArray(user.app_metadata?.providers) ? user.app_metadata.providers : []),
+  ].filter(Boolean);
+  const usesEmailAuth = providers.length === 0 || providers.includes('email');
+  return usesEmailAuth && !user.email_confirmed_at && !user.confirmed_at;
+}
+
+function signUpSuccessMessage(email) {
+  return `${email}로 인증 메일 발송이 정상 처리되었습니다. 지금 메일함을 열어 RoosyCozy 또는 Supabase 인증 메일의 링크를 눌러 주세요. 인증을 마친 뒤 이 창으로 돌아와 로그인 탭에서 이메일과 비밀번호로 로그인하면 됩니다. 메일이 보이지 않으면 스팸함이나 프로모션함을 확인하고 아래에서 다시 보낼 수 있습니다.`;
 }
 
 function setServiceStatus(message, status = 'idle') {
@@ -112,6 +234,41 @@ function setUpgradeMessage(message, status = 'idle') {
   if (!dom.upgradeMessage) return;
   dom.upgradeMessage.textContent = message;
   dom.upgradeMessage.dataset.status = status;
+}
+
+function isGoogleOAuthBlockedUserAgent() {
+  const ua = navigator.userAgent || '';
+  return /NAVER|KAKAOTALK|KAKAOSTORY|Instagram|FBAN|FBAV|FB_IAB|Line\/|DaumApps|Twitter|; wv\)/i.test(ua);
+}
+
+document.body.dataset.embeddedBrowser = isGoogleOAuthBlockedUserAgent() ? 'true' : 'false';
+
+function syncAuthMode() {
+  document.body.dataset.authMode = authMode;
+  dom.authModeButtons.forEach((button) => {
+    const isActive = button.dataset.authMode === authMode;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+
+  if (dom.authSubmit) {
+    dom.authSubmit.textContent = authMode === 'signup'
+      ? '인증 메일 보내고 가입'
+      : '이메일로 로그인';
+  }
+
+  if (dom.authPassword) {
+    dom.authPassword.setAttribute('autocomplete', authMode === 'signup' ? 'new-password' : 'current-password');
+  }
+
+  syncPasswordMatchMessage();
+}
+
+function setAuthMode(nextMode) {
+  authMode = nextMode === 'signup' ? 'signup' : 'login';
+  setAuthMessage('');
+  setAuthResendVisible(false);
+  syncAuthMode();
 }
 
 function normalizeTier(tier) {
@@ -185,8 +342,8 @@ function syncInteractionState() {
   });
 
   if (!session?.user) {
-    dom.input.placeholder = 'Google 로그인 후 상담을 시작하세요';
-    if (dom.composerNote) dom.composerNote.textContent = '비로그인 사용자는 대화할 수 없습니다. Google 로그인 후 이용해 주세요.';
+    dom.input.placeholder = '로그인 후 상담을 시작하세요';
+    if (dom.composerNote) dom.composerNote.textContent = '비로그인 사용자는 대화할 수 없습니다. 로그인 후 이용해 주세요.';
     return;
   }
 
@@ -692,6 +849,13 @@ async function invokeChat({ message = '', forceReport = false } = {}) {
 }
 
 async function signInWithGoogle() {
+  if (isGoogleOAuthBlockedUserAgent()) {
+    setAuthMode('signup');
+    setAuthMessage('네이버나 카카오 같은 앱 안의 브라우저에서는 Google 로그인이 차단될 수 있습니다. 여기서는 이메일로 로그인하거나, Google 계정으로 들어오려면 Chrome 브라우저에서 다시 열어 주세요.', true);
+    dom.authEmail?.focus();
+    return;
+  }
+
   const client = ensureClient();
   if (!client) return;
 
@@ -707,8 +871,166 @@ async function signInWithGoogle() {
   });
 
   if (error) {
-    setAuthMessage(error.message, true);
+    setAuthMessage(friendlyAuthError(error, 'login'), true);
   }
+}
+
+async function submitEmailAuth(event) {
+  event.preventDefault();
+  const client = ensureClient();
+  if (!client) return;
+  setAuthResendVisible(false);
+
+  const email = dom.authEmail?.value.trim() ?? '';
+  const password = dom.authPassword?.value ?? '';
+  const passwordConfirm = dom.authPasswordConfirm?.value ?? '';
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setAuthMessage('이메일 주소를 정확히 입력해 주세요.', true);
+    dom.authEmail?.focus();
+    return;
+  }
+
+  if (password.length < 8) {
+    setAuthMessage('비밀번호는 8자 이상으로 입력해 주세요.', true);
+    dom.authPassword?.focus();
+    return;
+  }
+
+  if (authMode === 'signup') {
+    if (!syncPasswordMatchMessage() || password !== passwordConfirm) {
+      setAuthMessage('비밀번호 확인이 일치하지 않습니다.', true);
+      dom.authPasswordConfirm?.focus();
+      return;
+    }
+
+    if (!dom.authTerms?.checked) {
+      setAuthMessage('개인정보처리방침 및 이용약관에 동의해 주세요.', true);
+      dom.authTerms?.focus();
+      return;
+    }
+  }
+
+  const submitButton = dom.authSubmit;
+  const idleLabel = submitButton?.textContent ?? '';
+  let response;
+
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = authMode === 'signup' ? '가입 처리 중' : '로그인 중';
+  }
+
+  try {
+    response = authMode === 'signup'
+      ? await client.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: getRedirectUrl(),
+        },
+      })
+      : await client.auth.signInWithPassword({
+        email,
+        password,
+      });
+  } catch (error) {
+    setAuthMessage(friendlyAuthError(error), true);
+    if (isEmailNotConfirmedMessage(error?.message)) {
+      setAuthResendVisible(true, email);
+    }
+    return;
+  } finally {
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = idleLabel;
+    }
+  }
+
+  const { data, error } = response;
+
+  if (error) {
+    setAuthMessage(friendlyAuthError(error), true);
+    if (isEmailNotConfirmedMessage(error?.message)) {
+      setAuthResendVisible(true, email);
+    }
+    return;
+  }
+
+  if (data?.session && isUnconfirmedEmailUser(data?.user)) {
+    await client.auth.signOut();
+    setAuthMode('login');
+    setAuthMessage(friendlyAuthError({ message: 'email_not_confirmed' }), true);
+    setAuthResendVisible(true, email);
+    dom.authPassword.value = '';
+    if (dom.authPasswordConfirm) dom.authPasswordConfirm.value = '';
+    if (dom.authTerms) dom.authTerms.checked = false;
+    return;
+  }
+
+  if (authMode === 'signup' && isExistingEmailSignUp(data)) {
+    setAuthMode('login');
+    setAuthMessage('이미 가입된 이메일입니다. 로그인 탭에서 이메일과 비밀번호로 로그인해 주세요.', true);
+    dom.authPassword.value = '';
+    dom.authPasswordConfirm.value = '';
+    dom.authTerms.checked = false;
+    return;
+  }
+
+  if (authMode === 'signup' && !data?.session) {
+    setAuthMode('login');
+    setAuthMessage(signUpSuccessMessage(email));
+    setAuthResendVisible(true, email);
+    dom.authPassword.value = '';
+    dom.authPasswordConfirm.value = '';
+    dom.authTerms.checked = false;
+    return;
+  }
+
+  setAuthMessage('로그인되었습니다.');
+  setAuthOpen(false);
+}
+
+async function resendVerificationEmail() {
+  const client = ensureClient();
+  if (!client) return;
+
+  const email = (dom.authEmail?.value.trim() || lastVerificationEmail).trim();
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setAuthMessage('인증 메일을 다시 받을 이메일 주소를 입력해 주세요.', true);
+    dom.authEmail?.focus();
+    return;
+  }
+
+  const idleLabel = dom.authResend?.textContent ?? '인증 메일 다시 보내기';
+
+  if (dom.authResend) {
+    dom.authResend.disabled = true;
+    dom.authResend.textContent = '재전송 중';
+  }
+
+  const { error } = await client.auth.resend({
+    type: 'signup',
+    email,
+    options: {
+      emailRedirectTo: getRedirectUrl(),
+    },
+  });
+
+  if (dom.authResend) {
+    dom.authResend.disabled = false;
+    dom.authResend.textContent = idleLabel;
+  }
+
+  if (error) {
+    setAuthMessage(friendlyAuthError(error), true);
+    setAuthResendVisible(true, email);
+    return;
+  }
+
+  setAuthMode('login');
+  setAuthMessage(signUpSuccessMessage(email));
+  setAuthResendVisible(true, email);
 }
 
 async function signOut() {
@@ -768,7 +1090,7 @@ async function redeemTeacherUpgradeCode(event) {
   event.preventDefault();
 
   if (!session?.user) {
-    setUpgradeMessage('Google 로그인 후 프로코드를 입력해 주세요.', 'error');
+    setUpgradeMessage('로그인 후 프로코드를 입력해 주세요.', 'error');
     return;
   }
 
@@ -852,12 +1174,50 @@ async function deleteConversation(id) {
   renderAll();
 }
 
+function setAuthOpen(isOpen) {
+  if (!dom.authModal || !dom.authBackdrop) return;
+  if (isOpen) {
+    setMenuOpen(false);
+    setHistoryOpen(false);
+    setReportOpen(false);
+    setLicenseOpen(false);
+    setAuthLegalOpen(false);
+    setAuthMode('login');
+    if (isGoogleOAuthBlockedUserAgent()) {
+      setAuthMode('signup');
+      setAuthMessage('네이버나 카카오 같은 앱 안의 브라우저에서는 이메일 로그인만 사용할 수 있습니다. Google 계정으로 들어오려면 Chrome 브라우저에서 다시 열어 주세요.');
+    }
+  } else {
+    setAuthLegalOpen(false);
+  }
+
+  document.body.classList.toggle('is-auth-open', isOpen);
+  dom.authModal.hidden = false;
+  dom.authBackdrop.hidden = !isOpen;
+  dom.authModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+
+  if (isOpen) {
+    setTimeout(() => {
+      dom.authEmail?.focus();
+    }, 60);
+    return;
+  }
+
+  setTimeout(() => {
+    if (!document.body.classList.contains('is-auth-open')) {
+      setAuthLegalOpen(false);
+      dom.authModal.hidden = true;
+    }
+  }, 180);
+}
+
 function setMenuOpen(isOpen) {
   if (!dom.menuToggle) return;
   if (isOpen) {
     setReportOpen(false);
     setHistoryOpen(false);
     setLicenseOpen(false);
+    setAuthOpen(false);
   }
   document.body.classList.toggle('is-menu-open', isOpen);
   dom.menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
@@ -870,6 +1230,7 @@ function setHistoryOpen(isOpen) {
     setMenuOpen(false);
     setReportOpen(false);
     setLicenseOpen(false);
+    setAuthOpen(false);
   }
   document.body.classList.toggle('is-history-open', isOpen);
   dom.historyDrawer.hidden = false;
@@ -890,6 +1251,7 @@ function setLicenseOpen(isOpen) {
     setMenuOpen(false);
     setHistoryOpen(false);
     setReportOpen(false);
+    setAuthOpen(false);
   }
 
   document.body.classList.toggle('is-license-open', isOpen);
@@ -910,12 +1272,65 @@ function setLicenseOpen(isOpen) {
   }, 180);
 }
 
+function authLegalSource(kind) {
+  const targetLabel = kind === 'terms' ? '이용약관' : '개인정보처리방침';
+  const legalDetails = [...document.querySelectorAll('.case-legal-block details')];
+  const target = legalDetails.find((detail) => {
+    const label = detail.querySelector('summary')?.textContent ?? '';
+    return label.includes(targetLabel);
+  });
+
+  return {
+    title: targetLabel,
+    content: target?.querySelector('.case-legal-content')?.innerHTML ?? '',
+  };
+}
+
+function setAuthLegalOpen(isOpen, kind = 'terms') {
+  if (!dom.authLegalModal || !dom.authLegalBackdrop) return;
+
+  if (isOpen) {
+    const source = authLegalSource(kind);
+    if (!source.content) return;
+
+    if (dom.authLegalTitle) dom.authLegalTitle.textContent = source.title;
+    if (dom.authLegalContent) {
+      dom.authLegalContent.innerHTML = source.content;
+      dom.authLegalContent.scrollTop = 0;
+    }
+
+    document.body.classList.add('is-auth-legal-open');
+    dom.authLegalModal.hidden = false;
+    dom.authLegalBackdrop.hidden = false;
+    dom.authLegalModal.setAttribute('aria-hidden', 'false');
+
+    setTimeout(() => dom.authLegalClose?.focus(), 60);
+    return;
+  }
+
+  document.body.classList.remove('is-auth-legal-open');
+  dom.authLegalBackdrop.hidden = true;
+  dom.authLegalModal.setAttribute('aria-hidden', 'true');
+
+  setTimeout(() => {
+    if (!document.body.classList.contains('is-auth-legal-open')) {
+      dom.authLegalModal.hidden = true;
+      if (dom.authLegalContent) dom.authLegalContent.innerHTML = '';
+    }
+  }, 180);
+}
+
+function openLegalFromAuth(kind) {
+  setAuthLegalOpen(true, kind);
+}
+
 function setReportOpen(isOpen) {
   if (!dom.reportToggle || !dom.reportBackdrop) return;
   if (isOpen) {
     setMenuOpen(false);
     setHistoryOpen(false);
     setLicenseOpen(false);
+    setAuthOpen(false);
   }
   document.body.classList.toggle('is-report-open', isOpen);
   dom.reportBackdrop.hidden = !isOpen;
@@ -959,7 +1374,36 @@ async function boot() {
   }
 }
 
-dom.signInGoogle.addEventListener('click', signInWithGoogle);
+dom.signInGoogle?.addEventListener('click', signInWithGoogle);
+dom.authOpen?.addEventListener('click', () => {
+  setAuthOpen(true);
+});
+dom.authClose?.addEventListener('click', () => {
+  setAuthOpen(false);
+});
+dom.authBackdrop?.addEventListener('click', () => {
+  setAuthOpen(false);
+});
+dom.authModeButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    setAuthMode(button.dataset.authMode);
+  });
+});
+dom.emailAuthForm?.addEventListener('submit', submitEmailAuth);
+dom.authResend?.addEventListener('click', resendVerificationEmail);
+dom.authPassword?.addEventListener('input', syncPasswordMatchMessage);
+dom.authPasswordConfirm?.addEventListener('input', syncPasswordMatchMessage);
+dom.authLegalOpenButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    openLegalFromAuth(button.dataset.authLegalOpen);
+  });
+});
+dom.authLegalClose?.addEventListener('click', () => {
+  setAuthLegalOpen(false);
+});
+dom.authLegalBackdrop?.addEventListener('click', () => {
+  setAuthLegalOpen(false);
+});
 dom.signOut.addEventListener('click', signOut);
 dom.saveCaseButtons.forEach((button) => {
   button.addEventListener('click', saveCaseSet);
@@ -1019,10 +1463,15 @@ dom.historyBackdrop?.addEventListener('click', () => {
 
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
+  if (document.body.classList.contains('is-auth-legal-open')) {
+    setAuthLegalOpen(false);
+    return;
+  }
   setMenuOpen(false);
   setHistoryOpen(false);
   setReportOpen(false);
   setLicenseOpen(false);
+  setAuthOpen(false);
 });
 
 dom.newConversation.addEventListener('click', () => {
@@ -1032,6 +1481,7 @@ dom.newConversation.addEventListener('click', () => {
   setHistoryOpen(false);
   setReportOpen(false);
   setLicenseOpen(false);
+  setAuthOpen(false);
   renderAll();
   dom.input.focus();
 });

@@ -142,6 +142,191 @@ a {
   pointer-events: auto;
 }
 
+.case-auth-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(15, 23, 42, 0.28);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.case-auth-backdrop:not([hidden]) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.case-auth-legal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  background: rgba(15, 23, 42, 0.32);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.case-auth-legal-backdrop:not([hidden]) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.case-auth-modal {
+  position: fixed;
+  top: 76px;
+  right: 18px;
+  z-index: 41;
+  width: min(420px, calc(100vw - 36px));
+  max-height: calc(100svh - 96px);
+  display: grid;
+  gap: 13px;
+  padding: 18px;
+  overflow: auto;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.99);
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.985);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.case-auth-modal[hidden] {
+  display: none;
+}
+
+.is-auth-open .case-auth-modal {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.case-auth-modal header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.case-auth-modal header span {
+  display: block;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.case-auth-modal h2 {
+  margin: 3px 0 0;
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.case-auth-modal header button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 0.76rem;
+  font-weight: 400;
+}
+
+.case-auth-legal-modal {
+  position: fixed;
+  top: 88px;
+  left: 50%;
+  z-index: 45;
+  width: min(560px, calc(100vw - 36px));
+  max-height: calc(100svh - 116px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.24);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -8px) scale(0.985);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.case-auth-legal-modal[hidden] {
+  display: none;
+}
+
+.is-auth-legal-open .case-auth-legal-modal {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.case-auth-legal-modal header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.case-auth-legal-modal h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.96rem;
+  font-weight: 500;
+}
+
+.case-auth-legal-modal header button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 0.74rem;
+  font-weight: 400;
+}
+
+.case-auth-legal-content {
+  display: grid;
+  gap: 9px;
+  padding: 14px 16px 18px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.case-auth-legal-content h3 {
+  margin: 8px 0 0;
+  color: #0f172a;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.case-auth-legal-content p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.76rem;
+  line-height: 1.65;
+}
+
+.case-auth-legal-content ol,
+.case-auth-legal-content ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 17px;
+  color: #64748b;
+  font-size: 0.76rem;
+  line-height: 1.65;
+}
+
 .case-license-modal {
   position: fixed;
   top: 76px;
@@ -738,6 +923,41 @@ a {
   font-weight: 500;
 }
 
+.case-login-button,
+.case-email-auth-form > button {
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.case-auth-google-row {
+  display: grid;
+}
+
+body[data-embedded-browser="true"] .case-auth-google-row {
+  display: none;
+}
+
+.case-auth-embedded-note {
+  display: none;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+body[data-embedded-browser="true"] .case-auth-embedded-note {
+  display: block;
+}
+
 .case-auth-divider {
   display: flex;
   align-items: center;
@@ -753,6 +973,134 @@ a {
   height: 1px;
   flex: 1;
   background: rgba(17, 24, 39, 0.1);
+}
+
+.case-auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.case-auth-tabs button {
+  min-height: 34px;
+  border-radius: 7px;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+.case-auth-tabs button.is-active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 5px 14px rgba(15, 23, 42, 0.08);
+}
+
+.case-email-auth-form {
+  display: grid;
+  gap: 8px;
+}
+
+.case-email-auth-form input[type="email"],
+.case-email-auth-form input[type="password"] {
+  width: 100%;
+  height: 42px;
+  padding: 0 11px;
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #101828;
+  font: inherit;
+}
+
+.case-signup-only {
+  display: none;
+}
+
+body[data-auth-mode="signup"] .case-signup-only {
+  display: grid;
+}
+
+.case-password-hint {
+  min-height: 18px;
+  margin: -2px 0 0;
+  color: #64748b;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.case-password-hint[data-status="success"] {
+  color: #166534;
+}
+
+.case-password-hint[data-status="error"] {
+  color: #b42318;
+}
+
+.case-terms-wrap {
+  gap: 8px;
+}
+
+.case-terms-check {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  color: #475569;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.case-terms-check input {
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+}
+
+.case-auth-legal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.case-auth-legal-actions button {
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 8px;
+  background: #f8fbff;
+  color: #1d4ed8;
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+
+.case-auth-modal small {
+  color: #64748b;
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.case-auth-resend {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 8px;
+  background: #f8fbff;
+  color: #1d4ed8;
+  font-size: 0.74rem;
+  font-weight: 400;
+}
+
+.case-auth-resend[hidden] {
+  display: none;
+}
+
+.case-auth-resend:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .case-auth-card input,
@@ -1542,6 +1890,37 @@ body[data-busy="true"] .case-report-preview::after {
     border-radius: 12px;
   }
 
+  .case-auth-modal {
+    top: 66px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-height: calc(100svh - 78px);
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .case-auth-legal-modal {
+    top: 68px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-height: calc(100svh - 84px);
+    transform: translateY(-8px) scale(0.985);
+  }
+
+  .is-auth-legal-open .case-auth-legal-modal {
+    transform: translateY(0) scale(1);
+  }
+
+  .case-auth-legal-modal header {
+    padding: 12px 14px;
+  }
+
+  .case-auth-legal-content {
+    padding: 12px 14px 16px;
+  }
+
   .case-license-modal h2 {
     font-size: 0.96rem;
   }
@@ -1577,6 +1956,7 @@ body[data-busy="true"] .case-report-preview::after {
   .case-history-button,
   .case-new-button,
   .case-save-button,
+  .case-login-button,
   .case-google-button,
   .case-home-shell .case-user-card {
     width: 100%;
