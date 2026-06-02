@@ -18,6 +18,20 @@ RoosyCozy 상담 응답 원칙:
 7. 사건보고서는 관계 설명만 하지 말고 행위별 책임 구조, 방관/가담 여부, 증거 공백, 다음 확보 자료를 포함한다.
 8. 사용자가 보고서 정리를 명시하지 않은 질문성 입력이면 보고서 수정보다 답변을 우선한다.
 9. 갈피를 잃지 않도록 매 응답은 가능하면 "답변", "보고서 반영", "다음 확인 질문" 순서로 짧게 구성한다.
+10. 상황 묘사가 부족하면 추상 질문 대신 장면을 복원하는 질문을 한다: 시간, 장소, 참여자 위치, 말한 문장, 행동 순서, 주변 목격자, 직후 반응, 남은 기록.
+11. 보고서에는 사용자가 한 말을 그대로 요약하지 말고, 사건 장면이 떠오르도록 구체적 행위와 맥락을 재구성한다.
+12. 확정 사실과 추정/주장/미확인 정보를 섞지 말고 각각 분리한다.
+13. "강력한 자료"는 녹취/문자/카톡/메일/사진/영상/출입기록/목격자/진료기록/민원 접수 내역/업무 지시 내역처럼 유형별로 제안한다.
+14. 보고서는 반드시 다음 구조를 우선한다:
+   - 사건 핵심 요약
+   - 당사자 및 역할표
+   - 시간순 경위
+   - 주요 장면별 상세 묘사
+   - 인물별 행위와 책임 구조
+   - 증거 목록 및 증명하려는 사실
+   - 부족한 정보와 추가 질문
+   - 다음 대응 체크리스트
+15. 각 섹션은 짧은 제목과 불릿을 사용해 제출용 문서처럼 읽히게 작성한다.
 `.trim();
 
 const dom = {
@@ -430,16 +444,22 @@ function markdownToHtml(markdown) {
     return `
       <header class="report-cover">
         <span>RoosyCozy Case Report</span>
-        <h2>상담 내용 정리</h2>
-        <p>AI와 문답을 시작하면 사건 개요, 경위, 쟁점, 요청사항이 문서 형식으로 정리됩니다.</p>
+        <h2>사건보고서 작성 대기</h2>
+        <p>AI가 문답을 통해 장면, 인물, 행위, 증거를 구체화하고 제출용 보고서 구조로 정리합니다.</p>
       </header>
       <div class="report-meta">
-        <span>문답 기반 정리</span>
-        <span>자동 갱신</span>
+        <span>장면 묘사 강화</span>
+        <span>역할 분류</span>
+        <span>증거 체크</span>
       </div>
       <section class="report-section report-placeholder">
-        <h2>작성 대기</h2>
-        <p>왼쪽 상담창에서 상황을 입력하면 보고서가 자동으로 갱신됩니다.</p>
+        <h2>작성 예정 구조</h2>
+        <ul>
+          <li>사건 핵심 요약과 시간순 경위</li>
+          <li>피해자, 주가해자, 참여자, 방관자, 목격자 등 역할 분류</li>
+          <li>주요 장면별 상세 묘사와 구체적 발언·행동</li>
+          <li>증거 목록, 부족한 정보, 다음 대응 체크리스트</li>
+        </ul>
       </section>
     `;
   }
@@ -528,10 +548,11 @@ function markdownToHtml(markdown) {
 
   const body = sections
     .filter((section) => section.title || section.blocks.length)
-    .map((section) => {
+    .map((section, index) => {
       const heading = section.title
         ? `<h${section.level}>${escapeHtml(section.title)}</h${section.level}>`
         : '';
+      const sectionKind = reportSectionKind(section.title);
       const blocks = section.blocks
         .map((block) => {
           if (block.type === 'list') {
@@ -545,7 +566,7 @@ function markdownToHtml(markdown) {
         })
         .join('');
 
-      return `<section class="report-section">${heading}${blocks}</section>`;
+      return `<section class="report-section ${sectionKind}" data-section-index="${index + 1}">${heading}${blocks}</section>`;
     })
     .join('');
 
@@ -560,6 +581,20 @@ function markdownToHtml(markdown) {
     </div>
     ${body || '<section class="report-section"><p>보고서 내용을 정리하고 있습니다.</p></section>'}
   `;
+}
+
+function reportSectionKind(title = '') {
+  const text = String(title);
+
+  if (/요약|개요|핵심/.test(text)) return 'is-summary';
+  if (/당사자|역할|인물|가해|피해|방관|목격/.test(text)) return 'is-people';
+  if (/시간|경위|일시|순서|타임라인/.test(text)) return 'is-timeline';
+  if (/장면|상황|묘사|발언|행동/.test(text)) return 'is-scene';
+  if (/증거|자료|기록|입증/.test(text)) return 'is-evidence';
+  if (/부족|확인|질문|불확실/.test(text)) return 'is-gap';
+  if (/대응|조치|체크|다음/.test(text)) return 'is-action';
+
+  return 'is-general';
 }
 
 function productLabel(product) {
@@ -596,12 +631,14 @@ function chatRequestPolicy(intent, shouldUpdateReport) {
       ? 'update_report_after_answering_if_needed'
       : 'answer_question_without_rewriting_report_unless_new_facts_are_present',
     requiredReportSections: [
-      '사건 개요',
-      '당사자 및 역할 분류',
-      '인물별 행위 정리',
-      '증거 및 확보 필요 자료',
-      '불확실한 점',
-      '다음 질문',
+      '사건 핵심 요약',
+      '당사자 및 역할표',
+      '시간순 경위',
+      '주요 장면별 상세 묘사',
+      '인물별 행위와 책임 구조',
+      '증거 목록 및 입증하려는 사실',
+      '부족한 정보와 추가 질문',
+      '다음 대응 체크리스트',
     ],
   };
 }
