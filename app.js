@@ -7,6 +7,19 @@ const isSupabaseConfigured = Boolean(supabaseUrl && supabasePublishableKey);
 
 document.body.dataset.supabaseConfigured = isSupabaseConfigured ? 'true' : 'false';
 
+const reportChatBehaviorGuide = `
+RoosyCozy 상담 응답 원칙:
+1. 사용자가 질문하면 먼저 질문에 직접 답한다. 질문 답변을 사건보고서 문장으로만 바꾸지 않는다.
+2. 새 사실관계가 들어오면 보고서를 자동 갱신하되, 대화 응답에는 무엇을 반영했는지 짧게 설명한다.
+3. "더 필요한 것", "강력한 증거", "어떻게 해야 하나" 같은 질문에는 실행 가능한 체크리스트로 답한다.
+4. 단순히 "그렇군요"로 끝내지 말고, 다음에 확인할 핵심 질문 1개를 제시한다.
+5. 당사자는 역할을 분리한다: 피해자, 주가해자, 참여자, 방관자, 목격자, 관리자/책임자, 역할 불명.
+6. 각 인물마다 "누가 / 언제 / 어디서 / 무엇을 했는지 / 증거 / 현재 불확실한 점"을 구분한다.
+7. 사건보고서는 관계 설명만 하지 말고 행위별 책임 구조, 방관/가담 여부, 증거 공백, 다음 확보 자료를 포함한다.
+8. 사용자가 보고서 정리를 명시하지 않은 질문성 입력이면 보고서 수정보다 답변을 우선한다.
+9. 갈피를 잃지 않도록 매 응답은 가능하면 "답변", "보고서 반영", "다음 확인 질문" 순서로 짧게 구성한다.
+`.trim();
+
 const dom = {
   authPanel: document.querySelector('[data-auth-panel]'),
   userPanel: document.querySelector('[data-user-panel]'),
@@ -64,9 +77,6 @@ const dom = {
   licenseBackdrop: document.querySelector('[data-license-backdrop]'),
   licenseModal: document.querySelector('[data-license-modal]'),
   licenseClose: document.querySelector('[data-license-close]'),
-  teacherUpgradeForm: document.querySelector('[data-teacher-upgrade-form]'),
-  teacherCodeInput: document.querySelector('[data-teacher-code-input]'),
-  upgradeMessage: document.querySelector('[data-upgrade-message]'),
 };
 
 const tierConfig = {
@@ -182,9 +192,9 @@ function friendlyAuthError(error, mode = authMode) {
     return '이메일 인증이 완료되지 않아 로그인할 수 없습니다. 메일함에서 RoosyCozy 또는 Supabase 인증 메일을 먼저 열고 인증 링크를 누른 뒤 다시 로그인해 주세요. 메일이 보이지 않으면 스팸함이나 프로모션함을 확인하거나 아래에서 다시 보낼 수 있습니다.';
   }
 
-  if (/invalid login credentials|invalid credentials/i.test(message)) {
+  if (/invalid login credentials|invalid credentials|email.*password|password.*email/i.test(message)) {
     return mode === 'login'
-      ? '이메일 또는 비밀번호가 올바르지 않습니다. 가입 직후 아직 인증하지 않았다면 메일함에서 인증을 먼저 진행해 주세요.'
+      ? '이메일(아이디) 또는 비밀번호가 맞지 않습니다. 입력한 이메일 주소와 비밀번호를 다시 확인해 주세요. 가입 직후 아직 인증하지 않았다면 메일함에서 인증을 먼저 진행해 주세요.'
       : '이미 가입된 이메일이거나 비밀번호를 확인할 수 없습니다. 로그인 탭에서 다시 시도해 주세요.';
   }
 
@@ -194,6 +204,10 @@ function friendlyAuthError(error, mode = authMode) {
 
   if (/rate limit|too many/i.test(message)) {
     return '요청이 잠시 많습니다. 잠깐 뒤 다시 시도해 주세요.';
+  }
+
+  if (/signup.*disabled|signups.*not.*allowed|email.*provider.*disabled|email.*logins.*disabled/i.test(message)) {
+    return 'Supabase 이메일 로그인 또는 회원가입 설정이 꺼져 있습니다. Authentication > Providers > Email 설정을 확인해 주세요.';
   }
 
   if (/fetch|network|failed/i.test(message)) {
@@ -228,12 +242,6 @@ function setServiceStatus(message, status = 'idle') {
   dom.serviceStatus.hidden = !isError;
   dom.serviceStatus.textContent = isError ? message : '';
   dom.serviceStatus.dataset.status = status;
-}
-
-function setUpgradeMessage(message, status = 'idle') {
-  if (!dom.upgradeMessage) return;
-  dom.upgradeMessage.textContent = message;
-  dom.upgradeMessage.dataset.status = status;
 }
 
 function isGoogleOAuthBlockedUserAgent() {
@@ -558,6 +566,46 @@ function productLabel(product) {
   return '통합 상담';
 }
 
+function classifyChatIntent(message, forceReport = false) {
+  const text = String(message || '').trim();
+
+  if (forceReport) return 'report_command';
+  if (!text) return 'empty';
+
+  const asksQuestion = /[?？]|뭐|무엇|어떻게|어떤|왜|가능|필요|더|강력|증거|대응|해야|할까|하나요|있나요|알려|추천|방법|조언/.test(text);
+  const reportCommand = /보고서|정리|작성|갱신|업데이트|반영|문서화|초안/.test(text);
+  const factSignal = /했다|했어|합니다|왔|말했|보냈|때렸|욕|협박|방관|참여|가해|피해|목격|증거|녹취|문자|카톡|메일|날짜|장소|이름|관계/.test(text);
+
+  if (reportCommand) return 'report_command';
+  if (asksQuestion && factSignal) return 'mixed_question_with_facts';
+  if (asksQuestion) return 'direct_question';
+  return 'fact_update';
+}
+
+function shouldUpdateReportFromMessage(intent, forceReport = false) {
+  if (forceReport) return true;
+  return ['report_command', 'fact_update', 'mixed_question_with_facts'].includes(intent);
+}
+
+function chatRequestPolicy(intent, shouldUpdateReport) {
+  return {
+    intent,
+    shouldUpdateReport,
+    answerFirst: intent === 'direct_question' || intent === 'mixed_question_with_facts',
+    reportPolicy: shouldUpdateReport
+      ? 'update_report_after_answering_if_needed'
+      : 'answer_question_without_rewriting_report_unless_new_facts_are_present',
+    requiredReportSections: [
+      '사건 개요',
+      '당사자 및 역할 분류',
+      '인물별 행위 정리',
+      '증거 및 확보 필요 자료',
+      '불확실한 점',
+      '다음 질문',
+    ],
+  };
+}
+
 function applySession(nextSession) {
   session = nextSession;
   const signedIn = Boolean(session?.user);
@@ -648,13 +696,24 @@ function renderMessages() {
       <span class="case-message-role">RoosyCozy</span>
       <div class="case-loading-line">
         <i></i><i></i><i></i>
-        <strong>사실관계와 보고서 구조를 정리하고 있습니다</strong>
+        <strong>답변과 사건 맥락을 정리하고 있습니다</strong>
       </div>
     `;
     dom.messageList.append(loading);
   }
 
-  dom.messageList.scrollTop = dom.messageList.scrollHeight;
+  scrollChatToBottom();
+}
+
+function scrollChatToBottom(behavior = 'auto') {
+  if (!dom.messageList) return;
+
+  requestAnimationFrame(() => {
+    dom.messageList.scrollTo({
+      top: dom.messageList.scrollHeight,
+      behavior,
+    });
+  });
 }
 
 function renderReport() {
@@ -769,6 +828,10 @@ async function invokeChat({ message = '', forceReport = false } = {}) {
   if (!message.trim() && !forceReport) return;
 
   const trimmedMessage = message.trim();
+  const chatIntent = classifyChatIntent(trimmedMessage, forceReport);
+  const shouldUpdateReport = shouldUpdateReportFromMessage(chatIntent, forceReport);
+  const requestPolicy = chatRequestPolicy(chatIntent, shouldUpdateReport);
+
   if (trimmedMessage) {
     ensureLocalConversation(trimmedMessage);
     messages = [
@@ -793,7 +856,10 @@ async function invokeChat({ message = '', forceReport = false } = {}) {
         conversationId: activeConversation?.isLocal ? null : activeConversation?.id ?? null,
         product: activeConversation?.product ?? 'pro',
         message: trimmedMessage,
-        forceReport,
+        forceReport: shouldUpdateReport,
+        clientIntent: chatIntent,
+        clientPolicy: requestPolicy,
+        clientGuidance: reportChatBehaviorGuide,
       },
     });
 
@@ -919,20 +985,29 @@ async function submitEmailAuth(event) {
     submitButton.disabled = true;
     submitButton.textContent = authMode === 'signup' ? '가입 처리 중' : '로그인 중';
   }
+  setAuthMessage(authMode === 'signup'
+    ? '회원가입 요청을 보내고 있습니다.'
+    : '이메일과 비밀번호를 확인하고 있습니다.');
 
   try {
-    response = authMode === 'signup'
-      ? await client.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: getRedirectUrl(),
-        },
-      })
-      : await client.auth.signInWithPassword({
-        email,
-        password,
-      });
+    response = await withTimeout(
+      authMode === 'signup'
+        ? client.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: getRedirectUrl(),
+          },
+        })
+        : client.auth.signInWithPassword({
+          email,
+          password,
+        }),
+      15000,
+      authMode === 'signup'
+        ? '회원가입 응답이 지연되고 있습니다. Supabase Auth의 Email provider와 SMTP 설정을 확인해 주세요.'
+        : '이메일 로그인 응답이 지연되고 있습니다. Supabase Auth의 Email provider 설정 또는 네트워크 상태를 확인해 주세요.'
+    );
   } catch (error) {
     setAuthMessage(friendlyAuthError(error), true);
     if (isEmailNotConfirmedMessage(error?.message)) {
@@ -1008,19 +1083,38 @@ async function resendVerificationEmail() {
     dom.authResend.disabled = true;
     dom.authResend.textContent = '재전송 중';
   }
+  setAuthMessage('인증 메일 재전송을 요청하고 있습니다.');
 
-  const { error } = await client.auth.resend({
-    type: 'signup',
-    email,
-    options: {
-      emailRedirectTo: getRedirectUrl(),
-    },
-  });
+  let resendResponse;
+
+  try {
+    resendResponse = await withTimeout(
+      client.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: getRedirectUrl(),
+        },
+      }),
+      15000,
+      '인증 메일 재전송 응답이 지연되고 있습니다. Supabase SMTP 설정과 이메일 발송 제한을 확인해 주세요.'
+    );
+  } catch (error) {
+    if (dom.authResend) {
+      dom.authResend.disabled = false;
+      dom.authResend.textContent = idleLabel;
+    }
+    setAuthMessage(friendlyAuthError(error), true);
+    setAuthResendVisible(true, email);
+    return;
+  }
 
   if (dom.authResend) {
     dom.authResend.disabled = false;
     dom.authResend.textContent = idleLabel;
   }
+
+  const { error } = resendResponse;
 
   if (error) {
     setAuthMessage(friendlyAuthError(error), true);
@@ -1084,64 +1178,6 @@ async function saveCaseSet() {
     button.textContent = button.dataset.idleLabel || '저장';
   });
   syncInteractionState();
-}
-
-async function redeemTeacherUpgradeCode(event) {
-  event.preventDefault();
-
-  if (!session?.user) {
-    setUpgradeMessage('로그인 후 프로코드를 입력해 주세요.', 'error');
-    return;
-  }
-
-  const code = dom.teacherCodeInput?.value.trim().toUpperCase() ?? '';
-
-  if (!/^[A-Z0-9]{6}$/.test(code)) {
-    setUpgradeMessage('프로코드는 영문 대문자와 숫자 6자리입니다.', 'error');
-    return;
-  }
-
-  const client = ensureClient();
-  if (!client) return;
-
-  const submitButton = dom.teacherUpgradeForm.querySelector('button[type="submit"]');
-  const idleLabel = submitButton.textContent;
-  submitButton.disabled = true;
-  submitButton.textContent = '확인 중';
-  setUpgradeMessage('프로코드를 확인하고 있습니다.', 'loading');
-
-  try {
-    const { data, error } = await withTimeout(
-      client.rpc('redeem_teacher_upgrade_code', {
-        input_code: code,
-      }),
-      12000,
-      '프로코드 승급 RPC 응답이 지연되고 있습니다. Database Function redeem_teacher_upgrade_code 상태를 확인해 주세요.'
-    );
-
-    if (error) throw error;
-
-    dom.teacherCodeInput.value = '';
-    applyUsageState({
-      tier: data?.tier ?? 'teacher',
-      used: data?.used ?? usageState.used,
-      limit: data?.limit ?? tierConfig.teacher.limit,
-      period: data?.period ?? usageState.period,
-    });
-    await withTimeout(
-      loadUsage(),
-      8000,
-      '사용량 갱신 응답이 지연되고 있습니다.'
-    ).catch(() => null);
-    setUpgradeMessage('Teacher 계정으로 승급되었습니다. 사용량이 갱신되었습니다.', 'success');
-  } catch (error) {
-    const message = error instanceof Error ? error.message : '승급 처리에 실패했습니다.';
-    setUpgradeMessage(`승급 오류: ${message}`, 'error');
-  } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = idleLabel;
-    syncInteractionState();
-  }
 }
 
 async function deleteConversation(id) {
@@ -1259,11 +1295,7 @@ function setLicenseOpen(isOpen) {
   dom.licenseBackdrop.hidden = !isOpen;
   dom.licenseModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
 
-  if (isOpen) {
-    setUpgradeMessage('프로코드는 인디스쿨에서 루지코지by노명성을 찾아 쪽지를 보내면 안내받을 수 있습니다.', 'idle');
-    setTimeout(() => dom.teacherCodeInput?.focus(), 60);
-    return;
-  }
+  if (isOpen) return;
 
   setTimeout(() => {
     if (!document.body.classList.contains('is-license-open')) {
@@ -1437,15 +1469,6 @@ dom.licenseClose?.addEventListener('click', () => {
 
 dom.licenseBackdrop?.addEventListener('click', () => {
   setLicenseOpen(false);
-});
-
-dom.teacherUpgradeForm?.addEventListener('submit', redeemTeacherUpgradeCode);
-
-dom.teacherCodeInput?.addEventListener('input', () => {
-  dom.teacherCodeInput.value = dom.teacherCodeInput.value
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, '')
-    .slice(0, 6);
 });
 
 dom.historyToggle?.addEventListener('click', () => {

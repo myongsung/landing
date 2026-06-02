@@ -6,6 +6,7 @@
 html {
   width: 100%;
   max-width: 100%;
+  height: 100%;
   margin: 0;
   overflow-x: hidden;
 }
@@ -13,8 +14,9 @@ html {
 body {
   width: 100%;
   max-width: 100%;
+  height: 100%;
   margin: 0;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 button,
@@ -44,9 +46,11 @@ a {
 }
 
 .case-app-shell {
+  height: 100svh;
   min-height: 100svh;
   display: grid;
   grid-template-columns: 288px minmax(0, 1fr) 360px;
+  overflow: hidden;
   background: #f6f7f9;
 }
 
@@ -449,44 +453,10 @@ a {
   background: #f8fbff;
 }
 
-.case-upgrade-form label {
+.case-upgrade-form strong {
   color: #0f172a;
   font-size: 0.82rem;
   font-weight: 500;
-}
-
-.case-upgrade-form > div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-}
-
-.case-upgrade-form input {
-  min-width: 0;
-  height: 40px;
-  padding: 0 12px;
-  border: 1px solid rgba(15, 23, 42, 0.14);
-  border-radius: 8px;
-  background: #ffffff;
-  color: #0f172a;
-  font: inherit;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.case-upgrade-form button {
-  min-height: 40px;
-  padding: 0 14px;
-  border-radius: 8px;
-  background: #0f172a;
-  color: #ffffff;
-  font-size: 0.8rem;
-  font-weight: 400;
-}
-
-.case-upgrade-form button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
 }
 
 .case-upgrade-form p {
@@ -494,14 +464,6 @@ a {
   color: #64748b;
   font-size: 0.76rem;
   line-height: 1.55;
-}
-
-.case-upgrade-form p[data-status="error"] {
-  color: #b42318;
-}
-
-.case-upgrade-form p[data-status="success"] {
-  color: #166534;
 }
 
 .case-legal-block {
@@ -1230,8 +1192,10 @@ body[data-auth-mode="signup"] .case-signup-only {
 
 .case-chat-main {
   min-width: 0;
+  min-height: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
 }
 
 .case-chat-header {
@@ -1260,13 +1224,14 @@ body[data-auth-mode="signup"] .case-signup-only {
 .case-home-shell .case-chat-main {
   grid-column: 1;
   grid-row: 2;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto auto;
   background: transparent;
 }
 
 .case-home-shell .case-report-panel {
   grid-column: 2;
   grid-row: 2;
+  min-height: 0;
 }
 
 .case-home-shell .case-chat-header {
@@ -1280,6 +1245,9 @@ body[data-auth-mode="signup"] .case-signup-only {
   gap: 14px;
   padding: 22px;
   overflow: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .case-home-shell .case-chat-body::before {
@@ -1489,8 +1457,11 @@ body[data-auth-mode="signup"] .case-signup-only {
 }
 
 .case-report-panel {
+  min-width: 0;
+  min-height: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
   background: #f7f8fa;
   border-left: 1px solid rgba(15, 23, 42, 0.08);
 }
@@ -1501,6 +1472,9 @@ body[data-auth-mode="signup"] .case-signup-only {
   margin: 14px;
   padding: 20px 22px;
   overflow: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: 8px;
   background: #ffffff;
@@ -1943,10 +1917,6 @@ body[data-busy="true"] .case-report-preview::after {
     padding: 12px;
   }
 
-  .case-upgrade-form > div {
-    grid-template-columns: 1fr;
-  }
-
   .case-home-shell > .case-service-status {
     display: none;
   }
@@ -2028,7 +1998,7 @@ body[data-busy="true"] .case-report-preview::after {
   }
 
   .case-chat-main {
-    min-height: 72svh;
+    min-height: 0;
   }
 
   .is-report-open {
