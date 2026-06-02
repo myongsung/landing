@@ -11,11 +11,11 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
 const openAiApiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
 const reportModel = Deno.env.get('OPENAI_REPORT_MODEL') ?? 'gpt-4o-mini';
 
-const MAX_HISTORY_MESSAGES = 30;
-const MAX_HISTORY_CHARS = 1800;
-const MAX_CURRENT_REPORT_CHARS = 18000;
+const MAX_HISTORY_MESSAGES = 24;
+const MAX_HISTORY_CHARS = 1500;
+const MAX_CURRENT_REPORT_CHARS = 14000;
 const MAX_CLIENT_GUIDANCE_CHARS = 7000;
-const MAX_REPORT_CHARS = 28000;
+const MAX_REPORT_CHARS = 24000;
 
 function firstKeyFromJsonSecret(value: string) {
   if (!value) return '';
@@ -425,7 +425,7 @@ async function callOpenAI(params: {
     model: reportModel,
     instructions: systemPrompt(params.product),
     input: buildModelInput(params),
-    max_output_tokens: params.updateReport ? 4200 : 1800,
+    max_output_tokens: params.updateReport ? 3600 : 1500,
     text: {
       format: {
         type: 'json_schema',

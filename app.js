@@ -129,6 +129,7 @@ const tierConfig = {
 
 let supabase = null;
 let session = null;
+let lastKnownSession = null;
 let conversations = [];
 let activeConversation = null;
 let messages = [];
@@ -419,6 +420,45 @@ function ensureClient() {
   return supabase;
 }
 
+async function restoreSessionIfAvailable(loadData = false) {
+  const client = ensureClient();
+  if (!client) return null;
+
+  const { data, error } = await client.auth.getSession();
+  if (error || !data?.session?.user) return null;
+
+  lastKnownSession = data.session;
+  applySession(data.session);
+
+  if (loadData) {
+    await loadUsage();
+    await loadConversations();
+  }
+
+  return data.session;
+}
+
+async function handleAuthStateChange(event, nextSession) {
+  if (nextSession?.user) {
+    lastKnownSession = nextSession;
+    applySession(nextSession);
+    await loadUsage();
+    await loadConversations();
+    return;
+  }
+
+  if (event === 'SIGNED_OUT') {
+    lastKnownSession = null;
+    applySession(null);
+    return;
+  }
+
+  const recoveredSession = await restoreSessionIfAvailable(true);
+  if (!recoveredSession && !lastKnownSession) {
+    applySession(null);
+  }
+}
+
 function getRedirectUrl() {
   const url = new URL(window.location.href);
   url.hash = '';
@@ -438,6 +478,25 @@ function escapeHtml(value) {
 function reportInlineHtml(value) {
   return escapeHtml(value)
     .replace(/\*\*(.+?)\*\*/g, '<span class="report-emphasis">$1</span>');
+}
+
+function splitMarkdownTableRow(line) {
+  return String(line)
+    .trim()
+    .replace(/^\|/, '')
+    .replace(/\|$/, '')
+    .split('|')
+    .map((cell) => cell.trim());
+}
+
+function isMarkdownTableRow(line) {
+  const text = String(line || '').trim();
+  return text.startsWith('|') && text.includes('|') && splitMarkdownTableRow(text).length >= 2;
+}
+
+function isMarkdownTableSeparator(line) {
+  if (!isMarkdownTableRow(line)) return false;
+  return splitMarkdownTableRow(line).every((cell) => /^:?-{2,}:?$/.test(cell.replace(/\s/g, '')));
 }
 
 function markdownToHtml(markdown) {
@@ -473,6 +532,7 @@ function markdownToHtml(markdown) {
   let currentSection = null;
   let paragraph = [];
   let list = [];
+  let table = [];
 
   function ensureSection() {
     if (!currentSection) {
@@ -500,9 +560,19 @@ function markdownToHtml(markdown) {
     list = [];
   }
 
+  function flushTable() {
+    if (!table.length) return;
+    ensureSection().blocks.push({
+      type: 'table',
+      rows: [...table],
+    });
+    table = [];
+  }
+
   function startSection(nextTitle, level = 2) {
     flushParagraph();
     flushList();
+    flushTable();
     currentSection = { title: nextTitle, level, blocks: [] };
     sections.push(currentSection);
   }
@@ -513,10 +583,14 @@ function markdownToHtml(markdown) {
     if (!line) {
       flushParagraph();
       flushList();
+      flushTable();
       return;
     }
 
     if (line.startsWith('# ')) {
+      flushParagraph();
+      flushList();
+      flushTable();
       title = line.slice(2).trim() || title;
       return;
     }
@@ -536,18 +610,30 @@ function markdownToHtml(markdown) {
       return;
     }
 
+    if (isMarkdownTableRow(line)) {
+      flushParagraph();
+      flushList();
+      if (!isMarkdownTableSeparator(line)) {
+        table.push(splitMarkdownTableRow(line));
+      }
+      return;
+    }
+
     if (/^[-*]\s+/.test(line)) {
       flushParagraph();
+      flushTable();
       list.push(line.replace(/^[-*]\s+/, ''));
       return;
     }
 
     flushList();
+    flushTable();
     paragraph.push(line);
   });
 
   flushParagraph();
   flushList();
+  flushTable();
 
   const body = sections
     .filter((section) => section.title || section.blocks.length)
@@ -563,6 +649,25 @@ function markdownToHtml(markdown) {
               .map((item) => `<li>${reportInlineHtml(item)}</li>`)
               .join('');
             return `<ul>${items}</ul>`;
+          }
+
+          if (block.type === 'table') {
+            const [headRow, ...bodyRows] = block.rows;
+            const header = headRow
+              .map((cell) => `<th>${reportInlineHtml(cell)}</th>`)
+              .join('');
+            const rows = bodyRows
+              .map((row) => `<tr>${row.map((cell) => `<td>${reportInlineHtml(cell)}</td>`).join('')}</tr>`)
+              .join('');
+
+            return `
+              <div class="report-table-wrap">
+                <table class="report-table">
+                  <thead><tr>${header}</tr></thead>
+                  <tbody>${rows || `<tr>${headRow.map(() => '<td></td>').join('')}</tr>`}</tbody>
+                </table>
+              </div>
+            `;
           }
 
           return `<p>${block.lines.map(reportInlineHtml).join('<br>')}</p>`;
@@ -853,7 +958,9 @@ function ensureLocalConversation(message) {
 }
 
 async function invokeChat({ message = '', forceReport = false } = {}) {
-  if (!session?.user) {
+  const activeSession = session?.user ? session : await restoreSessionIfAvailable(true);
+
+  if (!activeSession?.user) {
     setServiceStatus('로그인 후 대화할 수 있습니다.', 'error');
     return;
   }
@@ -891,17 +998,24 @@ async function invokeChat({ message = '', forceReport = false } = {}) {
   renderAll();
 
   try {
-    const { data, error } = await supabase.functions.invoke('report-chat', {
-      body: {
-        conversationId: activeConversation?.isLocal ? null : activeConversation?.id ?? null,
-        product: activeConversation?.product ?? 'pro',
-        message: trimmedMessage,
-        forceReport: shouldUpdateReport,
-        clientIntent: chatIntent,
-        clientPolicy: requestPolicy,
-        clientGuidance: reportChatBehaviorGuide,
-      },
-    });
+    const timeoutMs = shouldUpdateReport ? 70000 : 42000;
+    const { data, error } = await withTimeout(
+      supabase.functions.invoke('report-chat', {
+        body: {
+          conversationId: activeConversation?.isLocal ? null : activeConversation?.id ?? null,
+          product: activeConversation?.product ?? 'pro',
+          message: trimmedMessage,
+          forceReport,
+          clientIntent: chatIntent,
+          clientPolicy: requestPolicy,
+          clientGuidance: reportChatBehaviorGuide,
+        },
+      }),
+      timeoutMs,
+      shouldUpdateReport
+        ? '답변과 보고서 정리가 지연되고 있습니다. 잠시 뒤 다시 시도하거나 더 짧게 나누어 입력해 주세요.'
+        : '답변 생성이 지연되고 있습니다. 잠시 뒤 다시 시도해 주세요.'
+    );
 
     if (error) {
       const context = error.context;
@@ -1422,20 +1536,19 @@ async function boot() {
   if (!client) return;
 
   const { data } = await client.auth.getSession();
+  lastKnownSession = data.session ?? null;
   applySession(data.session);
-  await loadUsage();
-
-  client.auth.onAuthStateChange(async (_event, nextSession) => {
-    applySession(nextSession);
-    if (nextSession?.user) {
-      await loadUsage();
-      await loadConversations();
-    }
-  });
 
   if (data.session?.user) {
+    await loadUsage();
     await loadConversations();
+  } else {
+    await loadUsage();
   }
+
+  client.auth.onAuthStateChange(async (event, nextSession) => {
+    await handleAuthStateChange(event, nextSession);
+  });
 
   const draftPrompt = sessionStorage.getItem('roosycozyDraftPrompt');
 
