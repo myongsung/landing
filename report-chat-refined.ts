@@ -411,6 +411,51 @@ function toStringArray(value: unknown, maxItems = 8) {
   return value.map((item) => String(item ?? '').trim()).filter(Boolean).slice(0, maxItems);
 }
 
+function numberOrNull(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function normalizeUsageSnapshot(value: unknown) {
+  const row = Array.isArray(value) ? value[0] : value;
+
+  if (!row || typeof row !== 'object') {
+    return row;
+  }
+
+  const usedMessages = numberOrNull(row.used_messages) ?? 0;
+  const usedReports = numberOrNull(row.used_reports) ?? 0;
+  const hasSeparateUsage = row.used_messages !== undefined || row.used_reports !== undefined;
+  const rawLimit =
+    numberOrNull(row.limit_points) ??
+    numberOrNull(row.limit_messages) ??
+    numberOrNull(row.limit_reports) ??
+    numberOrNull(row.limit) ??
+    numberOrNull(row.monthly_limit) ??
+    numberOrNull(row.monthly_messages);
+  const rawRemaining =
+    numberOrNull(row.remaining_points) ??
+    numberOrNull(row.remaining_messages) ??
+    numberOrNull(row.remaining);
+  const used =
+    numberOrNull(row.used_points) ??
+    numberOrNull(row.used) ??
+    (hasSeparateUsage ? usedMessages + usedReports : null) ??
+    (rawLimit !== null && rawRemaining !== null ? Math.max(0, rawLimit - rawRemaining) : null) ??
+    0;
+  const limit = rawLimit ?? Math.max(used, 0);
+
+  return {
+    ...row,
+    tier: row.tier ?? row.membership_tier,
+    used,
+    limit,
+    used_points: used,
+    limit_points: limit,
+    remaining: Math.max(0, limit - used),
+  };
+}
+
 async function callOpenAI(params: {
   product: string;
   history: Array<{ role: string; content: string; created_at?: string }>;
@@ -465,7 +510,7 @@ async function consumeReportUsage(serviceClient: ReturnType<typeof createClient>
   });
 
   if (error) throw new Error(error.message);
-  return data;
+  return normalizeUsageSnapshot(data);
 }
 
 async function findConversation(serviceClient: ReturnType<typeof createClient>, conversationId: string, userId: string) {

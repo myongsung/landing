@@ -313,6 +313,61 @@ function usagePercentValue(state = usageState) {
   return Math.min(100, Math.round((state.used / state.limit) * 100));
 }
 
+function numberOrNull(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function unwrapPayload(value) {
+  if (typeof value === 'string') {
+    try {
+      return unwrapPayload(JSON.parse(value));
+    } catch {
+      return value;
+    }
+  }
+
+  if (Array.isArray(value)) return unwrapPayload(value[0] ?? {});
+  return value ?? {};
+}
+
+function normalizeChatResponse(data) {
+  const payload = unwrapPayload(data);
+
+  if (!payload || typeof payload !== 'object') {
+    return {
+      payload: {},
+      conversation: null,
+      assistantMessage: '',
+      usage: null,
+    };
+  }
+
+  return {
+    payload,
+    conversation:
+      payload.conversation ??
+      payload.updatedConversation ??
+      payload.reportConversation ??
+      payload.caseConversation ??
+      payload.case ??
+      null,
+    assistantMessage:
+      payload.assistantMessage ??
+      payload.assistant_message ??
+      payload.reply ??
+      payload.message ??
+      '',
+    usage:
+      payload.usage ??
+      payload.usageSnapshot ??
+      payload.usage_snapshot ??
+      payload.quota ??
+      payload.meta?.usage ??
+      null,
+  };
+}
+
 function canChat() {
   return Boolean(session?.user) && usageState.tier !== 'unauth' && usageState.used < usageState.limit;
 }
@@ -384,17 +439,55 @@ function syncInteractionState() {
 }
 
 function applyUsageState(nextUsage = {}) {
-  const tier = normalizeTier(nextUsage.tier);
+  const usage = unwrapPayload(nextUsage);
+  const usedMessages = numberOrNull(usage.used_messages) ?? 0;
+  const usedReports = numberOrNull(usage.used_reports) ?? 0;
+  const hasSeparateUsage = usage.used_messages !== undefined || usage.used_reports !== undefined;
+  const tier = normalizeTier(usage.tier ?? usage.membership_tier);
   const info = tierInfo(tier);
+  const rawLimit =
+    numberOrNull(usage.limit_points) ??
+    numberOrNull(usage.limit_messages) ??
+    numberOrNull(usage.limit_reports) ??
+    numberOrNull(usage.limit) ??
+    numberOrNull(usage.monthly_limit) ??
+    numberOrNull(usage.monthly_messages);
+  const limit = rawLimit ?? numberOrNull(usageState.limit) ?? info.limit;
+  const rawRemaining =
+    numberOrNull(usage.remaining_points) ??
+    numberOrNull(usage.remaining_messages) ??
+    numberOrNull(usage.remaining);
+  const used =
+    numberOrNull(usage.used_points) ??
+    numberOrNull(usage.used) ??
+    (hasSeparateUsage ? usedMessages + usedReports : null) ??
+    (rawRemaining !== null ? Math.max(0, limit - rawRemaining) : null) ??
+    usageState.used ??
+    0;
+
   usageState = {
     tier,
-    used: Number(nextUsage.used_messages ?? nextUsage.used_points ?? nextUsage.used ?? usageState.used ?? 0),
-    limit: Number(nextUsage.limit_messages ?? nextUsage.limit_points ?? nextUsage.limit ?? info.limit),
-    period: String(nextUsage.period ?? usageState.period ?? ''),
+    used: Math.max(0, Math.min(used, limit)),
+    limit,
+    period: String(usage.period ?? usage.month ?? usage.period_month ?? usageState.period ?? ''),
   };
 
   syncLicenseUi();
   syncInteractionState();
+}
+
+function applyLocalUsageIncrement(previousUsage = usageState) {
+  if (!session?.user || !previousUsage.limit) return;
+
+  const samePeriod = !previousUsage.period || !usageState.period || previousUsage.period === usageState.period;
+  if (!samePeriod || usageState.used > previousUsage.used) return;
+
+  applyUsageState({
+    tier: usageState.tier,
+    used: Math.min(usageState.limit, previousUsage.used + 1),
+    limit: usageState.limit,
+    period: usageState.period,
+  });
 }
 
 function ensureClient() {
@@ -893,7 +986,7 @@ async function loadConversations() {
   renderAll();
 }
 
-async function loadUsage() {
+async function loadUsage({ preserveOnError = true } = {}) {
   if (!session?.user || !supabase) {
     applyUsageState({ tier: 'unauth', used: 0, limit: 0 });
     return;
@@ -906,18 +999,35 @@ async function loadUsage() {
     return;
   }
 
-  const { data: membership } = await supabase
+  const { data: membership, error: membershipError } = await supabase
     .from('user_memberships')
     .select('tier')
     .eq('user_id', session.user.id)
     .maybeSingle();
+
+  if (membershipError) {
+    if (!preserveOnError) {
+      applyUsageState({ tier: 'general', used: usageState.used, limit: usageState.limit || tierConfig.general.limit });
+    }
+    return;
+  }
+
   const tier = normalizeTier(membership?.tier);
-  applyUsageState({ tier, used: 0, limit: tierInfo(tier).limit });
+  applyUsageState({
+    tier,
+    used: preserveOnError ? usageState.used : 0,
+    limit: tierInfo(tier).limit,
+    period: usageState.period,
+  });
 }
 
 async function loadMessages() {
   if (!activeConversation || !supabase) {
     messages = [];
+    return;
+  }
+
+  if (activeConversation.isLocal) {
     return;
   }
 
@@ -998,6 +1108,7 @@ async function invokeChat({ message = '', forceReport = false } = {}) {
   renderAll();
 
   try {
+    const usageBeforeRequest = { ...usageState };
     const timeoutMs = shouldUpdateReport ? 70000 : 42000;
     const { data, error } = await withTimeout(
       supabase.functions.invoke('report-chat', {
@@ -1029,26 +1140,50 @@ async function invokeChat({ message = '', forceReport = false } = {}) {
     }
     if (data?.error) throw new Error(data.error);
 
-    if (data?.conversation) {
-      const existingIndex = conversations.findIndex((item) => item.id === data.conversation.id);
+    const chatResponse = normalizeChatResponse(data);
+
+    if (chatResponse.payload?.error) {
+      throw new Error(chatResponse.payload.error);
+    }
+
+    if (chatResponse.conversation) {
+      const nextConversation = chatResponse.conversation;
+      const existingIndex = conversations.findIndex((item) => item.id === nextConversation.id);
 
       if (existingIndex >= 0) {
-        conversations[existingIndex] = data.conversation;
+        conversations[existingIndex] = nextConversation;
       } else {
-        conversations.unshift(data.conversation);
+        conversations.unshift(nextConversation);
       }
 
-      activeConversation = data.conversation;
+      activeConversation = nextConversation;
     }
 
-    if (data?.usage) {
-      applyUsageState(data.usage);
+    if (chatResponse.assistantMessage && (!chatResponse.conversation || activeConversation?.isLocal)) {
+      messages = [
+        ...messages,
+        {
+          id: `temp-assistant-${Date.now()}`,
+          role: 'assistant',
+          content: chatResponse.assistantMessage,
+          created_at: new Date().toISOString(),
+        },
+      ];
     }
 
+    if (chatResponse.usage) {
+      applyUsageState(chatResponse.usage);
+    } else {
+      applyLocalUsageIncrement(usageBeforeRequest);
+    }
+
+    await loadUsage({ preserveOnError: true });
+    applyLocalUsageIncrement(usageBeforeRequest);
     await loadMessages();
     renderAll();
     setServiceStatus('대화 저장 완료', 'ready');
   } catch (error) {
+    await loadUsage({ preserveOnError: true });
     const messageText = error instanceof Error ? error.message : '요청에 실패했습니다.';
     messages = [
       ...messages,
