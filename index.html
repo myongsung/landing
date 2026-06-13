@@ -3,16 +3,23 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#ffffff">
-  <title>RoosyCozy 루지코지 | AI 상담 채팅</title>
-  <meta name="description" content="AI와 대화하며 분쟁과 민원 상황을 정리하고 사건보고서를 완성하는 RoosyCozy 상담 채팅 서비스입니다." />
+  <meta name="theme-color" content="#050505">
+  <title>RoosyCozy | 지능형 수사지원 에이전트</title>
+  <meta name="description" content="사건 기록, PDF 증거, 인물 관계를 한 화면에서 정리하는 RoosyCozy 지능형 수사지원 에이전트입니다." />
   <link rel="stylesheet" href="app.css" />
   <script src="supabase-config.js"></script>
   <script type="module" src="app.js"></script>
 </head>
 
 <body class="chat-app chat-home">
-  <main class="case-app-shell case-home-shell" aria-label="RoosyCozy AI 상담">
+  <section class="desktop-only-gate" aria-label="PC 브라우저 전용 안내">
+    <img src="assets/brand/roosycozy-rc-logo.png" alt="" width="54" height="54">
+    <strong>RoosyCozy Intelligence</strong>
+    <h1>PC 브라우저에서만 사용할 수 있습니다</h1>
+    <p>지능형 증거분석, 사안 구조화, 사안보고서 작성은 넓은 화면을 전제로 설계되었습니다. 데스크톱 또는 노트북의 Chrome, Edge, Safari 브라우저에서 접속해 주세요.</p>
+  </section>
+
+  <main class="case-app-shell case-home-shell" aria-label="RoosyCozy 지능형 증거분석">
     <header class="case-topbar">
       <a class="case-brand" href="index.html" aria-label="RoosyCozy 홈">
         <img src="assets/brand/roosycozy-rc-logo.png" alt="" width="32" height="32">
@@ -21,7 +28,7 @@
 
       <button class="case-license-mini" type="button" aria-label="라이선스 요약 열기" data-license-open data-license-line>비로그인 · 대화 불가 · 0%</button>
 
-      <button class="case-report-toggle" type="button" aria-expanded="false" aria-label="사건보고서 열기" data-report-toggle>
+      <button class="case-report-toggle" type="button" aria-expanded="false" aria-label="사안보고서 열기" data-report-toggle>
         <span></span>
       </button>
 
@@ -34,12 +41,12 @@
       <div class="case-top-actions" data-top-actions>
         <button class="case-license-line" type="button" aria-label="라이선스와 사용량 열기" data-license-open data-license-line>비로그인 · 대화 불가 · 0%</button>
 
-        <button class="case-history-button" type="button" data-history-toggle>기록</button>
-        <button class="case-new-button" type="button" data-new-conversation>새 상담</button>
+        <button class="case-history-button" type="button" data-history-toggle>사안 기록</button>
+        <button class="case-new-button" type="button" data-new-conversation>새 사안</button>
         <button class="case-save-button" type="button" data-save-case data-idle-label="저장">저장</button>
 
         <section class="case-auth-card" data-auth-panel>
-          <button class="case-login-button" type="button" data-auth-open>로그인하기</button>
+          <button class="case-login-button" type="button" data-auth-open>사용해보기</button>
         </section>
 
         <section class="case-user-card is-hidden" data-user-panel>
@@ -55,20 +62,20 @@
     <aside class="case-history-drawer" data-history-drawer aria-hidden="true" hidden>
       <header>
         <div>
-          <span>History</span>
-          <h2>저장된 상담</h2>
+          <span>기록</span>
+          <h2>저장된 사안</h2>
         </div>
         <button type="button" data-history-close>닫기</button>
       </header>
-      <nav class="case-list case-history-list" data-conversation-list aria-label="저장된 상담"></nav>
+      <nav class="case-list case-history-list" data-conversation-list aria-label="저장된 사안"></nav>
     </aside>
 
     <div class="case-auth-backdrop" data-auth-backdrop hidden></div>
     <section class="case-auth-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="auth-modal-title" data-auth-modal hidden>
       <header>
         <div>
-          <span>Account</span>
-          <h2 id="auth-modal-title">로그인하기</h2>
+          <span>계정</span>
+          <h2 id="auth-modal-title">사용해보기</h2>
         </div>
         <button type="button" data-auth-close>닫기</button>
       </header>
@@ -80,7 +87,7 @@
         </button>
       </div>
 
-      <p class="case-auth-embedded-note">네이버앱, 카카오톡 등 앱 안의 브라우저에서는 Google 로그인이 차단될 수 있어 이메일 로그인만 사용할 수 있습니다. Google 계정으로 들어오려면 Chrome 브라우저에서 다시 열어 주세요.</p>
+      <p class="case-auth-embedded-note">RoosyCozy 분석 워크스페이스와 로그인은 PC 브라우저에서 이용해 주세요.</p>
 
       <div class="case-auth-divider">또는 이메일로 시작하기</div>
 
@@ -109,7 +116,7 @@
 
       <p class="case-auth-message" data-auth-message></p>
       <button class="case-auth-resend" type="button" data-auth-resend hidden>인증 메일 다시 보내기</button>
-      <small>회원가입 후 받은 메일의 인증 링크를 누른 뒤, 같은 이메일과 비밀번호로 PC와 모바일에서 로그인할 수 있습니다.</small>
+      <small>회원가입 후 받은 메일의 인증 링크를 누른 뒤 권한 안내를 확인해 주세요. Teacher는 인디스쿨 쪽지로, PRO는 별도 이메일 문의 후 승인됩니다.</small>
     </section>
 
     <div class="case-auth-legal-backdrop" data-auth-legal-backdrop hidden></div>
@@ -121,17 +128,50 @@
       <div class="case-auth-legal-content" data-auth-legal-content></div>
     </section>
 
+    <div class="case-guide-backdrop" data-guide-backdrop hidden></div>
+    <section class="case-guide-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="guide-modal-title" data-guide-modal hidden>
+      <header>
+        <div>
+          <span>사용 가이드라인</span>
+          <h2 id="guide-modal-title">권한별 사용 범위</h2>
+        </div>
+        <button type="button" data-guide-close>닫기</button>
+      </header>
+
+      <p class="case-guide-summary">RoosyCozy는 증거를 입체적으로 분해하고 재구성해 사안보고서를 정리하는 보조 시스템입니다. 법률 판단이나 수사·행정 결론을 대신하지 않습니다.</p>
+
+      <div class="case-guide-grid">
+        <article>
+          <span>권한 필요</span>
+          <h3>일반 계정</h3>
+          <p>Google 또는 이메일 로그인만 완료된 계정은 분석 워크스페이스에 들어갈 수 없습니다. 권한 승인 전에는 서비스 안내와 약관 확인만 가능합니다.</p>
+        </article>
+        <article>
+          <span>Teacher</span>
+          <h3>교원 권한</h3>
+          <p>교원 고객을 위한 기초 사안보고서 생성 기능입니다. 학교폭력, 교권침해 사안, 악성민원 대응, 상담기록, 학교 대응 경위를 입력하면 사실관계와 확인 필요 사항 중심으로 부분 보고서를 정리합니다.</p>
+          <small>권한 요청: 인디스쿨에서 루지코지by노명성에게 가입 이메일을 쪽지로 보내주세요.</small>
+        </article>
+        <article>
+          <span>PRO</span>
+          <h3>검찰/경찰 (수사기관) 전문 보조용</h3>
+          <p>PRO는 검찰·경찰 등 수사기관 계정에 한해 별도 승인되는 전문 보조용 라이선스입니다. 자료의 일관성, 원본·형식, 행위와의 연결 맥락을 더 세세하게 분해하고 재구성합니다.</p>
+          <small>별도 이메일 문의: myongsungcs@gmail.com</small>
+        </article>
+      </div>
+    </section>
+
     <div class="case-license-backdrop" data-license-backdrop hidden></div>
     <section class="case-license-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="license-modal-title" data-license-modal hidden>
       <header>
         <div>
-          <span>License</span>
+          <span>라이선스</span>
           <h2 id="license-modal-title">라이선스와 사용량</h2>
         </div>
         <button type="button" data-license-close>닫기</button>
       </header>
 
-      <p class="case-license-summary">비로그인 사용자는 대화할 수 없습니다. Google 또는 이메일 로그인 후 일반 계정으로 시작할 수 있으며, 초등교원 Teacher 승급은 당분간 운영자가 직접 처리합니다.</p>
+      <p class="case-license-summary">권한 필요: 분석 워크스페이스는 Teacher 또는 PRO 승인 계정만 사용할 수 있습니다. 일반 로그인 계정은 승인 전까지 분석 기능이 제한됩니다.</p>
 
       <div class="case-license-table-wrap">
         <table class="case-license-table">
@@ -139,32 +179,32 @@
             <tr>
               <th scope="col">구분</th>
               <th scope="col">일반</th>
-              <th scope="col">초등교원 Teacher</th>
-              <th scope="col">PRO</th>
+              <th scope="col">Teacher 교원 권한</th>
+              <th scope="col">PRO 검찰/경찰 (수사기관) 전문 보조용</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <th scope="row">대상</th>
               <td>Google 또는 이메일 로그인 사용자</td>
-              <td>초등교원</td>
-              <td>전문 사용자</td>
+              <td>학폭·교권침해·악성민원 대응 교원</td>
+              <td>검찰·경찰 등 수사기관 전문 보조용 사용자</td>
             </tr>
             <tr>
               <th scope="row">월 사용량</th>
-              <td>20회</td>
+              <td>권한 필요</td>
               <td>150회</td>
-              <td>500회</td>
+              <td>500회 또는 별도 협의</td>
             </tr>
             <tr>
-              <th scope="row">문답 상담</th>
-              <td>가능</td>
-              <td>가능</td>
-              <td>가능</td>
+              <th scope="row">증거 분석</th>
+              <td>권한 필요</td>
+              <td>학폭·교권침해·악성민원 대응 보고서 중심</td>
+              <td>세부 증거분석 전문 보조용</td>
             </tr>
             <tr>
-              <th scope="row">보고서 저장</th>
-              <td>가능</td>
+              <th scope="row">사안보고서 저장</th>
+              <td>권한 필요</td>
               <td>가능</td>
               <td>가능</td>
             </tr>
@@ -172,9 +212,9 @@
         </table>
       </div>
 
-      <section class="case-upgrade-form" aria-label="Teacher 수동 승급 안내">
-        <strong>Teacher 수동 승급 안내</strong>
-        <p>초등교원 계정은 당분간 프로승급코드 없이 운영자가 직접 승급합니다. RoosyCozy에 가입한 이메일 주소를 인디스쿨에서 "루지코지by노명성"에게 쪽지로 알려주시면 확인 후 Teacher 계정으로 승급해드립니다.</p>
+      <section class="case-upgrade-form" aria-label="교원 권한 안내">
+        <strong>권한 안내</strong>
+        <p>Teacher 권한은 인디스쿨에서 루지코지by노명성에게 RoosyCozy 가입 이메일 주소를 쪽지로 보내 요청할 수 있습니다. PRO는 검찰·경찰 등 수사기관 계정의 전문 보조용 라이선스로, 별도 이메일 문의 후 승인됩니다.</p>
       </section>
 
       <div class="case-legal-block">
@@ -189,18 +229,18 @@
             <h3>제2조 개인정보처리자 및 문의처</h3>
             <p>본 서비스의 개인정보 처리에 관한 책임과 문의 접수는 아래 연락처를 통하여 처리합니다.</p>
             <ul>
-              <li>서비스명: RoosyCozy AI 상담 채팅</li>
+              <li>서비스명: RoosyCozy Intelligence</li>
               <li>개인정보 문의: myongsungcs@gmail.com</li>
-              <li>처리 범위: 회원 인증, 상담 문답 저장, AI 보고서 생성, 라이선스 및 사용량 관리, 보안·오남용 방지</li>
+              <li>처리 범위: 회원 인증, 분석 문답 저장, 사안 보고서 생성, 라이선스 및 사용량 관리, 보안·오남용 방지</li>
             </ul>
 
             <h3>제3조 개인정보의 처리 목적</h3>
             <p>회사는 다음 목적을 위하여 필요한 최소한의 개인정보를 처리하며, 다음 목적 이외의 용도로 이용하지 않습니다. 처리 목적이 변경되는 경우에는 관계 법령에 따라 별도 동의를 받거나 필요한 조치를 이행합니다.</p>
             <ol>
               <li>회원 인증 및 계정 관리: Google OAuth 또는 이메일 로그인, 이용자 식별, 세션 유지, 로그아웃 처리</li>
-              <li>AI 상담 및 보고서 생성: 이용자가 입력한 상담 내용 분석, 추가 질문 생성, 사건 개요·경위·쟁점·요청사항 정리</li>
-              <li>대화 및 보고서 저장: 이용자가 저장하거나 서비스 이용 과정에서 생성된 상담 기록, 보고서, 제목, 상태값의 조회·삭제 지원</li>
-              <li>라이선스 및 사용량 관리: 일반·Teacher·PRO 계정 구분, 월 사용량 산정, Teacher 수동 승급 여부 확인, 오남용 방지</li>
+            <li>사안 보고서 생성: 이용자가 입력한 사건 기록과 관계 그래프 분석, 추가 질문 생성, 사건 구조·관련 주체·쟁점·사실관계·증거·AI 정리근거·사용자 확인 지점 정리</li>
+              <li>대화 및 사안보고서 저장: 이용자가 저장하거나 서비스 이용 과정에서 생성된 분석 기록, 사안보고서, 제목, 상태값의 조회·삭제 지원</li>
+              <li>라이선스 및 사용량 관리: 일반·Teacher·PRO 검찰/경찰 (수사기관) 전문 보조용 계정 구분, 월 사용량 산정, 권한 부여 여부 확인, 오남용 방지</li>
               <li>서비스 안정성 확보: 장애 대응, 비정상 접근 탐지, 보안 점검, 분쟁 대응을 위한 접속·이용 기록 확인</li>
               <li>고객 문의 처리: 문의 사실 확인, 처리 결과 안내, 동일 문의의 재발 방지</li>
             </ol>
@@ -209,19 +249,19 @@
             <p>회사는 서비스 제공에 필요한 범위에서 아래 항목을 처리할 수 있습니다.</p>
             <ul>
               <li>로그인 정보: 이메일 주소, Google 계정 식별자, 프로필 이름 또는 프로필 이미지가 제공되는 경우 해당 정보, 이메일 가입 시 인증 및 비밀번호 기반 로그인에 필요한 인증 정보</li>
-              <li>계정·라이선스 정보: 내부 사용자 식별자, 회원 등급, Teacher 또는 PRO 승급 처리 여부, 사용량, 생성·수정 시각</li>
-              <li>상담 정보: 이용자가 입력한 문답, AI가 생성한 질문과 답변, 보고서 본문, 상담 제목, 상담 상태, 저장 여부, 삭제 여부</li>
+              <li>계정·라이선스 정보: 내부 사용자 식별자, 회원 등급, Teacher 권한 또는 PRO 검찰/경찰 (수사기관) 전문 보조용 문의 처리 여부, 사용량, 생성·수정 시각</li>
+              <li>분석 정보: 이용자가 입력한 문답과 사안 기록, AI가 생성한 질문과 답변, 사안보고서 본문, 사안 제목, 분석 상태, 저장 여부, 삭제 여부</li>
               <li>서비스 이용 정보: 접속 일시, 브라우저 및 기기 정보, IP 주소, 오류 기록, 인증 토큰 및 세션 유지에 필요한 로컬 저장 정보</li>
               <li>문의 정보: 이용자가 이메일 등으로 문의하는 경우 이름, 이메일 주소, 문의 내용, 처리 결과</li>
             </ul>
-            <p>이용자는 제3자의 개인정보, 민감정보, 고유식별정보, 아동·청소년 관련 정보 등을 입력하지 않는 것이 원칙입니다. 다만 사건 정리에 반드시 필요한 경우에는 관련 법령과 제3자의 권리를 침해하지 않는 범위에서 최소한으로 입력해야 하며, 가능하면 이름·연락처 등은 익명화 또는 가명화하여 입력해야 합니다.</p>
+            <p>이용자는 제3자의 개인정보, 민감정보, 고유식별정보, 아동·청소년 관련 정보 등을 입력하지 않는 것이 원칙입니다. 다만 사안 분석에 반드시 필요한 경우에는 관련 법령과 제3자의 권리를 침해하지 않는 범위에서 최소한으로 입력해야 하며, 가능하면 이름·연락처 등은 익명화 또는 가명화하여 입력해야 합니다.</p>
 
             <h3>제5조 개인정보의 처리 및 보유 기간</h3>
             <p>회사는 개인정보의 처리 목적이 달성되거나 이용자가 삭제·탈퇴를 요청한 때에는 지체 없이 해당 개인정보를 파기합니다. 다만 관계 법령에 따라 보존할 필요가 있거나 분쟁 대응을 위하여 필요한 경우에는 아래 기간 동안 보관할 수 있습니다.</p>
             <ul>
               <li>계정 정보: 회원 탈퇴, Google 로그인 연결 해제 또는 이메일 계정 삭제 요청 시까지</li>
-              <li>상담 문답 및 보고서: 이용자가 직접 삭제하거나 계정 삭제를 요청할 때까지</li>
-              <li>라이선스·승급 처리 이력: 부정 사용 방지 및 중복 승급 제한을 위하여 계정 유지 기간 동안, 탈퇴 후에는 분쟁 대응에 필요한 범위에서 최대 1년</li>
+              <li>분석 문답 및 사안보고서: 이용자가 직접 삭제하거나 계정 삭제를 요청할 때까지</li>
+              <li>라이선스·등급 처리 이력: 부정 사용 방지 및 중복 등급 처리 제한을 위하여 계정 유지 기간 동안, 탈퇴 후에는 분쟁 대응에 필요한 범위에서 최대 1년</li>
               <li>접속·보안 로그: 보안 점검 및 장애 대응을 위하여 원칙적으로 3개월, 사고 조사 또는 법령상 보존 필요가 있는 경우 해당 기간</li>
               <li>고객 문의 기록: 문의 처리 및 분쟁 대응을 위하여 처리 완료 후 최대 3년</li>
             </ul>
@@ -234,12 +274,12 @@
             <ul>
               <li>Supabase: 회원 인증, 데이터베이스 저장, 서버리스 함수, 보안 로그 관리</li>
               <li>Google: Google OAuth 로그인 및 계정 인증</li>
-              <li>생성형 AI API 제공업체: 상담 문답 분석, 추가 질문 생성, 보고서 정리본 생성</li>
+              <li>생성형 AI API 제공업체: 사건 기록 분석, 추가 질문 생성, 사안 보고서 생성</li>
             </ul>
             <p>국외 사업자를 이용하는 경우 이전되는 정보는 서비스 제공에 필요한 항목으로 한정되며, 보유·이용 기간은 위탁 업무 수행 또는 계약 종료 시까지입니다. 회사는 수탁자가 개인정보를 안전하게 처리하도록 계약 또는 서비스 설정을 통하여 관리·감독합니다.</p>
 
             <h3>제8조 AI 처리 및 모델 학습 관련 고지</h3>
-            <p>RoosyCozy는 이용자가 입력한 상담 내용과 대화 맥락을 AI 응답 및 보고서 생성 목적으로 처리합니다. 회사는 이용자 상담 데이터를 RoosyCozy 자체 범용 AI 모델 학습 목적으로 사용하지 않는 것을 원칙으로 합니다. 외부 AI API 제공업체를 이용하는 경우 해당 업체의 API 약관·보안 설정에 따라 입력 데이터가 처리될 수 있으며, 회사는 가능한 범위에서 모델 학습에 이용되지 않는 API 설정 또는 계약 조건을 우선 적용합니다.</p>
+            <p>RoosyCozy는 이용자가 입력한 사건 기록, 대화 맥락, 관계 그래프를 AI 응답 및 사안 보고서 생성 목적으로 처리합니다. AI는 사실관계, 관련 주체 후보, 정리근거, 불확실성, 사용자 확인 지점을 정리하는 보조 도구이며, 최종 법률·행정·형사책임 판단을 대체하지 않습니다. 회사는 이용자 분석 데이터를 RoosyCozy 자체 범용 AI 모델 학습 목적으로 사용하지 않는 것을 원칙으로 합니다. 외부 AI API 제공업체를 이용하는 경우 해당 업체의 API 약관·보안 설정에 따라 입력 데이터가 처리될 수 있으며, 회사는 가능한 범위에서 모델 학습에 이용되지 않는 API 설정 또는 계약 조건을 우선 적용합니다.</p>
 
             <h3>제9조 개인정보의 파기 절차 및 방법</h3>
             <p>회사는 보유 기간 경과, 처리 목적 달성, 이용자의 삭제 요청 등 파기 사유가 발생하면 해당 개인정보를 복구 또는 재생할 수 없는 방법으로 파기합니다. 전자적 파일은 안전한 삭제 또는 접근 불가능한 상태로 처리하며, 백업 데이터는 백업 주기와 보관 정책에 따라 순차적으로 삭제됩니다.</p>
@@ -266,17 +306,17 @@
             <p class="case-legal-date">시행일: 2026. 6. 2.</p>
 
             <h3>제1조 목적</h3>
-            <p>본 약관은 RoosyCozy(이하 "회사"라 합니다)가 제공하는 AI 상담 채팅 및 보고서 생성 서비스(이하 "서비스"라 합니다)의 이용 조건, 회사와 이용자의 권리·의무 및 책임 사항, 서비스 이용 절차와 제한 사항을 정함을 목적으로 합니다.</p>
+            <p>본 약관은 RoosyCozy(이하 "회사"라 합니다)가 제공하는 사안 보고서 생성 서비스(이하 "서비스"라 합니다)의 이용 조건, 회사와 이용자의 권리·의무 및 책임 사항, 서비스 이용 절차와 제한 사항을 정함을 목적으로 합니다.</p>
 
             <h3>제2조 정의</h3>
             <ol>
-              <li>"서비스"란 이용자가 AI와 문답하면서 사건·분쟁·민원 관련 사실관계를 정리하고 보고서 형태의 정리본을 생성·저장할 수 있는 웹 기반 기능을 말합니다.</li>
+              <li>"서비스"란 이용자가 AI와 문답하면서 분쟁·갈등·민원·계약·조직 내 문제 등 다양한 사안의 사실관계, 자료의 일관성, 원본·형식 확인, 행위 맥락 연결, 관련 주체 후보, 쟁점, 증거, AI 정리근거, 사용자 확인 지점, 가능한 전개 경로를 분석하고 사안보고서 형태의 정리본을 생성·저장할 수 있는 PC 브라우저 기반 기능을 말합니다.</li>
               <li>"이용자"란 본 약관에 따라 서비스를 이용하는 자를 말하며, 비로그인 이용자와 Google 또는 이메일 로그인 이용자를 포함합니다.</li>
               <li>"회원"이란 Google 또는 이메일 로그인을 통하여 회사가 이용자를 식별할 수 있는 상태의 이용자를 말합니다.</li>
-              <li>"상담 문답"이란 이용자가 입력한 내용과 AI가 생성한 질문·답변을 말합니다.</li>
-              <li>"보고서"란 상담 문답을 바탕으로 AI가 사건 개요, 경위, 쟁점, 요청사항 등을 구조화하여 생성한 정리본을 말합니다.</li>
-              <li>"라이선스"란 이용 가능한 기능과 월 사용량을 정하는 계정 등급을 말하며, 일반, Teacher, PRO 등급으로 구분될 수 있습니다.</li>
-              <li>"Teacher 수동 승급"이란 초등교원 등 특정 대상자가 가입 이메일을 회사에 알려주면 회사가 확인 후 Teacher 등급을 부여하는 절차입니다.</li>
+              <li>"분석 문답"이란 이용자가 입력한 사안 기록과 AI가 생성한 질문·답변을 말합니다.</li>
+              <li>"사안보고서"란 분석 문답과 PDF 증거를 바탕으로 AI가 자료의 일관성, 원본·형식 확인, 행위 맥락 연결, 관련 주체, 핵심 쟁점, 사실관계, 주장 대립, 증거 연결, AI 정리근거, 사용자 확인 지점, 리스크, 시뮬레이션 등을 구조화하여 생성한 정리본을 말합니다.</li>
+              <li>"라이선스"란 이용 가능한 기능과 월 사용량을 정하는 계정 등급을 말하며, 일반, Teacher, PRO 검찰/경찰 (수사기관) 전문 보조용 등으로 구분될 수 있습니다.</li>
+              <li>"교원 권한"이란 회사가 학폭, 교권침해 사안, 악성민원 대응 등 교원 고객의 이용 목적과 계정 상태를 확인한 뒤 분석 워크스페이스 접속을 허용하는 절차를 말합니다.</li>
             </ol>
 
             <h3>제3조 약관의 효력 및 변경</h3>
@@ -285,24 +325,24 @@
             <h3>제4조 서비스의 내용</h3>
             <p>회사는 다음 기능을 제공합니다.</p>
             <ul>
-              <li>AI 상담 채팅 기능</li>
-              <li>상담 문답 기반 보고서 생성 및 갱신 기능</li>
-              <li>대화 및 보고서 저장, 조회, 삭제 기능</li>
+              <li>지능형 수사지원 문답 기능</li>
+              <li>분석 문답 기반 지능형 증거분석 사안보고서 생성 및 갱신 기능</li>
+              <li>대화 및 사안보고서 저장, 조회, 삭제 기능</li>
               <li>라이선스 등급 및 월 사용량 표시 기능</li>
-              <li>Teacher 수동 승급 안내 기능</li>
+              <li>Teacher 권한 및 PRO 검찰/경찰 (수사기관) 전문 보조용 문의 안내 기능</li>
             </ul>
             <p>회사는 서비스 개선, 보안, 운영상 필요에 따라 기능의 전부 또는 일부를 변경·중단할 수 있습니다.</p>
 
             <h3>제5조 회원가입 및 로그인</h3>
-            <p>서비스의 상담 기능은 Google 또는 이메일 로그인을 완료한 회원에게 제공됩니다. 이메일로 가입하는 회원은 회사가 발송하는 인증 링크를 통하여 이메일 소유 여부를 확인해야 하며, 인증이 완료되지 않은 경우 로그인이 제한될 수 있습니다. 비로그인 이용자는 서비스 소개, 약관 확인 등 제한된 기능만 이용할 수 있으며, AI 상담 입력 및 보고서 저장은 이용할 수 없습니다. 회원은 본인 계정을 안전하게 관리하여야 하며, 계정의 제3자 사용으로 발생한 손해에 대하여 회사에 고의 또는 중대한 과실이 없는 한 회원이 책임을 부담합니다.</p>
+            <p>서비스의 분석 워크스페이스는 PC 브라우저에서 Google 또는 이메일 로그인을 완료하고 Teacher 권한 또는 PRO 검찰/경찰 (수사기관) 전문 보조용 라이선스를 부여받은 회원에게 제공됩니다. 이메일로 가입하는 회원은 회사가 발송하는 인증 링크를 통하여 이메일 소유 여부를 확인해야 하며, 인증이 완료되지 않은 경우 로그인이 제한될 수 있습니다. 비로그인 이용자와 권한이 없는 일반 회원은 서비스 소개, 약관 확인, 권한 요청 안내 등 제한된 기능만 이용할 수 있으며, AI 분석 입력 및 사안보고서 저장은 이용할 수 없습니다. 회원은 본인 계정을 안전하게 관리하여야 하며, 계정의 제3자 사용으로 발생한 손해에 대하여 회사에 고의 또는 중대한 과실이 없는 한 회원이 책임을 부담합니다.</p>
 
             <h3>제6조 라이선스 및 사용량</h3>
             <ol>
-              <li>일반 계정은 Google 또는 이메일 로그인 후 기본 제공되는 등급이며, 회사가 정한 월 사용량 범위 내에서 상담 기능을 이용할 수 있습니다.</li>
-              <li>Teacher 계정은 초등교원 등 회사가 정한 대상에게 제공되는 등급이며, 가입 이메일 확인 등 회사가 정한 수동 절차를 통하여 승급할 수 있습니다.</li>
-              <li>PRO 계정은 회사가 정한 전문 사용자용 등급이며, 제공 시기, 사용량, 요금, 기능은 별도 안내에 따릅니다.</li>
-              <li>Teacher 승급 요청은 본인 계정에 대해서만 할 수 있으며, 타인의 이메일을 이용한 허위 요청, 자격 사칭, 자동화 요청 또는 우회 사용을 금지합니다.</li>
-              <li>회사는 부정 사용, 시스템 남용, 보안 위험이 의심되는 경우 사용량을 제한하거나 승급을 취소할 수 있습니다.</li>
+              <li>일반 계정은 Google 또는 이메일 로그인 후 기본 제공되는 등급이며, 분석 워크스페이스 접속을 위해서는 Teacher 권한 또는 PRO 검찰/경찰 (수사기관) 전문 보조용 라이선스 승인이 필요합니다.</li>
+              <li>교원 권한은 학폭, 교권침해 사안, 악성민원 대응 등 교원 고객에게 제공되는 등급이며, 인디스쿨에서 루지코지by노명성에게 가입 이메일을 쪽지로 보내는 수동 절차를 통하여 부여될 수 있습니다.</li>
+              <li>PRO는 검찰·경찰 등 수사기관 계정의 전문 보조용 기능으로 별도 협의 대상이며, myongsungcs@gmail.com을 통해 문의할 수 있습니다.</li>
+              <li>교원 권한 요청은 본인 계정에 대해서만 할 수 있으며, 타인의 이메일을 이용한 허위 요청, 자격 사칭, 자동화 요청 또는 우회 사용을 금지합니다.</li>
+              <li>회사는 부정 사용, 시스템 남용, 보안 위험이 의심되는 경우 사용량을 제한하거나 등급을 조정·취소할 수 있습니다.</li>
             </ol>
 
             <h3>제7조 이용자의 의무</h3>
@@ -316,14 +356,14 @@
               <li>크롤링, 자동화 요청, 과도한 트래픽 발생 등 서비스 운영을 방해하는 행위</li>
             </ul>
 
-            <h3>제8조 AI 생성물 및 보고서의 성격</h3>
-            <p>서비스가 생성하는 질문, 답변, 보고서는 이용자가 입력한 자료를 바탕으로 한 자동 정리 결과입니다. 이는 법률 자문, 행정 판단, 수사·재판 결과 예측, 노무·세무·의료 등 전문 자문을 대체하지 않습니다. 이용자는 보고서를 제출, 공유, 신고, 민원, 소송, 내용증명, 학교 또는 기관 제출 자료로 사용하기 전에 사실관계, 날짜, 당사자, 표현, 증빙자료, 법적 주장 여부를 직접 확인하여야 합니다.</p>
+            <h3>제8조 AI 생성물 및 사안보고서의 성격</h3>
+            <p>서비스가 생성하는 질문, 답변, 사안보고서, 정리근거, 관련 주체 분류, 시뮬레이션은 이용자가 입력한 자료를 바탕으로 한 자동 분석 결과입니다. 이는 법률 자문, 행정 판단, 형사책임 판단, 수사·재판 결과 예측, 노무·세무·의료 등 전문 자문을 대체하지 않습니다. 이용자는 사안보고서를 제출, 공유, 신고, 민원, 소송, 내용증명, 학교 또는 기관 제출 자료로 사용하기 전에 사실관계, 날짜, 당사자, 표현, 증빙자료, 법적 주장 여부, AI가 추론한 부분과 사용자가 직접 확인한 부분의 구분을 직접 확인하여야 합니다.</p>
 
             <h3>제9조 저장 자료의 관리 및 삭제</h3>
-            <p>회원은 서비스 화면에서 저장된 상담 및 보고서를 조회하거나 삭제할 수 있습니다. 삭제된 자료는 서비스 화면에서 복구할 수 없으며, 백업 데이터는 회사의 백업 주기 및 보안 정책에 따라 순차적으로 삭제됩니다. 법령상 보존 의무가 있거나 분쟁 대응에 필요한 경우 회사는 필요한 범위에서 일부 기록을 보관할 수 있습니다.</p>
+            <p>회원은 서비스 화면에서 저장된 분석 기록 및 사안보고서를 조회하거나 삭제할 수 있습니다. 삭제된 자료는 서비스 화면에서 복구할 수 없으며, 백업 데이터는 회사의 백업 주기 및 보안 정책에 따라 순차적으로 삭제됩니다. 법령상 보존 의무가 있거나 분쟁 대응에 필요한 경우 회사는 필요한 범위에서 일부 기록을 보관할 수 있습니다.</p>
 
             <h3>제10조 지식재산권 및 이용 허락</h3>
-            <p>이용자가 입력한 상담 내용에 대한 권리는 원칙적으로 이용자에게 있습니다. 이용자는 서비스 제공, AI 응답 생성, 보고서 작성, 저장, 보안 점검, 오류 개선을 위하여 필요한 범위에서 회사가 해당 입력 내용과 생성물을 처리할 수 있도록 허락합니다. 서비스의 화면, 소프트웨어, 로고, 디자인, 데이터베이스 구조, 운영 방식 등에 관한 권리는 회사 또는 정당한 권리자에게 귀속됩니다.</p>
+            <p>이용자가 입력한 사안 기록에 대한 권리는 원칙적으로 이용자에게 있습니다. 이용자는 서비스 제공, AI 응답 생성, 사안보고서 작성, 저장, 보안 점검, 오류 개선을 위하여 필요한 범위에서 회사가 해당 입력 내용과 생성물을 처리할 수 있도록 허락합니다. 서비스의 화면, 소프트웨어, 로고, 디자인, 데이터베이스 구조, 운영 방식 등에 관한 권리는 회사 또는 정당한 권리자에게 귀속됩니다.</p>
 
             <h3>제11조 개인정보 보호</h3>
             <p>회사는 개인정보를 본 약관과 별도로 게시한 개인정보처리방침에 따라 처리합니다. 이용자는 타인의 개인정보를 입력하는 경우 그 입력이 적법하고 필요한 범위 내에서 이루어졌는지 스스로 확인하여야 합니다.</p>
@@ -335,49 +375,276 @@
             <p>회사는 AI 생성 결과의 완전성, 정확성, 특정 목적 적합성, 법적 효력, 기관 제출 시 수리 여부를 보증하지 않습니다. 회사의 고의 또는 중대한 과실이 없는 한, 이용자가 AI 생성물을 검토 없이 사용하여 발생한 불이익, 제3자와의 분쟁, 기관 제출 결과, 법적 판단의 차이, 이용자 입력 오류로 인한 손해에 대하여 책임을 부담하지 않습니다.</p>
 
             <h3>제14조 손해배상 및 금지행위에 대한 조치</h3>
-            <p>이용자가 본 약관 또는 관계 법령을 위반하여 회사 또는 제3자에게 손해를 발생시킨 경우 이용자는 그 손해를 배상하여야 합니다. 회사는 위반 행위가 확인되거나 합리적으로 의심되는 경우 계정 이용 제한, 기록 삭제 요청, Teacher 승급 취소, 관계 기관 신고 등 필요한 조치를 할 수 있습니다.</p>
+            <p>이용자가 본 약관 또는 관계 법령을 위반하여 회사 또는 제3자에게 손해를 발생시킨 경우 이용자는 그 손해를 배상하여야 합니다. 회사는 위반 행위가 확인되거나 합리적으로 의심되는 경우 계정 이용 제한, 기록 삭제 요청, 교원 권한 취소, 관계 기관 신고 등 필요한 조치를 할 수 있습니다.</p>
 
             <h3>제15조 준거법 및 분쟁 해결</h3>
             <p>본 약관은 대한민국 법령에 따라 해석됩니다. 서비스 이용과 관련하여 분쟁이 발생한 경우 회사와 이용자는 성실히 협의하여 해결하며, 협의로 해결되지 않는 경우 관계 법령에서 정한 관할 법원 또는 절차에 따릅니다.</p>
 
             <h3>제16조 문의</h3>
-            <p>서비스 이용, 라이선스, Teacher 승급, 개인정보, 삭제 요청에 관한 문의는 myongsungcs@gmail.com으로 접수할 수 있습니다. Teacher 수동 승급은 RoosyCozy에 가입한 이메일 주소를 인디스쿨에서 "루지코지by노명성"에게 쪽지로 보내는 방식으로 요청할 수 있습니다.</p>
+            <p>서비스 이용, 라이선스, Teacher 권한, PRO 검찰/경찰 (수사기관) 전문 보조용 문의, 개인정보, 삭제 요청에 관한 문의는 myongsungcs@gmail.com으로 접수할 수 있습니다. Teacher 권한은 인디스쿨에서 루지코지by노명성에게 RoosyCozy 가입 이메일 주소를 쪽지로 전달하는 방식으로 요청할 수 있습니다.</p>
           </div>
         </details>
       </div>
     </section>
 
-    <section class="case-chat-main" aria-label="AI 상담">
-      <header class="case-chat-header">
-        <div>
-          <span data-active-product>AI 상담 에이전트</span>
-          <h1 data-active-title>무슨 일이 있었나요?</h1>
+    <section class="case-landing-shell" aria-label="RoosyCozy 지능형 수사지원 에이전트 랜딩">
+      <section class="case-landing-hero">
+        <div class="case-landing-copy">
+          <span class="case-landing-eyebrow">실제 분석 워크스페이스 기반</span>
+          <h1>사건을 평면 위에 배치하고, 보고서로 재구성합니다</h1>
+          <p>인물 노드, 관계선, PDF 원자료를 한 화면에 올려 사건의 구조를 정리합니다. RoosyCozy는 입력된 자료를 사실, 주장, 확인 필요 지점으로 나누고 사안 보고서 형태로 다시 구성합니다.</p>
+          <div class="case-hero-points" aria-label="핵심 기능">
+            <span><i class="case-mini-icon node" aria-hidden="true"></i>인물 노드 배치</span>
+            <span><i class="case-mini-icon link" aria-hidden="true"></i>관계선 연결</span>
+            <span><i class="case-mini-icon pdf" aria-hidden="true"></i>PDF 증거 반영</span>
+            <span><i class="case-mini-icon report" aria-hidden="true"></i>사안 보고서 생성</span>
+          </div>
+          <div class="case-landing-actions">
+            <button type="button" data-auth-open>사용해보기</button>
+            <button type="button" data-guide-open>사용 가이드라인</button>
+          </div>
+          <p class="case-mobile-pc-notice">분석 워크스페이스는 PC 브라우저에서 이용해 주세요.</p>
+          <p class="case-access-note" data-access-note>권한 필요: 분석 워크스페이스는 Teacher 또는 PRO 승인 후 사용할 수 있습니다.</p>
         </div>
-        <button type="button" data-generate-report>보고서 갱신</button>
+      </section>
+
+      <section class="case-landing-segments" aria-label="주요 기능">
+        <article>
+          <span class="case-card-icon node" aria-hidden="true"></span>
+          <h2>관계 평면 구성</h2>
+          <p>사건에 등장하는 인물, 기관, 장소를 노드로 만들고 서로 어떤 관계에 놓이는지 직접 배치합니다. 화면의 배치 자체가 보고서의 관계 구조로 반영됩니다.</p>
+          <ul>
+            <li>인물 노드 생성</li>
+            <li>관계선 연결</li>
+            <li>위치 조정</li>
+            <li>고립 노드 확인</li>
+          </ul>
+        </article>
+        <article>
+          <span class="case-card-icon evidence" aria-hidden="true"></span>
+          <h2>증거 자료 정리</h2>
+          <p>PDF 원자료와 사건 메모를 함께 읽어 자료의 출처, 시간 흐름, 관련 인물, 확인되지 않은 빈칸을 분리합니다.</p>
+          <ul>
+            <li>PDF 본문 추출</li>
+            <li>자료별 확인 내용</li>
+            <li>누락 지점 표시</li>
+            <li>추정과 사실 분리</li>
+          </ul>
+        </article>
+        <article>
+          <span class="case-card-icon report" aria-hidden="true"></span>
+          <h2>사안 보고서 재구성</h2>
+          <p>관계 그래프와 증거 내용을 바탕으로 접수표, 핵심 요약, 관계 구조, 증거-행위 연결표를 하나의 문서로 정리합니다.</p>
+          <ul>
+            <li>사안 접수표</li>
+            <li>핵심 결론 요약</li>
+            <li>관계 구조 반영</li>
+            <li>다음 확인 질문</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="case-landing-matrix" aria-label="분석 항목">
+        <header>
+          <h2>분석 항목</h2>
+          <p>분석은 결론을 단정하는 방식이 아니라 자료를 여러 층으로 나누는 방식으로 진행됩니다. 같은 사건도 자료의 일관성, 원본의 형식, 행위와의 연결을 따로 보아야 구조가 선명해집니다.</p>
+        </header>
+        <div class="case-matrix-grid">
+          <article class="case-matrix-card reliability">
+            <span class="case-card-icon consistency" aria-hidden="true"></span>
+            <h3>자료 일관성</h3>
+            <p>진술, 문서, 시간 흐름이 서로 맞물리는지 확인합니다. 서로 다른 자료가 같은 장면을 가리키는지, 시간 순서가 어긋나는지, 빠진 구간이 있는지 정리합니다.</p>
+            <ul>
+              <li>진술과 문서 대조</li>
+              <li>시간순 확인</li>
+              <li>누락 지점 표시</li>
+            </ul>
+          </article>
+          <article class="case-matrix-card attribution">
+            <span class="case-card-icon format" aria-hidden="true"></span>
+            <h3>원본·형식 확인</h3>
+            <p>자료가 언제 작성되었고, 누가 만들었으며, 어떤 경로로 보관되었는지 확인합니다. 원본성이나 형식에서 사용자가 다시 확인해야 할 부분을 분리합니다.</p>
+            <ul>
+              <li>작성 시점</li>
+              <li>작성 주체</li>
+              <li>보관 경로</li>
+            </ul>
+          </article>
+          <article class="case-matrix-card proof">
+            <span class="case-card-icon context" aria-hidden="true"></span>
+            <h3>행위 맥락 연결</h3>
+            <p>각 자료가 어떤 인물, 행위, 장면과 연결되는지 표시합니다. 증거가 단순히 존재하는지보다 무엇을 설명하는지에 초점을 둡니다.</p>
+            <ul>
+              <li>인물</li>
+              <li>행위</li>
+              <li>증거 연결</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="case-landing-method" aria-label="분석 방식">
+        <header>
+          <h2>작업 흐름</h2>
+          <p>사용자는 사건을 설명하고, 자료를 올리고, 인물을 배치합니다. 에이전트는 이 입력을 사안 보고서의 구조로 재배열합니다.</p>
+        </header>
+        <div>
+          <article>
+            <span class="case-step-index">01</span>
+            <strong>사건 접수</strong>
+            <p>사건명, 관련 인물, 발생 경위, 보유 자료를 먼저 기록합니다. 짧은 메모도 접수표 형식으로 나뉩니다.</p>
+          </article>
+          <article>
+            <span class="case-step-index">02</span>
+            <strong>자료 분리</strong>
+            <p>PDF와 메모에서 확인된 사실, 사용자 주장, 추정, 확인 필요 사항을 서로 섞이지 않게 분리합니다.</p>
+          </article>
+          <article>
+            <span class="case-step-index">03</span>
+            <strong>관계 배치</strong>
+            <p>인물 노드를 만들고 관계선을 연결해 사건의 중심, 주변, 확인 필요 지점을 시각적으로 정리합니다.</p>
+          </article>
+          <article>
+            <span class="case-step-index">04</span>
+            <strong>보고서 생성</strong>
+            <p>관계 그래프와 증거 내용을 반영해 제출 전 검토 가능한 사안 보고서 초안을 생성합니다.</p>
+          </article>
+        </div>
+      </section>
+
+      <footer class="case-landing-footer" aria-label="RoosyCozy 푸터">
+        <div class="case-footer-brand">
+          <img src="assets/brand/roosycozy-rc-logo.png" alt="" width="40" height="40">
+          <div>
+            <strong>RoosyCozy</strong>
+            <p>사건 기록, PDF 증거, 관계 그래프, 보고서 작성.</p>
+          </div>
+        </div>
+        <div class="case-footer-links" aria-label="서비스 안내">
+          <button type="button" data-guide-open>사용 가이드라인</button>
+          <button type="button" data-license-open>권한 안내</button>
+          <button type="button" data-license-open>개인정보처리방침 · 이용약관</button>
+        </div>
+        <p class="case-footer-disclaimer">AI 분석 결과는 법률·수사·행정 판단을 대체하지 않으며, 최종 제출 전 사실관계와 표현은 사용자가 직접 확인해야 합니다.</p>
+        <small>© 2026 RoosyCozy. All rights reserved.</small>
+      </footer>
+    </section>
+
+    <section class="case-strategy-overview" aria-label="증거 관리">
+      <header>
+        <span>증거</span>
+        <h2>증거 입력</h2>
+        <p>PDF 원자료를 읽어 사안보고서의 사실, 증거, 행위 연결에 반영합니다.</p>
       </header>
 
-      <div class="case-chat-body" data-message-list>
+      <div class="case-evidence-axes" aria-label="분석 축">
+        <span>
+          <b>자료 일관성</b>
+          <small>일관성, 시간순, 누락 맥락</small>
+        </span>
+        <span>
+          <b>원본·형식 확인</b>
+          <small>원본성, 작성 시점, 보관 경로</small>
+        </span>
+        <span>
+          <b>행위 맥락 연결</b>
+          <small>어떤 행위와 맥락을 가리키는가</small>
+        </span>
+      </div>
+
+      <section class="case-evidence-vault" aria-label="PDF 증거 보관함" data-evidence-dropzone>
+        <div class="case-evidence-head">
+          <div>
+            <span>추가</span>
+            <strong>PDF 증거 파일</strong>
+          </div>
+          <label class="case-evidence-upload">
+            <input type="file" accept="application/pdf,.pdf" multiple data-evidence-input>
+            PDF 추가
+          </label>
+        </div>
+        <p data-evidence-status>PDF 파일을 추가하면 본문을 읽어 다음 사안보고 분석에 반영합니다. PDF 분석 반영은 2회 차감됩니다.</p>
+        <div class="case-evidence-list" data-evidence-list>
+          <p class="case-evidence-empty">아직 추가된 PDF 증거가 없습니다.</p>
+        </div>
+        <button class="case-evidence-analyze" type="button" data-evidence-analyze>분석에 반영 · 2회</button>
+      </section>
+    </section>
+
+    <section class="case-chat-main" aria-label="사건 관계 평면">
+      <header class="case-chat-header">
+        <div>
+          <span data-active-product>사건 평면</span>
+          <h1 data-active-title>사건 그래프 편집</h1>
+        </div>
+      </header>
+
+      <section class="case-graph-workbench" aria-label="사건 관계 그래프 작업 평면">
+        <div class="case-graph-toolbar">
+          <div>
+            <span>사건 평면</span>
+            <strong>클릭: 인물 생성 · 더블클릭: 정보 입력</strong>
+          </div>
+          <div class="case-graph-actions">
+            <button type="button" data-generate-report>보고서 작성</button>
+            <button type="button" data-graph-link-mode>관계선 모드</button>
+            <button type="button" data-graph-clear>그래프 초기화</button>
+          </div>
+        </div>
+
+        <div class="case-graph-canvas" data-graph-canvas role="application" aria-label="사건 관계 그래프 평면" tabindex="0">
+          <svg class="case-graph-links" data-graph-links aria-hidden="true"></svg>
+          <div class="case-graph-nodes" data-graph-nodes></div>
+          <div class="case-graph-empty" data-graph-empty>
+            <strong>왼쪽 클릭: 인물 생성</strong>
+            <span>더블클릭으로 이름, 역할, 메모를 입력합니다. 관계선 모드에서 다른 인물을 클릭하면 연결됩니다.</span>
+          </div>
+        </div>
+
+        <aside class="case-graph-inspector" data-graph-inspector aria-live="polite">
+          <span>선택 없음</span>
+          <strong>선택 노드</strong>
+          <p>인물 노드를 만들고 관계선을 연결하면 보고서가 관계 구조를 반영합니다.</p>
+        </aside>
+      </section>
+
+      <div class="case-chat-body case-conversation-log" data-message-list>
         <article class="case-empty-state">
-          <h2>무슨 일이 있었나요?</h2>
-          <p>짧게 시작해도 괜찮습니다. AI가 필요한 질문을 이어가며 사건보고서를 완성합니다.</p>
+          <h2>사건 메모를 입력하세요</h2>
+          <div class="case-intake-template" aria-label="사안보고 입력 항목">
+            <span>사건명</span>
+            <span>관련 인물</span>
+            <span>핵심 행위</span>
+            <span>증거 자료</span>
+            <span>확인할 관계</span>
+          </div>
+          <div class="case-prompt-chips" aria-label="입력 예시">
+            <button type="button" data-prompt-template="사건명:\n관련 인물:\n인물별 역할:\n핵심 행위:\n발생 시점·장소:\n보유 증거:\n그래프에서 확인할 관계:\n아직 비어 있는 연결:">수사지원 양식</button>
+            <button type="button" data-prompt-template="사건명: 진술·문서 대조\n관련 인물:\n문서 또는 PDF 증거:\n상충되는 진술:\n연결해야 할 인물:\n확인할 질문:">진술 대조</button>
+            <button type="button" data-prompt-template="사건명: 관계 구조 분석\n직접 행위자:\n주변 관여자:\n의사결정자:\n방관자 또는 목격자:\n보유 증거:\n그래프에서 만들 관계선:">관계 구조</button>
+          </div>
         </article>
       </div>
 
       <form class="case-composer" data-chat-form>
-        <textarea rows="1" placeholder="상황을 적거나 AI 질문에 답변하세요" data-chat-input></textarea>
+        <textarea rows="1" placeholder="사건 메모, 인물 역할, 관계선으로 확인할 내용을 입력하세요" data-chat-input></textarea>
         <button type="submit" aria-label="전송">↑</button>
       </form>
-      <p class="case-composer-note" data-composer-note>로그인 후 상담을 시작할 수 있습니다.</p>
+      <p class="case-composer-note" data-composer-note>관계 그래프와 사건 메모를 함께 분석해 보고서를 갱신합니다.</p>
     </section>
 
     <div class="case-report-backdrop" data-report-backdrop hidden></div>
-    <aside class="case-report-panel" aria-label="사건보고서">
+    <aside class="case-report-panel" aria-label="사안 보고서">
       <div class="case-report-toolbar">
+        <div>
+          <span>보고서</span>
+          <h2>사안 보고서</h2>
+        </div>
         <button class="case-report-close" type="button" data-report-close>닫기</button>
       </div>
       <article class="case-report-preview" data-report-preview>
-        <h2>상담 내용 정리</h2>
-        <p>AI와 문답을 시작하면 사건 개요, 경위, 쟁점, 요청사항이 여기에 정리됩니다.</p>
+        <h2>사안 보고서</h2>
+        <p>인물과 관계선을 만들면 보고서가 갱신됩니다.</p>
       </article>
     </aside>
   </main>
