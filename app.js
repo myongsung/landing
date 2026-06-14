@@ -32,6 +32,8 @@ RoosyCozy 지능형 수사지원 에이전트 응답 원칙:
 12. 보고서는 고정 양식이 아니라 사건별로 달라지는 문서다. 기본 골격은 유지하되, 필요한 경우 관계 구조, 증거 연결도, 반박 시나리오, 제출 전 확인 문안, 판단보류 메모를 추가한다.
 13. 사건 평면의 관계 그래프는 보고서 안에서 "관계 구조", "자료 일관성", "행위 맥락 연결", "AI 정리근거"로 흡수한다. 화면 오른쪽 자체를 설명하지 않는다.
 14. 법률·행정·형사책임 판단을 단정하지 않는다. 전문 판단이 필요한 대목은 "전문가 검토 필요" 또는 "사용자 최종 확인 필요"로 표시한다.
+15. "[사건 평면 인물 노드 메모]"가 들어오면 해당 노드를 중심으로 사안보고서를 갱신하되, 중복 문장을 줄이고 표와 짧은 문단으로 정리한다.
+16. 노드 메모는 "확인된 내용", "메모 기반 추정", "확인 필요"로 나누고, 새로 연결된 인물은 관계 구조 표에 반영한다.
 `.trim();
 
 const dom = {
@@ -104,9 +106,46 @@ const dom = {
   graphNodes: document.querySelector('[data-graph-nodes]'),
   graphLinks: document.querySelector('[data-graph-links]'),
   graphEmpty: document.querySelector('[data-graph-empty]'),
+  graphCreateMenu: document.querySelector('[data-graph-create-menu]'),
+  graphCreateKindButtons: document.querySelectorAll('[data-graph-create-kind]'),
+  graphNodeMenu: document.querySelector('[data-graph-node-menu]'),
+  graphNodeMenuTitle: document.querySelector('[data-graph-node-menu-title]'),
+  graphNodeDelete: document.querySelector('[data-graph-node-delete]'),
+  graphMarquee: document.querySelector('[data-graph-marquee]'),
   graphInspector: document.querySelector('[data-graph-inspector]'),
   graphClear: document.querySelector('[data-graph-clear]'),
   graphLinkMode: document.querySelector('[data-graph-link-mode]'),
+  graphMemoBackdrop: document.querySelector('[data-graph-memo-backdrop]'),
+  graphMemoModal: document.querySelector('[data-graph-memo-modal]'),
+  graphMemoClose: document.querySelector('[data-graph-memo-close]'),
+  graphMemoKicker: document.querySelector('[data-graph-memo-kicker]'),
+  graphMemoTitle: document.querySelector('[data-graph-memo-title]'),
+  graphMemoNameLabel: document.querySelector('[data-graph-memo-name-label]'),
+  graphMemoRoleLabel: document.querySelector('[data-graph-memo-role-label]'),
+  graphMemoNoteLabel: document.querySelector('[data-graph-memo-note-label]'),
+  graphMemoHint: document.querySelector('[data-graph-memo-hint]'),
+  graphMemoLabel: document.querySelector('[data-graph-memo-label]'),
+  graphMemoRole: document.querySelector('[data-graph-memo-role]'),
+  graphMemoNote: document.querySelector('[data-graph-memo-note]'),
+  graphMemoLayerButtons: document.querySelectorAll('[data-graph-memo-layer]'),
+  graphMemoSave: document.querySelector('[data-graph-memo-save]'),
+  graphMemoSubmit: document.querySelector('[data-graph-memo-submit]'),
+  graphRelationBackdrop: document.querySelector('[data-graph-relation-backdrop]'),
+  graphRelationModal: document.querySelector('[data-graph-relation-modal]'),
+  graphRelationClose: document.querySelector('[data-graph-relation-close]'),
+  graphRelationLabel: document.querySelector('[data-graph-relation-label]'),
+  graphRelationBasis: document.querySelector('[data-graph-relation-basis]'),
+  graphRelationStrengthButtons: document.querySelectorAll('[data-graph-relation-strength]'),
+  graphRelationSave: document.querySelector('[data-graph-relation-save]'),
+  graphRelationDelete: document.querySelector('[data-graph-relation-delete]'),
+  graphRelationSubmit: document.querySelector('[data-graph-relation-submit]'),
+  graphConfirmBackdrop: document.querySelector('[data-graph-confirm-backdrop]'),
+  graphConfirmModal: document.querySelector('[data-graph-confirm-modal]'),
+  graphConfirmTitle: document.querySelector('[data-graph-confirm-title]'),
+  graphConfirmMessage: document.querySelector('[data-graph-confirm-message]'),
+  graphConfirmDetail: document.querySelector('[data-graph-confirm-detail]'),
+  graphConfirmCancel: document.querySelector('[data-graph-confirm-cancel]'),
+  graphConfirmOk: document.querySelector('[data-graph-confirm-ok]'),
   accessNote: document.querySelector('[data-access-note]'),
 };
 
@@ -122,6 +161,9 @@ const pdfJsConfig = {
   moduleUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.mjs',
   workerUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.mjs',
 };
+
+const conversationListSelect = 'id, user_id, product, title, status, saved_at, created_at, updated_at';
+const conversationDetailSelect = 'id, user_id, product, title, status, report_markdown, saved_at, created_at, updated_at';
 
 const tierConfig = {
   unauth: {
@@ -174,17 +216,54 @@ let pdfJsLoader = null;
 let graphState = {
   nodes: [],
   links: [],
+  clusters: [],
   selectedNodeId: null,
+  selectedLinkId: null,
   pendingLinkNodeId: null,
   linkMode: true,
   nextNodeNumber: 1,
+  nextEventNumber: 1,
+  nextClusterNumber: 1,
 };
 let graphDragState = null;
+let graphCreatePoint = null;
+let graphNodeMenuId = null;
+let graphCanvasDragState = null;
+let graphCanvasSuppressClickUntil = 0;
+let graphViewport = {
+  x: 0,
+  y: 0,
+  scale: 1,
+};
+let graphMemoNodeId = null;
+let graphMemoLayer = 'uncertain';
+let graphRelationId = null;
+let graphRelationStrength = 'weak';
+let graphConfirmResolver = null;
+let graphLastPress = {
+  id: '',
+  at: 0,
+};
+let graphLastLinkPress = {
+  id: '',
+  at: 0,
+};
 
 const graphLayerLabels = {
   core: '핵심',
   support: '주변',
   uncertain: '확인 필요',
+};
+
+const graphKindLabels = {
+  person: '인물',
+  event: '주요 사건',
+};
+
+const graphStrengthLabels = {
+  confirmed: '확인됨',
+  likely: '개연성',
+  weak: '확인 필요',
 };
 
 function setAuthMessage(message, isError = false) {
@@ -609,14 +688,26 @@ async function restoreSessionIfAvailable(loadData = false) {
   const client = ensureClient();
   if (!client) return null;
 
-  const { data, error } = await client.auth.getSession();
+  let response;
+  try {
+    response = await withTimeout(
+      client.auth.getSession(),
+      12000,
+      '로그인 세션 확인이 지연되고 있습니다. 새로고침 후 다시 시도해 주세요.'
+    );
+  } catch (error) {
+    setServiceStatus(error instanceof Error ? error.message : '로그인 세션 확인이 지연되고 있습니다.', 'error');
+    return null;
+  }
+
+  const { data, error } = response;
   if (error || !data?.session?.user) return null;
 
   lastKnownSession = data.session;
   applySession(data.session);
 
   if (loadData) {
-    await loadUsage();
+    await loadUsage({ preserveOnError: true });
     await loadConversations();
   }
 
@@ -1200,6 +1291,8 @@ function markdownToHtml(markdown) {
 function reportSectionKind(title = '') {
   const text = String(title);
 
+  if (/상황 시각화|시각화 보드|관계 구조/.test(text)) return 'is-summary';
+  if (/관계 기록|관계선|연결/.test(text)) return 'is-evidence';
   if (/요약|개요|핵심/.test(text)) return 'is-summary';
   if (/당사자|역할|인물|가해|피해|방관|목격|이해관계|분쟁구도|관계자|관련 주체|행위자|감독|관리|의사결정/.test(text)) return 'is-people';
   if (/시간|경위|일시|순서|타임라인/.test(text)) return 'is-timeline';
@@ -1390,20 +1483,143 @@ function graphNodeById(id) {
   return graphState.nodes.find((node) => node.id === id) ?? null;
 }
 
+function clampGraphScale(value) {
+  return Math.max(0.45, Math.min(2.4, value));
+}
+
+function graphClientPoint(event) {
+  const rect = dom.graphCanvas?.getBoundingClientRect();
+  if (!rect) return { x: 0, y: 0 };
+  return {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top,
+  };
+}
+
+function graphScreenToWorld(point) {
+  return {
+    x: (point.x - graphViewport.x) / graphViewport.scale,
+    y: (point.y - graphViewport.y) / graphViewport.scale,
+  };
+}
+
+function graphWorldToScreen(point) {
+  return {
+    x: graphViewport.x + point.x * graphViewport.scale,
+    y: graphViewport.y + point.y * graphViewport.scale,
+  };
+}
+
+function graphWorldBounds() {
+  const rect = dom.graphCanvas?.getBoundingClientRect();
+  const width = Math.max(1, rect?.width || 1);
+  const height = Math.max(1, rect?.height || 1);
+  return {
+    width,
+    height,
+    minX: -Math.max(180, width * 0.6),
+    maxX: width + Math.max(180, width * 0.6),
+    minY: -Math.max(140, height * 0.6),
+    maxY: height + Math.max(140, height * 0.6),
+  };
+}
+
+function clampGraphWorldPoint(point) {
+  const bounds = graphWorldBounds();
+  return {
+    x: Math.max(bounds.minX, Math.min(bounds.maxX, point.x)),
+    y: Math.max(bounds.minY, Math.min(bounds.maxY, point.y)),
+  };
+}
+
+function applyGraphViewport() {
+  const transform = `translate(${graphViewport.x}px, ${graphViewport.y}px) scale(${graphViewport.scale})`;
+  if (dom.graphLinks) {
+    dom.graphLinks.style.transform = transform;
+    dom.graphLinks.style.transformOrigin = '0 0';
+  }
+  if (dom.graphNodes) {
+    dom.graphNodes.style.transform = transform;
+    dom.graphNodes.style.transformOrigin = '0 0';
+  }
+}
+
 function resetKnowledgeGraph() {
   graphState = {
     nodes: [],
     links: [],
+    clusters: [],
     selectedNodeId: null,
+    selectedLinkId: null,
     pendingLinkNodeId: null,
     linkMode: graphState.linkMode,
     nextNodeNumber: 1,
+    nextEventNumber: 1,
+    nextClusterNumber: 1,
   };
   graphDragState = null;
+  graphCanvasDragState = null;
+  graphCreatePoint = null;
+  graphNodeMenuId = null;
+  graphViewport = {
+    x: 0,
+    y: 0,
+    scale: 1,
+  };
+  setGraphCreateMenuOpen(false);
+  setGraphNodeMenuOpen(false);
+  setGraphMarquee(null);
+}
+
+function setGraphConfirmOpen(isOpen, options = {}) {
+  if (!dom.graphConfirmBackdrop || !dom.graphConfirmModal) return;
+
+  dom.graphConfirmBackdrop.hidden = !isOpen;
+  dom.graphConfirmModal.hidden = !isOpen;
+  dom.graphConfirmModal.setAttribute('aria-hidden', String(!isOpen));
+
+  if (!isOpen) return;
+
+  if (dom.graphConfirmTitle) dom.graphConfirmTitle.textContent = options.title || '작업을 진행할까요?';
+  if (dom.graphConfirmMessage) dom.graphConfirmMessage.textContent = options.message || '';
+  if (dom.graphConfirmDetail) dom.graphConfirmDetail.textContent = options.detail || '';
+  if (dom.graphConfirmOk) dom.graphConfirmOk.textContent = options.okLabel || '진행';
+  if (dom.graphConfirmCancel) dom.graphConfirmCancel.textContent = options.cancelLabel || '취소';
+
+  requestAnimationFrame(() => dom.graphConfirmOk?.focus());
+}
+
+function resolveGraphConfirm(value) {
+  const resolver = graphConfirmResolver;
+  graphConfirmResolver = null;
+  setGraphConfirmOpen(false);
+  resolver?.(value);
+}
+
+function requestGraphConfirm(options = {}) {
+  if (!dom.graphConfirmModal) {
+    return Promise.resolve(window.confirm(options.message || options.title || '작업을 진행할까요?'));
+  }
+
+  if (graphConfirmResolver) {
+    resolveGraphConfirm(false);
+  }
+
+  setGraphCreateMenuOpen(false);
+  setGraphNodeMenuOpen(false);
+  setGraphConfirmOpen(true, options);
+
+  return new Promise((resolve) => {
+    graphConfirmResolver = resolve;
+  });
 }
 
 function graphLayerLabel(value) {
   return graphLayerLabels[value] || graphLayerLabels.uncertain;
+}
+
+function graphKindLabel(value) {
+  return graphKindLabels[value] || graphKindLabels.person;
 }
 
 function normalizeGraphLayer(value) {
@@ -1413,39 +1629,981 @@ function normalizeGraphLayer(value) {
   return 'uncertain';
 }
 
+function normalizeGraphStrength(value) {
+  const text = String(value || '').trim();
+  if (/확인|confirmed|문서|녹취|원자료|캡처|증거/i.test(text)) return 'confirmed';
+  if (/개연|likely|추정|정황|가능/i.test(text)) return 'likely';
+  return 'weak';
+}
+
+function graphStrengthLabel(value) {
+  return graphStrengthLabels[value] || graphStrengthLabels.weak;
+}
+
+function inferGraphLayerFromMemo(note, fallback = 'uncertain') {
+  const text = String(note || '');
+  if (/직접|주도|핵심|가해|피해|의사결정|결정권|담당|주체|중심|반복|강요|협박|지시/.test(text)) {
+    return 'core';
+  }
+  if (/목격|참고|주변|동석|전달|확인자|보조|방관|참여 가능|관련 가능/.test(text)) {
+    return 'support';
+  }
+  if (/확인 필요|불명|미정|추정|모름|아직|불확실|누락/.test(text)) {
+    return 'uncertain';
+  }
+  return normalizeGraphLayer(fallback);
+}
+
 function graphNodeLabel(node) {
   return `${node.label || '인물'}${node.role ? ` · ${node.role}` : ''}`;
 }
 
-function createGraphNode(x, y) {
+function graphLinkById(id) {
+  return graphState.links.find((link) => link.id === id) ?? null;
+}
+
+function graphLinkIdFromEvent(event) {
+  const target = event.target;
+  if (!target?.closest) return '';
+  return target.closest('[data-graph-link-id]')?.dataset?.graphLinkId || '';
+}
+
+function setGraphCreateMenuOpen(isOpen, worldPoint = null, screenPoint = null) {
+  if (!dom.graphCreateMenu) return;
+
+  if (!isOpen || !worldPoint) {
+    graphCreatePoint = null;
+    dom.graphCreateMenu.hidden = true;
+    return;
+  }
+
+  graphCreatePoint = worldPoint;
+  setGraphNodeMenuOpen(false);
   const rect = dom.graphCanvas.getBoundingClientRect();
-  const id = `person-${Date.now()}-${graphState.nextNodeNumber}`;
-  const label = `인물 ${graphState.nextNodeNumber}`;
+  const anchor = screenPoint || graphWorldToScreen(worldPoint);
+  const menuWidth = 178;
+  const menuHeight = 116;
+  const left = Math.max(12, Math.min(rect.width - menuWidth - 12, anchor.x + 10));
+  const top = Math.max(12, Math.min(rect.height - menuHeight - 12, anchor.y + 10));
+
+  dom.graphCreateMenu.style.left = `${left}px`;
+  dom.graphCreateMenu.style.top = `${top}px`;
+  dom.graphCreateMenu.hidden = false;
+}
+
+function setGraphNodeMenuOpen(isOpen, nodeId = '', screenPoint = null) {
+  if (!dom.graphNodeMenu) return;
+
+  if (!isOpen || !nodeId) {
+    graphNodeMenuId = null;
+    dom.graphNodeMenu.hidden = true;
+    return;
+  }
+
+  const node = graphNodeById(nodeId);
+  if (!node) {
+    setGraphNodeMenuOpen(false);
+    return;
+  }
+
+  graphNodeMenuId = node.id;
+  setGraphCreateMenuOpen(false);
+  const rect = dom.graphCanvas.getBoundingClientRect();
+  const anchor = screenPoint || graphWorldToScreen(node);
+  const menuWidth = 156;
+  const menuHeight = 76;
+  const left = Math.max(12, Math.min(rect.width - menuWidth - 12, anchor.x + 10));
+  const top = Math.max(12, Math.min(rect.height - menuHeight - 12, anchor.y + 10));
+
+  if (dom.graphNodeMenuTitle) {
+    dom.graphNodeMenuTitle.textContent = `${node.label || '노드'} 작업`;
+  }
+  dom.graphNodeMenu.style.left = `${left}px`;
+  dom.graphNodeMenu.style.top = `${top}px`;
+  dom.graphNodeMenu.hidden = false;
+}
+
+function setGraphMarquee(rect) {
+  if (!dom.graphMarquee) return;
+
+  if (!rect) {
+    dom.graphMarquee.hidden = true;
+    return;
+  }
+
+  dom.graphMarquee.style.left = `${rect.left}px`;
+  dom.graphMarquee.style.top = `${rect.top}px`;
+  dom.graphMarquee.style.width = `${rect.width}px`;
+  dom.graphMarquee.style.height = `${rect.height}px`;
+  dom.graphMarquee.hidden = false;
+}
+
+function createGraphNode(x, y, kind = 'person') {
+  const nodeKind = kind === 'event' ? 'event' : 'person';
+  const isEvent = nodeKind === 'event';
+  const sequence = isEvent ? graphState.nextEventNumber : graphState.nextNodeNumber;
+  const id = `${nodeKind}-${Date.now()}-${sequence}`;
+  const label = isEvent ? `주요 사건 ${sequence}` : `인물 ${sequence}`;
+  const point = clampGraphWorldPoint({ x, y });
   const node = {
     id,
+    kind: nodeKind,
     label,
-    role: '역할 미정',
-    layer: 'uncertain',
+    role: isEvent ? '사건' : '역할 미정',
+    layer: isEvent ? 'core' : 'uncertain',
     note: '',
-    x: Math.max(86, Math.min(rect.width - 86, x)),
-    y: Math.max(52, Math.min(rect.height - 52, y)),
+    analysisStatus: 'draft',
+    x: point.x,
+    y: point.y,
   };
 
   graphState = {
     ...graphState,
     nodes: [...graphState.nodes, node],
     selectedNodeId: id,
+    selectedLinkId: null,
     pendingLinkNodeId: graphState.linkMode ? id : null,
-    nextNodeNumber: graphState.nextNodeNumber + 1,
+    nextNodeNumber: isEvent ? graphState.nextNodeNumber : graphState.nextNodeNumber + 1,
+    nextEventNumber: isEvent ? graphState.nextEventNumber + 1 : graphState.nextEventNumber,
   };
 
+  setGraphCreateMenuOpen(false);
   renderAll();
 }
 
-function toggleGraphLink(sourceId, targetId) {
+function deleteGraphNode(nodeId) {
+  const node = graphNodeById(nodeId);
+  if (!node) return false;
+
+  const nextLinks = graphState.links.filter((link) => link.source !== node.id && link.target !== node.id);
+  graphState = {
+    ...graphState,
+    nodes: graphState.nodes.filter((item) => item.id !== node.id),
+    links: nextLinks,
+    clusters: (graphState.clusters || [])
+      .map((cluster) => ({
+        ...cluster,
+        nodeIds: cluster.nodeIds.filter((id) => id !== node.id),
+      }))
+      .filter((cluster) => cluster.nodeIds.length >= 2),
+    selectedNodeId: graphState.selectedNodeId === node.id ? null : graphState.selectedNodeId,
+    selectedLinkId: graphState.selectedLinkId && nextLinks.some((link) => (
+      link.id === graphState.selectedLinkId
+    )) ? graphState.selectedLinkId : null,
+    pendingLinkNodeId: graphState.pendingLinkNodeId === node.id ? null : graphState.pendingLinkNodeId,
+  };
+
+  setGraphNodeMenuOpen(false);
+  renderAll();
+  return true;
+}
+
+function createGraphCluster(nodes) {
+  const selectedNodes = [...new Map(nodes.filter(Boolean).map((node) => [node.id, node])).values()];
+  if (selectedNodes.length < 2) return null;
+
+  const sequence = graphState.nextClusterNumber;
+  const id = `cluster-${Date.now()}-${sequence}`;
+  const columns = Math.ceil(Math.sqrt(selectedNodes.length));
+  const rows = Math.ceil(selectedNodes.length / columns);
+  const width = Math.max(360, Math.min(720, columns * 190 + 110));
+  const height = Math.max(240, Math.min(560, rows * 132 + 106));
+  const center = selectedNodes.reduce((acc, node) => ({
+    x: acc.x + node.x / selectedNodes.length,
+    y: acc.y + node.y / selectedNodes.length,
+  }), { x: 0, y: 0 });
+  const bounds = graphWorldBounds();
+  const x = Math.max(bounds.minX + 24, Math.min(bounds.maxX - width - 24, center.x - width / 2));
+  const y = Math.max(bounds.minY + 24, Math.min(bounds.maxY - height - 24, center.y - height / 2));
+  const slotWidth = width / columns;
+  const slotHeight = Math.max(108, (height - 82) / rows);
+  const arrangedNodes = selectedNodes.map((node, index) => {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const nextPoint = clampGraphWorldPoint({
+      x: x + slotWidth * column + slotWidth / 2,
+      y: y + 74 + slotHeight * row + slotHeight / 2,
+    });
+
+    return {
+      ...node,
+      x: nextPoint.x,
+      y: nextPoint.y,
+      clusterId: id,
+    };
+  });
+  const arrangedById = new Map(arrangedNodes.map((node) => [node.id, node]));
+  const selectedNames = selectedNodes.map((node) => node.label || graphKindLabel(node.kind)).join(', ');
+  const cluster = {
+    id,
+    label: `사안 묶음 ${sequence}`,
+    nodeIds: selectedNodes.map((node) => node.id),
+    note: `포섭 노드: ${selectedNames}`,
+    x,
+    y,
+    width,
+    height,
+    createdAt: new Date().toISOString(),
+  };
+
+  graphState = {
+    ...graphState,
+    nodes: graphState.nodes.map((node) => arrangedById.get(node.id) || node),
+    clusters: [...(graphState.clusters || []), cluster],
+    selectedNodeId: selectedNodes[0]?.id ?? graphState.selectedNodeId,
+    selectedLinkId: null,
+    pendingLinkNodeId: graphState.linkMode ? selectedNodes[0]?.id ?? null : graphState.pendingLinkNodeId,
+    nextClusterNumber: graphState.nextClusterNumber + 1,
+  };
+
+  renderAll();
+  return cluster;
+}
+
+function setGraphMemoLayer(value) {
+  graphMemoLayer = normalizeGraphLayer(value);
+  dom.graphMemoLayerButtons?.forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.graphMemoLayer === graphMemoLayer);
+  });
+}
+
+function setGraphMemoOpen(isOpen) {
+  if (isOpen) setGraphRelationOpen(false);
+  if (isOpen) setGraphCreateMenuOpen(false);
+  document.body.classList.toggle('is-graph-memo-open', isOpen);
+  if (dom.graphMemoBackdrop) dom.graphMemoBackdrop.hidden = !isOpen;
+  if (dom.graphMemoModal) {
+    dom.graphMemoModal.hidden = !isOpen;
+    dom.graphMemoModal.setAttribute('aria-hidden', String(!isOpen));
+  }
+  if (!isOpen) graphMemoNodeId = null;
+}
+
+function openGraphMemo(nodeId) {
+  const node = graphNodeById(nodeId);
+  if (!node) return;
+
+  const isEvent = node.kind === 'event';
+  graphMemoNodeId = node.id;
+  if (dom.graphMemoKicker) dom.graphMemoKicker.textContent = isEvent ? '사건 노드 기록' : '인물 노드 기록';
+  if (dom.graphMemoTitle) dom.graphMemoTitle.textContent = isEvent ? '주요 사건 정리' : '인물·주체 정리';
+  if (dom.graphMemoNameLabel) dom.graphMemoNameLabel.textContent = isEvent ? '사건명' : '인물·주체명';
+  if (dom.graphMemoRoleLabel) dom.graphMemoRoleLabel.textContent = isEvent ? '사건 유형' : '역할·관계';
+  if (dom.graphMemoNoteLabel) dom.graphMemoNoteLabel.textContent = isEvent ? '사건 기록' : '인물 기록';
+  if (dom.graphMemoHint) {
+    dom.graphMemoHint.innerHTML = isEvent
+      ? '사건 기록에는 <b>시점:</b>, <b>장소:</b>, <b>행위:</b>, <b>증거:</b>, <b>관련 인물:</b>을 쓰면 그래프와 보고서가 더 구체화됩니다.'
+      : '인물 기록에는 <b>행위:</b>, <b>진술:</b>, <b>증거:</b>, <b>관련 인물:</b>을 쓰면 누락된 노드와 관계선이 보강됩니다.';
+  }
+  if (dom.graphMemoLabel) dom.graphMemoLabel.value = node.label || '';
+  if (dom.graphMemoRole) dom.graphMemoRole.value = node.role || '';
+  if (dom.graphMemoNote) dom.graphMemoNote.value = node.note || '';
+  if (dom.graphMemoLabel) dom.graphMemoLabel.placeholder = isEvent ? '예: 6월 3일 면담, 자료 제출 요구' : '예: 인물 1, 기관명, 담당자';
+  if (dom.graphMemoRole) dom.graphMemoRole.placeholder = isEvent ? '예: 발언, 제출, 충돌, 요청, 회의' : '예: 직접 행위자, 목격자, 관리자';
+  if (dom.graphMemoNote) {
+    dom.graphMemoNote.placeholder = isEvent
+      ? '시점, 장소, 참여자, 행위 순서, 남은 증거를 적어주세요. 예: 시점: 6월 3일 / 장소: 교무실 / 행위: 자료 제출 요구 / 증거: 문자 캡처'
+      : '행위, 진술, 증거, 관계 근거를 적어주세요. 예: 행위: 자료 요구 / 진술: 직접 들음 / 관련 인물: 홍길동';
+  }
+  setGraphMemoLayer(node.layer || 'uncertain');
+  setGraphMemoOpen(true);
+  requestAnimationFrame(() => dom.graphMemoNote?.focus());
+}
+
+function setGraphRelationStrength(value) {
+  graphRelationStrength = normalizeGraphStrength(value);
+  dom.graphRelationStrengthButtons?.forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.graphRelationStrength === graphRelationStrength);
+  });
+}
+
+function setGraphRelationOpen(isOpen) {
+  if (isOpen) setGraphMemoOpen(false);
+  if (isOpen) setGraphCreateMenuOpen(false);
+  document.body.classList.toggle('is-graph-relation-open', isOpen);
+  if (dom.graphRelationBackdrop) dom.graphRelationBackdrop.hidden = !isOpen;
+  if (dom.graphRelationModal) {
+    dom.graphRelationModal.hidden = !isOpen;
+    dom.graphRelationModal.setAttribute('aria-hidden', String(!isOpen));
+  }
+  if (!isOpen) graphRelationId = null;
+}
+
+function openGraphRelation(linkId) {
+  const link = graphLinkById(linkId);
+  if (!link) return;
+
+  graphRelationId = link.id;
+  graphState = {
+    ...graphState,
+    selectedLinkId: link.id,
+    selectedNodeId: null,
+  };
+  if (dom.graphRelationLabel) dom.graphRelationLabel.value = link.label || '관계';
+  if (dom.graphRelationBasis) dom.graphRelationBasis.value = link.basis || '';
+  setGraphRelationStrength(link.strength || 'weak');
+  renderKnowledgeGraph();
+  setGraphRelationOpen(true);
+  requestAnimationFrame(() => dom.graphRelationLabel?.focus());
+}
+
+function saveGraphRelation({ status = 'draft' } = {}) {
+  const link = graphLinkById(graphRelationId);
+  if (!link) return null;
+
+  const nextLink = {
+    ...link,
+    label: normalizeEntityName(dom.graphRelationLabel?.value) || '관계',
+    basis: String(dom.graphRelationBasis?.value || '').trim().slice(0, 500),
+    strength: graphRelationStrength,
+    analysisStatus: status,
+  };
+
+  graphState = {
+    ...graphState,
+    links: graphState.links.map((item) => (item.id === link.id ? nextLink : item)),
+    selectedLinkId: link.id,
+    selectedNodeId: null,
+  };
+  renderAll();
+  return nextLink;
+}
+
+function deleteGraphRelation() {
+  const link = graphLinkById(graphRelationId);
+  if (!link) return false;
+
+  graphState = {
+    ...graphState,
+    links: graphState.links.filter((item) => item.id !== link.id),
+    selectedLinkId: null,
+    pendingLinkNodeId: graphState.linkMode ? link.source : graphState.pendingLinkNodeId,
+  };
+  renderAll();
+  return true;
+}
+
+function normalizeEntityName(value) {
+  return String(value || '')
+    .replace(/["'“”‘’]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 26);
+}
+
+function parseRelatedEntityNames(note, currentLabel = '') {
+  const names = [];
+  const current = normalizeEntityName(currentLabel);
+  const lines = String(note || '').split('\n');
+
+  lines.forEach((line) => {
+    const match = line.match(/(?:관련\s*인물|추가\s*인물|상대|목격자|방관자|기관|장소|관련\s*주체)\s*[:：]\s*(.+)/i);
+    if (!match) return;
+    match[1]
+      .split(/[,，、/|·ㆍ;]/)
+      .map(normalizeEntityName)
+      .filter((name) => name && name !== current && name.length >= 2)
+      .forEach((name) => {
+        if (!names.includes(name)) names.push(name);
+      });
+  });
+
+  return names.slice(0, 5);
+}
+
+function findGraphNodeByLabel(label) {
+  const normalized = normalizeEntityName(label).toLowerCase();
+  return graphState.nodes.find((node) => normalizeEntityName(node.label).toLowerCase() === normalized) ?? null;
+}
+
+function splitGraphValues(value) {
+  return String(value || '')
+    .split(/[,，、/|;]/)
+    .map(normalizeEntityName)
+    .filter((item) => item.length >= 2)
+    .slice(0, 6);
+}
+
+function parseGraphMemoField(note, keys) {
+  const values = [];
+  const keyPattern = keys.map((key) => key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  const pattern = new RegExp(`(?:${keyPattern})\\s*[:：]\\s*(.+)`, 'i');
+
+  String(note || '').split('\n').forEach((line) => {
+    const match = line.match(pattern);
+    if (!match) return;
+    splitGraphValues(match[1]).forEach((item) => {
+      if (!values.includes(item)) values.push(item);
+    });
+  });
+
+  return values.slice(0, 6);
+}
+
+function addGraphMemoRelatedNodes(sourceNode, relatedNames) {
+  if (!sourceNode || !relatedNames.length || !dom.graphCanvas) return [];
+
+  const rect = dom.graphCanvas.getBoundingClientRect();
+  const created = [];
+  let nextNumber = graphState.nextNodeNumber;
+  const nextNodes = [...graphState.nodes];
+  const nextLinks = [...graphState.links];
+  const radius = 190;
+
+  relatedNames.forEach((name, index) => {
+    let target = findGraphNodeByLabel(name);
+
+    if (!target) {
+      const angle = (-70 + index * 32) * (Math.PI / 180);
+      target = {
+        id: `person-${Date.now()}-${nextNumber}-${index}`,
+        kind: 'person',
+        label: name,
+        role: '메모 언급',
+        layer: 'support',
+        note: `${sourceNode.label} 메모에서 언급됨`,
+        analysisStatus: 'draft',
+        x: Math.max(86, Math.min(rect.width - 86, sourceNode.x + Math.cos(angle) * radius)),
+        y: Math.max(52, Math.min(rect.height - 52, sourceNode.y + Math.sin(angle) * radius)),
+      };
+      nextNumber += 1;
+      nextNodes.push(target);
+      created.push(name);
+    }
+
+    const exists = nextLinks.some((link) => (
+      (link.source === sourceNode.id && link.target === target.id)
+      || (link.source === target.id && link.target === sourceNode.id)
+    ));
+
+    if (!exists) {
+      nextLinks.push({
+        id: `link-${Date.now()}-${index}`,
+        source: sourceNode.id,
+        target: target.id,
+        label: '메모 연결',
+        basis: `${sourceNode.label} 메모에서 ${name} 언급`,
+        strength: 'likely',
+      });
+    }
+  });
+
+  graphState = {
+    ...graphState,
+    nodes: nextNodes,
+    links: nextLinks,
+    nextNodeNumber: nextNumber,
+  };
+
+  return created;
+}
+
+function graphAutoNodePosition(sourceNode, index, distance = 210) {
+  const rect = dom.graphCanvas?.getBoundingClientRect();
+  const width = rect?.width || 900;
+  const height = rect?.height || 520;
+  const angle = (-120 + index * 38) * (Math.PI / 180);
+
+  return {
+    x: Math.max(86, Math.min(width - 86, sourceNode.x + Math.cos(angle) * distance)),
+    y: Math.max(52, Math.min(height - 52, sourceNode.y + Math.sin(angle) * distance)),
+  };
+}
+
+function getOrCreateGraphNode({ label, role, layer = 'support', note = '', kind = 'person', aroundNode, index = 0 }) {
+  const normalizedLabel = normalizeEntityName(label);
+  if (!normalizedLabel) return null;
+
+  const existing = findGraphNodeByLabel(normalizedLabel);
+  if (existing) return existing;
+
+  const nodeKind = kind === 'event' ? 'event' : 'person';
+  const position = aroundNode
+    ? graphAutoNodePosition(aroundNode, index)
+    : { x: 160 + index * 34, y: 120 + index * 28 };
+  const node = {
+    id: `${nodeKind}-${Date.now()}-${graphState.nextNodeNumber}-${index}`,
+    kind: nodeKind,
+    label: normalizedLabel,
+    role: normalizeEntityName(role) || '관련 주체',
+    layer: normalizeGraphLayer(layer),
+    note: String(note || '').slice(0, 160),
+    analysisStatus: 'draft',
+    x: position.x,
+    y: position.y,
+  };
+
+  graphState = {
+    ...graphState,
+    nodes: [...graphState.nodes, node],
+    nextNodeNumber: graphState.nextNodeNumber + 1,
+  };
+
+  return node;
+}
+
+function upsertGraphLink({ sourceId, targetId, label = '관계', basis = '', strength = 'weak' }) {
+  if (!sourceId || !targetId || sourceId === targetId) return null;
+
+  const existing = graphState.links.find((link) => (
+    (link.source === sourceId && link.target === targetId)
+    || (link.source === targetId && link.target === sourceId)
+  ));
+
+  if (existing) {
+    const nextLink = {
+      ...existing,
+      label: normalizeEntityName(label) || existing.label || '관계',
+      basis: String(basis || existing.basis || '').slice(0, 500),
+      strength: normalizeGraphStrength(strength || existing.strength),
+    };
+
+    graphState = {
+      ...graphState,
+      links: graphState.links.map((link) => (link.id === existing.id ? nextLink : link)),
+      selectedLinkId: nextLink.id,
+    };
+
+    return nextLink;
+  }
+
+  const link = {
+    id: `link-${Date.now()}-${graphState.links.length + 1}`,
+    source: sourceId,
+    target: targetId,
+    label: normalizeEntityName(label) || '관계',
+    basis: String(basis || '').slice(0, 500),
+    strength: normalizeGraphStrength(strength),
+  };
+
+  graphState = {
+    ...graphState,
+    links: [...graphState.links, link],
+    selectedLinkId: link.id,
+  };
+
+  return link;
+}
+
+function enrichKnowledgeGraphFromMemo(saved, responseText = '') {
+  const source = graphNodeById(saved?.node?.id);
+  if (!source) return;
+
+  const note = [source.note, responseText].filter(Boolean).join('\n');
+  const evidenceItems = parseGraphMemoField(note, ['증거', '보유 증거', '자료', '문서', 'PDF', '녹취', '카톡', '문자', '메일']);
+  const actionItems = parseGraphMemoField(note, ['행위', '핵심 행위', '문제 행위', '발언', '요구', '요청']);
+  const contextItems = [
+    ...parseGraphMemoField(note, ['시점', '일시', '날짜', '시간']),
+    ...parseGraphMemoField(note, ['장소', '공간', '채널']),
+  ].slice(0, 6);
+
+  const createdNodes = [];
+  evidenceItems.forEach((item, index) => {
+    const node = getOrCreateGraphNode({
+      label: item,
+      role: '증거 자료',
+      layer: 'support',
+      kind: 'event',
+      note: `${source.label} 관련 증거`,
+      aroundNode: source,
+      index: index + 1,
+    });
+    if (node) {
+      createdNodes.push(node.id);
+      upsertGraphLink({
+        sourceId: source.id,
+        targetId: node.id,
+        label: '증거 연결',
+        basis: item,
+        strength: 'confirmed',
+      });
+    }
+  });
+
+  actionItems.forEach((item, index) => {
+    const node = getOrCreateGraphNode({
+      label: item,
+      role: '행위',
+      layer: 'core',
+      kind: 'event',
+      note: `${source.label} 메모에서 분리된 행위`,
+      aroundNode: source,
+      index: index + evidenceItems.length + 1,
+    });
+    if (node) {
+      createdNodes.push(node.id);
+      upsertGraphLink({
+        sourceId: source.id,
+        targetId: node.id,
+        label: '행위 연결',
+        basis: item,
+        strength: /확인|증거|녹취|문서|캡처/.test(note) ? 'likely' : 'weak',
+      });
+    }
+  });
+
+  contextItems.forEach((item, index) => {
+    const node = getOrCreateGraphNode({
+      label: item,
+      role: '시점·장소',
+      layer: 'support',
+      kind: 'event',
+      note: `${source.label} 관련 맥락`,
+      aroundNode: source,
+      index: index + evidenceItems.length + actionItems.length + 1,
+    });
+    if (node) {
+      createdNodes.push(node.id);
+      upsertGraphLink({
+        sourceId: source.id,
+        targetId: node.id,
+        label: '발생 맥락',
+        basis: item,
+        strength: 'likely',
+      });
+    }
+  });
+
+  graphState = {
+    ...graphState,
+    selectedNodeId: source.id,
+    selectedLinkId: graphState.selectedLinkId,
+    nodes: graphState.nodes.map((node) => (
+      node.id === source.id
+        ? {
+            ...node,
+            layer: inferGraphLayerFromMemo(note, node.layer),
+            analysisStatus: 'synced',
+            note: node.note,
+          }
+        : createdNodes.includes(node.id)
+          ? { ...node, analysisStatus: 'synced' }
+          : node
+    )),
+  };
+}
+
+function enrichKnowledgeGraphFromRelation(saved, responseText = '') {
+  const link = graphLinkById(saved?.link?.id);
+  if (!link) return;
+
+  const source = graphNodeById(link.source);
+  const target = graphNodeById(link.target);
+  if (!source || !target) return;
+
+  const center = {
+    x: (source.x + target.x) / 2,
+    y: (source.y + target.y) / 2,
+  };
+  const note = [link.label, link.basis, source.note, target.note, responseText].filter(Boolean).join('\n');
+  const evidenceItems = parseGraphMemoField(note, ['증거', '보유 증거', '자료', '문서', 'PDF', '녹취', '카톡', '문자', '메일']);
+  const actionItems = parseGraphMemoField(note, ['행위', '핵심 행위', '문제 행위', '발언', '요구', '요청']);
+  const contextItems = [
+    ...parseGraphMemoField(note, ['시점', '일시', '날짜', '시간']),
+    ...parseGraphMemoField(note, ['장소', '공간', '채널']),
+  ].slice(0, 5);
+
+  const createdNodes = [];
+  const attachToRelation = (node, label, basis, strength = 'likely') => {
+    if (!node) return;
+    createdNodes.push(node.id);
+    upsertGraphLink({
+      sourceId: source.id,
+      targetId: node.id,
+      label,
+      basis,
+      strength,
+    });
+    upsertGraphLink({
+      sourceId: target.id,
+      targetId: node.id,
+      label,
+      basis,
+      strength,
+    });
+  };
+
+  evidenceItems.forEach((item, index) => {
+    attachToRelation(
+      getOrCreateGraphNode({
+        label: item,
+        role: '관계 증거',
+        layer: 'support',
+        kind: 'event',
+        note: `${source.label} - ${target.label} 관계 근거`,
+        aroundNode: center,
+        index: index + 1,
+      }),
+      '관계 증거',
+      item,
+      'confirmed'
+    );
+  });
+
+  actionItems.forEach((item, index) => {
+    attachToRelation(
+      getOrCreateGraphNode({
+        label: item,
+        role: '관계 행위',
+        layer: 'core',
+        kind: 'event',
+        note: `${source.label} - ${target.label} 사이의 행위`,
+        aroundNode: center,
+        index: index + evidenceItems.length + 1,
+      }),
+      '관계 행위',
+      item,
+      /확인|증거|녹취|문서|캡처/.test(note) ? 'likely' : 'weak'
+    );
+  });
+
+  contextItems.forEach((item, index) => {
+    attachToRelation(
+      getOrCreateGraphNode({
+        label: item,
+        role: '관계 맥락',
+        layer: 'support',
+        kind: 'event',
+        note: `${source.label} - ${target.label} 관계 맥락`,
+        aroundNode: center,
+        index: index + evidenceItems.length + actionItems.length + 1,
+      }),
+      '관계 맥락',
+      item,
+      'likely'
+    );
+  });
+
+  graphState = {
+    ...graphState,
+    selectedNodeId: null,
+    selectedLinkId: link.id,
+    links: graphState.links.map((item) => (
+      item.id === link.id
+        ? {
+            ...item,
+            analysisStatus: 'synced',
+            strength: item.basis ? item.strength : normalizeGraphStrength(note),
+            analyzedAt: new Date().toISOString(),
+          }
+        : item
+    )),
+    nodes: graphState.nodes.map((node) => (
+      createdNodes.includes(node.id) ? { ...node, analysisStatus: 'synced' } : node
+    )),
+  };
+}
+
+function saveGraphMemo({ status = 'draft' } = {}) {
+  const node = graphNodeById(graphMemoNodeId);
+  if (!node) return null;
+
+  const note = String(dom.graphMemoNote?.value ?? '').trim().slice(0, 1600);
+  const label = normalizeEntityName(dom.graphMemoLabel?.value) || node.label;
+  const role = normalizeEntityName(dom.graphMemoRole?.value) || '역할 미정';
+  const layer = inferGraphLayerFromMemo(note, graphMemoLayer);
+
+  graphState = {
+    ...graphState,
+    nodes: graphState.nodes.map((item) => (
+      item.id === node.id
+        ? {
+            ...item,
+            label,
+            role,
+            layer,
+            note,
+            analysisStatus: status,
+            memoUpdatedAt: new Date().toISOString(),
+          }
+        : item
+    )),
+    selectedNodeId: node.id,
+    pendingLinkNodeId: graphState.linkMode ? node.id : graphState.pendingLinkNodeId,
+  };
+
+  const updatedNode = graphNodeById(node.id);
+  const relatedNames = parseRelatedEntityNames(note, label);
+  const createdNames = addGraphMemoRelatedNodes(updatedNode, relatedNames);
+  renderAll();
+
+  return {
+    node: graphNodeById(node.id),
+    relatedNames,
+    createdNames,
+  };
+}
+
+function buildGraphMemoAgentMessage(saved) {
+  const node = saved?.node;
+  if (!node) return '';
+  const isEvent = node.kind === 'event';
+  const recordTitle = isEvent ? '[사건 노드 기록]' : '[인물 노드 기록]';
+
+  return [
+    recordTitle,
+    `${isEvent ? '사건명' : '인물·주체명'}: ${node.label}`,
+    `${isEvent ? '사건 유형' : '역할·관계'}: ${node.role}`,
+    `분류: ${graphLayerLabel(node.layer)}`,
+    `${isEvent ? '사건 기록' : '인물 기록'}: ${node.note || '확인 필요'}`,
+    saved.relatedNames?.length ? `메모에서 연결된 관련 주체: ${saved.relatedNames.join(', ')}` : '메모에서 연결된 관련 주체: 없음',
+    saved.createdNames?.length ? `새로 추가된 보조 노드: ${saved.createdNames.join(', ')}` : '새로 추가된 보조 노드: 없음',
+    '',
+    '요청:',
+    isEvent
+      ? '- 이 사건 노드를 시간·장소·참여자·행위 순서·증거의 관점에서 입체적으로 재구성해줘.'
+      : '- 이 인물 노드를 역할·행위·진술·증거·다른 노드와의 관계 관점에서 입체적으로 재구성해줘.',
+    '- 왼쪽 상황 시각화 보드에는 사건 노드 기록, 인물 노드 기록, 관계 기록이 구분되어 보이도록 정리해줘.',
+    '- 사안보고서는 짧은 문단과 표 중심으로 가독성 좋게 작성하고, 사실·주장·추정·확인 필요를 분리해줘.',
+    '- 노드 기록에서 확인 가능한 행위, 증거, 시점, 장소, 관계 근거를 증거-사실-행위 연결표에 반영해줘.',
+    '- 그래프 보강 단서는 가능하면 "증거:", "행위:", "시점:", "장소:", "관련 인물:" 형식으로 짧게 남겨줘.',
+  ].join('\n');
+}
+
+function graphSnapshotForAgent() {
+  return {
+    nodes: graphState.nodes.map((node) => ({
+      id: node.id,
+      kind: node.kind || 'person',
+      label: node.label,
+      role: node.role,
+      layer: node.layer,
+      note: node.note,
+      clusterId: node.clusterId || '',
+    })),
+    links: graphState.links.map((link) => ({
+      id: link.id,
+      source: link.source,
+      target: link.target,
+      label: link.label,
+      strength: link.strength,
+      basis: link.basis,
+    })),
+    clusters: (graphState.clusters || []).map((cluster) => ({
+      id: cluster.id,
+      label: cluster.label,
+      nodeIds: cluster.nodeIds,
+      nodeLabels: cluster.nodeIds
+        .map(graphNodeById)
+        .filter(Boolean)
+        .map((node) => node.label),
+      note: cluster.note,
+    })),
+  };
+}
+
+function buildGraphNodeStructuredInput(saved) {
+  const node = saved?.node;
+  if (!node) return null;
+  const isEvent = node.kind === 'event';
+
+  return {
+    kind: isEvent ? 'event_node' : 'person_node',
+    schemaVersion: 1,
+    node: {
+      id: node.id,
+      type: node.kind || 'person',
+      label: node.label,
+      role: node.role,
+      layer: node.layer,
+      note: node.note,
+      relatedNames: saved.relatedNames || [],
+      createdNames: saved.createdNames || [],
+      parsed: {
+        evidence: parseGraphMemoField(node.note, ['증거', '보유 증거', '자료', '문서', 'PDF', '녹취', '카톡', '문자', '메일']),
+        actions: parseGraphMemoField(node.note, ['행위', '핵심 행위', '문제 행위', '발언', '요구', '요청', '진술']),
+        time: parseGraphMemoField(node.note, ['시점', '일시', '날짜', '시간']),
+        place: parseGraphMemoField(node.note, ['장소', '공간', '채널']),
+        relatedPeople: parseRelatedEntityNames(node.note, node.label),
+      },
+    },
+    analysisFocus: isEvent
+      ? ['time_place_sequence', 'participants', 'acts', 'evidence_basis', 'unknown_slots']
+      : ['role', 'acts', 'statements', 'evidence_basis', 'relationships', 'unknown_slots'],
+    graphSnapshot: graphSnapshotForAgent(),
+  };
+}
+
+function buildGraphRelationAgentMessage(saved) {
+  const link = saved?.link;
+  if (!link) return '';
+  const source = graphNodeById(link.source);
+  const target = graphNodeById(link.target);
+  if (!source || !target) return '';
+
+  return [
+    '[관계 기록]',
+    `출발 노드: ${source.label} (${graphKindLabel(source.kind)} · ${source.role || '역할 미정'})`,
+    `도착 노드: ${target.label} (${graphKindLabel(target.kind)} · ${target.role || '역할 미정'})`,
+    `관계명: ${link.label || '관계'}`,
+    `관계 상태: ${graphStrengthLabel(link.strength)}`,
+    `관계 근거: ${link.basis || '확인 필요'}`,
+    '',
+    '[출발 노드 기록]',
+    source.note || '확인 필요',
+    '',
+    '[도착 노드 기록]',
+    target.note || '확인 필요',
+    '',
+    '요청:',
+    '- 위 두 노드 사이의 관계를 사실·주장·추정·확인 필요로 분해해줘.',
+    '- 관계가 어떤 증거, 진술, 시간, 장소, 행위 흐름으로 뒷받침되는지 구조화해줘.',
+    '- 관계 기록을 왼쪽 상황 시각화 보드와 사안보고서의 관계 구조, 증거-사실-행위 연결표에 반영해줘.',
+    '- 관계의 강도는 법적 판단이 아니라 자료상 연결 정도로만 표현해줘.',
+    '- 그래프 보강 단서는 가능하면 "증거:", "행위:", "시점:", "장소:", "관련 인물:" 형식으로 짧게 남겨줘.',
+  ].join('\n');
+}
+
+function buildGraphRelationStructuredInput(saved) {
+  const link = saved?.link;
+  if (!link) return null;
+  const source = graphNodeById(link.source);
+  const target = graphNodeById(link.target);
+  if (!source || !target) return null;
+
+  return {
+    kind: 'relation_record',
+    schemaVersion: 1,
+    relation: {
+      id: link.id,
+      label: link.label || '관계',
+      strength: link.strength || 'weak',
+      strengthLabel: graphStrengthLabel(link.strength),
+      basis: link.basis || '',
+      source: {
+        id: source.id,
+        type: source.kind || 'person',
+        label: source.label,
+        role: source.role,
+        note: source.note,
+      },
+      target: {
+        id: target.id,
+        type: target.kind || 'person',
+        label: target.label,
+        role: target.role,
+        note: target.note,
+      },
+      parsed: {
+        evidence: parseGraphMemoField(link.basis, ['증거', '자료', '문서', 'PDF', '녹취', '카톡', '문자', '메일']),
+        actions: parseGraphMemoField(link.basis, ['행위', '발언', '요구', '요청', '진술']),
+        time: parseGraphMemoField(link.basis, ['시점', '일시', '날짜', '시간']),
+        place: parseGraphMemoField(link.basis, ['장소', '공간', '채널']),
+      },
+    },
+    analysisFocus: ['connection_basis', 'fact_claim_inference_split', 'evidence_to_action_link', 'contradictions', 'unknown_slots'],
+    graphSnapshot: graphSnapshotForAgent(),
+  };
+}
+
+async function toggleGraphLink(sourceId, targetId) {
   if (!sourceId || !targetId || sourceId === targetId) return;
 
-  const exists = graphState.links.some((link) => (
+  const sourceNode = graphNodeById(sourceId);
+  const targetNode = graphNodeById(targetId);
+  if (!sourceNode || !targetNode) return;
+
+  const exists = graphState.links.find((link) => (
     (link.source === sourceId && link.target === targetId)
     || (link.source === targetId && link.target === sourceId)
   ));
@@ -1453,38 +2611,62 @@ function toggleGraphLink(sourceId, targetId) {
   if (exists) {
     graphState = {
       ...graphState,
-      selectedNodeId: targetId,
+      selectedNodeId: null,
+      selectedLinkId: exists.id,
       pendingLinkNodeId: graphState.linkMode ? targetId : null,
     };
+    renderAll();
+    openGraphRelation(exists.id);
     return;
   }
 
+  const confirmed = await requestGraphConfirm({
+    title: '관계선을 만들까요?',
+    message: `${sourceNode.label} ↔ ${targetNode.label} 사이에 새 관계선을 생성합니다.`,
+    detail: '생성 후 관계선을 더블클릭하면 관계명, 근거, 연결 강도를 입력하고 에이전트에게 반영할 수 있습니다.',
+    okLabel: '관계선 생성',
+  });
+
+  if (!confirmed) {
+    graphState = {
+      ...graphState,
+      selectedNodeId: targetId,
+      selectedLinkId: null,
+      pendingLinkNodeId: graphState.linkMode ? targetId : null,
+    };
+    renderAll();
+    setServiceStatus('관계선 생성을 취소했습니다.', 'ready');
+    return;
+  }
+
+  const link = upsertGraphLink({
+    sourceId,
+    targetId,
+    label: '관계',
+    basis: '',
+    strength: 'weak',
+  });
+
   graphState = {
     ...graphState,
-    links: [
-      ...graphState.links,
-      {
-        id: `link-${Date.now()}`,
-        source: sourceId,
-        target: targetId,
-        label: '관계',
-      },
-    ],
-    selectedNodeId: targetId,
+    selectedNodeId: null,
+    selectedLinkId: link?.id ?? null,
     pendingLinkNodeId: graphState.linkMode ? targetId : null,
   };
+  renderAll();
+  setServiceStatus('관계선을 생성했습니다. 관계선을 더블클릭해 근거를 입력할 수 있습니다.', 'ready');
 }
 
-function selectGraphNode(id) {
+async function selectGraphNode(id) {
   if (graphState.linkMode && graphState.pendingLinkNodeId && graphState.pendingLinkNodeId !== id) {
-    toggleGraphLink(graphState.pendingLinkNodeId, id);
-    renderAll();
+    await toggleGraphLink(graphState.pendingLinkNodeId, id);
     return;
   }
 
   graphState = {
     ...graphState,
     selectedNodeId: id,
+    selectedLinkId: null,
     pendingLinkNodeId: graphState.linkMode ? id : null,
   };
   renderAll();
@@ -1496,7 +2678,8 @@ function graphRelationList() {
       const source = graphNodeById(link.source);
       const target = graphNodeById(link.target);
       if (!source || !target) return '';
-      return `${source.label} ↔ ${target.label}`;
+      const basis = link.basis ? ` · 근거: ${link.basis}` : '';
+      return `${source.label} ↔ ${target.label} (${link.label || '관계'} · ${graphStrengthLabel(link.strength)})${basis}`;
     })
     .filter(Boolean);
 }
@@ -1513,39 +2696,78 @@ function graphIsolatedNodes() {
 function knowledgeGraphMarkdown() {
   const nodeCount = graphState.nodes.length;
   const linkCount = graphState.links.length;
+  const clusters = graphState.clusters || [];
   const selected = graphNodeById(graphState.selectedNodeId);
   const relations = graphRelationList();
   const isolated = graphIsolatedNodes();
+  const eventNodes = graphState.nodes.filter((node) => node.kind === 'event');
+  const personNodes = graphState.nodes.filter((node) => node.kind !== 'event');
 
   if (!nodeCount) {
     return [
-      '## 관계 구조',
+      '## 상황 시각화 보드',
       '',
-      '- 아직 생성된 인물 노드가 없습니다.',
-      '- 사건 평면의 빈 곳을 클릭해 인물을 만들고 관계선을 연결하세요.',
-      '- 인물의 역할, 메모, 연결 상태가 이 보고서에 반영됩니다.',
+      '- 아직 생성된 노드가 없습니다.',
+      '- 사건 평면의 빈 곳을 클릭해 인물 또는 주요 사건 노드를 만들고 관계선을 연결하세요.',
+      '- 노드 유형, 역할, 메모, 연결 상태가 이 보고서에 반영됩니다.',
     ].join('\n');
   }
 
   const density = nodeCount <= 1 ? '판단 보류' : `${linkCount}/${Math.round((nodeCount * (nodeCount - 1)) / 2)} 연결`;
 
   return [
-    '## 관계 구조',
+    '## 상황 시각화 보드',
     '',
-    `- 현재 인물 노드: ${nodeCount}개`,
+    `- 현재 노드: ${nodeCount}개`,
+    `- 사건 노드: ${eventNodes.length}개`,
+    `- 인물 노드: ${personNodes.length}개`,
     `- 현재 관계선: ${linkCount}개`,
+    `- 클러스터: ${clusters.length}개`,
     `- 관계 밀도: ${density}`,
     selected ? `- 선택 노드: ${graphNodeLabel(selected)}` : '- 선택 노드: 없음',
     '',
-    '### 관련 인물',
-    ...graphState.nodes.map((node) => [
+    '### 사건 노드 기록',
+    ...(eventNodes.length ? eventNodes.map((node) => [
       `- ${graphNodeLabel(node)}`,
+      `  - 유형: ${graphKindLabel(node.kind)}`,
       `  - 분류: ${graphLayerLabel(node.layer)}`,
       node.note ? `  - 메모: ${node.note}` : '  - 메모: 확인 필요',
-    ].join('\n')),
+    ].join('\n')) : ['- 아직 사건 노드가 없습니다.']),
     '',
-    '### 관계선',
+    '### 인물 노드 기록',
+    ...(personNodes.length ? personNodes.map((node) => [
+      `- ${graphNodeLabel(node)}`,
+      `  - 유형: ${graphKindLabel(node.kind)}`,
+      `  - 분류: ${graphLayerLabel(node.layer)}`,
+      node.note ? `  - 메모: ${node.note}` : '  - 메모: 확인 필요',
+    ].join('\n')) : ['- 아직 인물 노드가 없습니다.']),
+    '',
+    '### 관계 기록',
     ...(relations.length ? relations.map((item) => `- ${item}`) : ['- 아직 연결된 관계선이 없습니다.']),
+    '',
+    '### 클러스터 기록',
+    ...(clusters.length
+      ? clusters.map((cluster) => {
+          const names = cluster.nodeIds
+            .map(graphNodeById)
+            .filter(Boolean)
+            .map((node) => graphNodeLabel(node));
+          return `- ${cluster.label}: ${names.join(' / ') || '확인 필요'}${cluster.note ? ` · ${cluster.note}` : ''}`;
+        })
+      : ['- 아직 생성된 클러스터가 없습니다.']),
+    '',
+    '### 관계선 근거 표',
+    ...(graphState.links.length
+      ? [
+          '| 출발 | 도착 | 관계 | 상태 | 근거 |',
+          '|---|---|---|---|---|',
+          ...graphState.links.map((link) => {
+            const source = graphNodeById(link.source);
+            const target = graphNodeById(link.target);
+            return `| ${source?.label || '미상'} | ${target?.label || '미상'} | ${link.label || '관계'} | ${graphStrengthLabel(link.strength)} | ${link.basis || '확인 필요'} |`;
+          }),
+        ]
+      : ['- 관계선 근거가 아직 없습니다.']),
     '',
     '### 확인이 필요한 빈칸',
     ...(isolated.length
@@ -1567,6 +2789,7 @@ ${knowledgeGraphMarkdown()}
 주의:
 - 위 관계 그래프는 사용자가 직접 배치한 사건 구조다.
 - 보고서에는 인물 노드, 관계선, 고립 노드, 연결 근거가 부족한 관계를 반영한다.
+- 파란 반투명 클러스터 영역은 사용자가 같은 맥락으로 묶은 노드 집합이다. 클러스터는 별도 인물이 아니라 사안 묶음으로 다룬다.
 - 그래프 관계선은 법적 판단이 아니라 사안 구조화 단서로만 다룬다.
 - PDF 증거 또는 사건 기록과 연결되지 않은 노드는 "확인 필요"로 남긴다.
 `.trim();
@@ -1584,21 +2807,64 @@ function renderKnowledgeGraph() {
       if (!source || !target) return '';
       const midX = (source.x + target.x) / 2;
       const midY = (source.y + target.y) / 2;
+      const selectedClass = link.id === graphState.selectedLinkId ? ' is-selected' : '';
+      const strengthClass = ` is-${normalizeGraphStrength(link.strength)}`;
+      const statusClass = link.analysisStatus ? ` is-${link.analysisStatus}` : '';
+      const statusLabel = link.analysisStatus === 'synced'
+        ? '보고서 반영'
+        : link.analysisStatus === 'analyzing'
+          ? '분석 중'
+          : link.analysisStatus === 'failed'
+            ? '확인 필요'
+            : graphStrengthLabel(link.strength);
       return `
-        <line class="case-graph-link" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}"></line>
-        <text class="case-graph-link-label" x="${midX}" y="${midY - 6}" text-anchor="middle">관계</text>
+        <g class="case-graph-link-group${selectedClass}${strengthClass}${statusClass}" data-graph-link-id="${escapeHtml(link.id)}">
+          <line class="case-graph-link-hit" data-graph-link-id="${escapeHtml(link.id)}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}"></line>
+          <line class="case-graph-link" data-graph-link-id="${escapeHtml(link.id)}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}"></line>
+          <text class="case-graph-link-label" data-graph-link-id="${escapeHtml(link.id)}" x="${midX}" y="${midY - 6}" text-anchor="middle">${escapeHtml(link.label || '관계')}</text>
+          <text class="case-graph-link-strength" data-graph-link-id="${escapeHtml(link.id)}" x="${midX}" y="${midY + 9}" text-anchor="middle">${escapeHtml(statusLabel)}</text>
+        </g>
       `;
     })
     .join('');
   dom.graphLinks.setAttribute('viewBox', `0 0 ${Math.max(1, rect.width)} ${Math.max(1, rect.height)}`);
 
   dom.graphNodes.innerHTML = '';
+  (graphState.clusters || []).forEach((cluster) => {
+    const clusterNodes = cluster.nodeIds
+      .map(graphNodeById)
+      .filter(Boolean);
+    if (clusterNodes.length < 2) return;
+
+    const area = document.createElement('section');
+    area.className = 'case-graph-cluster-area';
+    area.style.left = `${cluster.x}px`;
+    area.style.top = `${cluster.y}px`;
+    area.style.width = `${cluster.width}px`;
+    area.style.height = `${cluster.height}px`;
+    area.dataset.graphClusterId = cluster.id;
+    area.innerHTML = `
+      <div>
+        <span>클러스터</span>
+        <strong>${escapeHtml(cluster.label)}</strong>
+      </div>
+      <small>${escapeHtml(clusterNodes.map((node) => node.label).join(' · '))}</small>
+    `;
+    dom.graphNodes.append(area);
+  });
+
   graphState.nodes.forEach((node) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = [
       'case-graph-node',
+      `is-kind-${node.kind || 'person'}`,
       `is-${node.layer || 'uncertain'}`,
+      node.analysisStatus === 'analyzing' ? 'is-analyzing' : '',
+      node.analysisStatus === 'synced' ? 'is-synced' : '',
+      node.analysisStatus === 'failed' ? 'is-failed' : '',
+      node.clusterNodeIds?.length ? 'is-cluster' : '',
+      node.clusterId ? 'is-in-cluster' : '',
       node.id === graphState.selectedNodeId ? 'is-selected' : '',
       node.id === graphState.pendingLinkNodeId ? 'is-pending' : '',
     ].filter(Boolean).join(' ');
@@ -1606,10 +2872,13 @@ function renderKnowledgeGraph() {
     button.style.top = `${node.y}px`;
     button.dataset.graphNodeId = node.id;
     button.innerHTML = `
-      <i>${escapeHtml(graphLayerLabel(node.layer))}</i>
+      <i>${escapeHtml(graphKindLabel(node.kind))}</i>
       <b>${escapeHtml(node.label)}</b>
       <span>${escapeHtml(node.role)}</span>
       <em>${escapeHtml(node.note || '더블클릭으로 사건 메모 입력')}</em>
+      ${node.analysisStatus === 'synced' ? '<u>보고서 반영</u>' : ''}
+      ${node.analysisStatus === 'analyzing' ? '<u>분석 중</u>' : ''}
+      ${node.analysisStatus === 'failed' ? '<u>확인 필요</u>' : ''}
     `;
     dom.graphNodes.append(button);
   });
@@ -1617,20 +2886,35 @@ function renderKnowledgeGraph() {
   dom.graphEmpty?.classList.toggle('is-hidden', graphState.nodes.length > 0);
   dom.graphLinkMode?.classList.toggle('is-active', graphState.linkMode);
   dom.graphLinkMode && (dom.graphLinkMode.textContent = graphState.linkMode ? '관계선 모드 켜짐' : '관계선 모드 꺼짐');
+  applyGraphViewport();
 
   if (dom.graphInspector) {
     const selected = graphNodeById(graphState.selectedNodeId);
+    const selectedLink = graphLinkById(graphState.selectedLinkId);
     const isolated = graphIsolatedNodes();
-    dom.graphInspector.innerHTML = selected
+    dom.graphInspector.innerHTML = selectedLink
+      ? `
+        <span>선택 관계선</span>
+        <strong>${escapeHtml(selectedLink.label || '관계')} · ${escapeHtml(graphStrengthLabel(selectedLink.strength))}</strong>
+        <p>${escapeHtml(selectedLink.basis || '관계선 근거를 더블클릭으로 입력하세요.')}</p>
+        ${selectedLink.analysisStatus === 'synced' ? '<small>관계 기록 반영 완료</small>' : ''}
+        ${selectedLink.analysisStatus === 'analyzing' ? '<small>관계 기록 분석 중</small>' : ''}
+        ${selectedLink.analysisStatus === 'failed' ? '<small>관계 기록 반영 실패</small>' : ''}
+        <small>관계선을 더블클릭하면 근거와 상태를 편집할 수 있습니다.</small>
+      `
+      : selected
       ? `
         <span>선택 노드</span>
         <strong>${escapeHtml(graphNodeLabel(selected))}</strong>
-        <p>${escapeHtml(graphLayerLabel(selected.layer))}${selected.note ? ` · ${escapeHtml(selected.note)}` : ' · 더블클릭으로 행위, 증거, 시점 메모를 입력하세요.'}</p>
+        <p>${escapeHtml(graphKindLabel(selected.kind))} · ${escapeHtml(graphLayerLabel(selected.layer))}${selected.note ? ` · ${escapeHtml(selected.note)}` : ' · 더블클릭으로 행위, 증거, 시점 메모를 입력하세요.'}</p>
+        ${selected.analysisStatus === 'synced' ? '<small>에이전트 반영 완료</small>' : ''}
+        ${selected.analysisStatus === 'analyzing' ? '<small>에이전트 분석 중</small>' : ''}
+        ${selected.analysisStatus === 'failed' ? '<small>반영 실패 · 다시 시도 필요</small>' : ''}
       `
       : `
         <span>그래프 상태</span>
-        <strong>${graphState.nodes.length}명 · 관계 ${graphState.links.length}개</strong>
-        <p>${isolated.length ? `${isolated.length}개 인물은 아직 다른 인물과 연결되지 않았습니다.` : '모든 인물이 최소 1개 관계선으로 연결되어 있습니다.'}</p>
+        <strong>${graphState.nodes.length}개 노드 · 관계 ${graphState.links.length}개 · 클러스터 ${(graphState.clusters || []).length}개</strong>
+        <p>${isolated.length ? `${isolated.length}개 노드는 아직 다른 노드와 연결되지 않았습니다.` : '모든 노드가 최소 1개 관계선으로 연결되어 있습니다.'}</p>
       `;
   }
 }
@@ -1657,10 +2941,24 @@ function renderAll() {
 async function loadConversations() {
   if (!session?.user || !supabase) return;
 
-  const { data, error } = await supabase
-    .from('report_conversations')
-    .select('id, user_id, product, title, status, report_markdown, saved_at, created_at, updated_at')
-    .order('updated_at', { ascending: false });
+  const previousActiveId = activeConversation?.id;
+  let response;
+  try {
+    response = await withTimeout(
+      supabase
+        .from('report_conversations')
+        .select(conversationListSelect)
+        .order('updated_at', { ascending: false })
+        .limit(30),
+      22000,
+      '저장된 사안 기록을 불러오는 중 응답이 지연되고 있습니다.'
+    );
+  } catch (error) {
+    setServiceStatus(error instanceof Error ? `${error.message} 잠시 뒤 기록 버튼을 다시 눌러 주세요.` : '저장된 사안 기록을 불러오지 못했습니다.', 'error');
+    return;
+  }
+
+  const { data, error } = response;
 
   if (error) {
     setAuthMessage(error.message, true);
@@ -1668,9 +2966,50 @@ async function loadConversations() {
   }
 
   conversations = data ?? [];
-  activeConversation = conversations[0] ?? null;
+  activeConversation = conversations.find((conversation) => conversation.id === previousActiveId) ?? conversations[0] ?? null;
+  if (activeConversation?.id) {
+    await loadConversationDetail(activeConversation.id, { silent: true });
+  }
   await loadMessages();
   renderAll();
+}
+
+async function loadConversationDetail(id, { silent = false } = {}) {
+  if (!session?.user || !supabase || !id || String(id).startsWith('local-')) return null;
+
+  let response;
+  try {
+    response = await withTimeout(
+      supabase
+        .from('report_conversations')
+        .select(conversationDetailSelect)
+        .eq('id', id)
+        .eq('user_id', session.user.id)
+        .single(),
+      18000,
+      '선택한 사안 본문을 불러오는 중 응답이 지연되고 있습니다.'
+    );
+  } catch (error) {
+    if (!silent) {
+      setServiceStatus(error instanceof Error ? error.message : '선택한 사안 본문을 불러오지 못했습니다.', 'error');
+    }
+    return null;
+  }
+
+  const { data, error } = response;
+  if (error) {
+    if (!silent) setServiceStatus(error.message, 'error');
+    return null;
+  }
+
+  activeConversation = data;
+  conversations = conversations.map((conversation) => (
+    conversation.id === data.id
+      ? { ...conversation, ...data }
+      : conversation
+  ));
+
+  return data;
 }
 
 async function loadUsage({ preserveOnError = true } = {}) {
@@ -1679,18 +3018,40 @@ async function loadUsage({ preserveOnError = true } = {}) {
     return;
   }
 
-  const { data: usageData, error: usageError } = await supabase.rpc('get_my_report_usage');
+  let usageResponse;
+  try {
+    usageResponse = await withTimeout(
+      supabase.rpc('get_my_report_usage'),
+      12000,
+      '사용량 정보를 확인하는 중 응답이 지연되고 있습니다.'
+    );
+  } catch {
+    usageResponse = { data: null, error: true };
+  }
+
+  const { data: usageData, error: usageError } = usageResponse;
 
   if (!usageError && usageData) {
     applyUsageState(usageData);
     return;
   }
 
-  const { data: membership, error: membershipError } = await supabase
-    .from('user_memberships')
-    .select('tier')
-    .eq('user_id', session.user.id)
-    .maybeSingle();
+  let membershipResponse;
+  try {
+    membershipResponse = await withTimeout(
+      supabase
+        .from('user_memberships')
+        .select('tier')
+        .eq('user_id', session.user.id)
+        .maybeSingle(),
+      12000,
+      '권한 정보를 확인하는 중 응답이 지연되고 있습니다.'
+    );
+  } catch {
+    membershipResponse = { data: null, error: true };
+  }
+
+  const { data: membership, error: membershipError } = membershipResponse;
 
   if (membershipError) {
     if (!preserveOnError) {
@@ -1718,11 +3079,23 @@ async function loadMessages() {
     return;
   }
 
-  const { data, error } = await supabase
-    .from('report_messages')
-    .select('id, conversation_id, role, content, created_at')
-    .eq('conversation_id', activeConversation.id)
-    .order('created_at', { ascending: true });
+  let response;
+  try {
+    response = await withTimeout(
+      supabase
+        .from('report_messages')
+        .select('id, conversation_id, role, content, created_at')
+        .eq('conversation_id', activeConversation.id)
+        .order('created_at', { ascending: true }),
+      15000,
+      '대화 기록을 불러오는 중 응답이 지연되고 있습니다.'
+    );
+  } catch (error) {
+    setServiceStatus(error instanceof Error ? error.message : '대화 기록을 불러오지 못했습니다.', 'error');
+    return;
+  }
+
+  const { data, error } = response;
 
   if (error) {
     setAuthMessage(error.message, true);
@@ -1736,6 +3109,7 @@ async function selectConversation(id) {
   activeConversation = conversations.find((conversation) => conversation.id === id) ?? null;
   evidenceFiles = [];
   resetKnowledgeGraph();
+  await loadConversationDetail(id, { silent: false });
   await loadMessages();
   setHistoryOpen(false);
   renderAll();
@@ -1756,32 +3130,42 @@ function ensureLocalConversation(message) {
   };
 }
 
-async function invokeChat({ message = '', forceReport = false } = {}) {
+async function invokeChat({ message = '', forceReport = false, structuredInput = null } = {}) {
   if (desktopOnlyMedia.matches) {
-    setServiceStatus('RoosyCozy Intelligence는 PC 브라우저에서만 사용할 수 있습니다.', 'error');
-    return;
+    const reason = 'RoosyCozy Intelligence는 PC 브라우저에서만 사용할 수 있습니다.';
+    setServiceStatus(reason, 'error');
+    return { ok: false, reason };
   }
 
   if (evidenceFiles.some((item) => item.status === 'extracting' || item.status === 'queued')) {
-    setServiceStatus('PDF 본문을 읽는 중입니다. 추출이 끝난 뒤 다시 시도해 주세요.', 'error');
-    return;
+    const reason = 'PDF 본문을 읽는 중입니다. 추출이 끝난 뒤 다시 시도해 주세요.';
+    setServiceStatus(reason, 'error');
+    return { ok: false, reason };
   }
 
   const activeSession = session?.user ? session : await restoreSessionIfAvailable(true);
 
   if (!activeSession?.user) {
-    setServiceStatus('로그인 후 대화할 수 있습니다.', 'error');
-    return;
+    const reason = '로그인 후 대화할 수 있습니다.';
+    setServiceStatus(reason, 'error');
+    return { ok: false, reason };
   }
 
   if (!hasWorkspaceAccess()) {
-    setServiceStatus('권한 필요: Teacher 또는 PRO 승인 계정만 분석 워크스페이스를 사용할 수 있습니다.', 'error');
+    const reason = '권한 필요: Teacher 또는 PRO 승인 계정만 분석 워크스페이스를 사용할 수 있습니다.';
+    setServiceStatus(reason, 'error');
     syncInteractionState();
-    return;
+    return { ok: false, reason };
   }
 
-  if (!supabase) return;
-  if (!message.trim() && !forceReport) return;
+  if (!supabase) {
+    const reason = 'Supabase 연결 설정을 확인해 주세요.';
+    setServiceStatus(reason, 'error');
+    return { ok: false, reason };
+  }
+  if (!message.trim() && !forceReport) {
+    return { ok: false, reason: '분석할 내용이 없습니다.' };
+  }
 
   const trimmedMessage = message.trim();
   const chatIntent = classifyChatIntent(trimmedMessage, forceReport);
@@ -1794,12 +3178,14 @@ async function invokeChat({ message = '', forceReport = false } = {}) {
     usageUnits,
     includesPdfEvidence: Boolean(evidenceGuidance),
     includesKnowledgeGraph: Boolean(graphGuidance),
+    structuredInputKind: structuredInput?.kind || null,
   };
 
   if (!canChat(usageUnits)) {
-    setServiceStatus(`${usageUnits}회가 필요한 요청입니다. 현재 남은 사용량은 ${remainingUsage()}회입니다.`, 'error');
+    const reason = `${usageUnits}회가 필요한 요청입니다. 현재 남은 사용량은 ${remainingUsage()}회입니다.`;
+    setServiceStatus(reason, 'error');
     syncInteractionState();
-    return;
+    return { ok: false, reason };
   }
 
   if (trimmedMessage) {
@@ -1833,6 +3219,7 @@ async function invokeChat({ message = '', forceReport = false } = {}) {
           clientIntent: chatIntent,
           clientPolicy: requestPolicy,
           clientGuidance: [reportChatBehaviorGuide, graphGuidance, evidenceGuidance].filter(Boolean).join('\n\n'),
+          structuredInput,
           usageUnits,
         },
       }),
@@ -1896,6 +3283,7 @@ async function invokeChat({ message = '', forceReport = false } = {}) {
     await loadMessages();
     renderAll();
     setServiceStatus('분석 저장 완료', 'ready');
+    return { ok: true, conversation: activeConversation, usage: usageState, response: chatResponse };
   } catch (error) {
     await loadUsage({ preserveOnError: true });
     const messageText = error instanceof Error ? error.message : '요청에 실패했습니다.';
@@ -1909,6 +3297,7 @@ async function invokeChat({ message = '', forceReport = false } = {}) {
       },
     ];
     setServiceStatus('분석 함수 연결 확인 필요', 'error');
+    return { ok: false, reason: messageText };
   } finally {
     isSending = false;
     document.body.dataset.busy = 'false';
@@ -2163,7 +3552,7 @@ async function saveCaseSet() {
       status: activeConversation.status ?? 'draft',
     })
     .eq('id', activeConversation.id)
-    .select('id, user_id, product, title, status, report_markdown, saved_at, created_at, updated_at')
+    .select(conversationDetailSelect)
     .single();
 
   if (error) {
@@ -2207,6 +3596,9 @@ async function deleteConversation(id) {
 
   if (activeConversation?.id === id) {
     activeConversation = conversations[0] ?? null;
+    if (activeConversation?.id) {
+      await loadConversationDetail(activeConversation.id, { silent: true });
+    }
     await loadMessages();
   }
 
@@ -2538,6 +3930,26 @@ dom.historyBackdrop?.addEventListener('click', () => {
 
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
+  if (graphConfirmResolver) {
+    resolveGraphConfirm(false);
+    return;
+  }
+  if (dom.graphNodeMenu && !dom.graphNodeMenu.hidden) {
+    setGraphNodeMenuOpen(false);
+    return;
+  }
+  if (dom.graphCreateMenu && !dom.graphCreateMenu.hidden) {
+    setGraphCreateMenuOpen(false);
+    return;
+  }
+  if (document.body.classList.contains('is-graph-relation-open')) {
+    setGraphRelationOpen(false);
+    return;
+  }
+  if (document.body.classList.contains('is-graph-memo-open')) {
+    setGraphMemoOpen(false);
+    return;
+  }
   if (document.body.classList.contains('is-auth-legal-open')) {
     setAuthLegalOpen(false);
     return;
@@ -2550,6 +3962,15 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('click', (event) => {
+  if (event.target.closest?.('[data-graph-create-menu]')) return;
+  if (event.target.closest?.('[data-graph-node-menu]')) return;
+  if (dom.graphCreateMenu && !dom.graphCreateMenu.hidden && !event.target.closest?.('[data-graph-canvas]')) {
+    setGraphCreateMenuOpen(false);
+  }
+  if (dom.graphNodeMenu && !dom.graphNodeMenu.hidden && !event.target.closest?.('[data-graph-canvas]')) {
+    setGraphNodeMenuOpen(false);
+  }
+
   const removeEvidenceButton = event.target.closest('[data-evidence-remove]');
   if (removeEvidenceButton) {
     removeEvidenceFile(removeEvidenceButton.dataset.evidenceRemove);
@@ -2564,21 +3985,96 @@ document.addEventListener('click', (event) => {
   dom.input.focus();
 });
 
-dom.graphCanvas?.addEventListener('click', (event) => {
+dom.graphCanvas?.addEventListener('wheel', (event) => {
+  if (event.target.closest?.('[data-graph-create-menu], [data-graph-node-menu]')) return;
+
+  event.preventDefault();
+  setGraphCreateMenuOpen(false);
+  setGraphNodeMenuOpen(false);
+
+  const screen = graphClientPoint(event);
+  const worldBefore = graphScreenToWorld(screen);
+  const nextScale = clampGraphScale(graphViewport.scale * (event.deltaY < 0 ? 1.09 : 0.91));
+
+  graphViewport = {
+    scale: nextScale,
+    x: screen.x - worldBefore.x * nextScale,
+    y: screen.y - worldBefore.y * nextScale,
+  };
+
+  applyGraphViewport();
+}, { passive: false });
+
+dom.graphCanvas?.addEventListener('pointerdown', (event) => {
   if (event.button !== 0) return;
   if (event.target.closest?.('[data-graph-node-id]')) return;
-  if (graphDragState?.moved) return;
+  if (event.target.closest?.('[data-graph-link-id]')) return;
+  if (event.target.closest?.('[data-graph-create-menu], [data-graph-node-menu]')) return;
 
-  const rect = dom.graphCanvas.getBoundingClientRect();
-  createGraphNode(event.clientX - rect.left, event.clientY - rect.top);
+  const screen = graphClientPoint(event);
+  const world = graphScreenToWorld(screen);
+  graphCanvasDragState = {
+    pointerId: event.pointerId,
+    startScreen: screen,
+    currentScreen: screen,
+    startWorld: world,
+    moved: false,
+  };
+
+  setGraphCreateMenuOpen(false);
+  setGraphNodeMenuOpen(false);
+  setGraphMarquee(null);
+  dom.graphCanvas.setPointerCapture?.(event.pointerId);
+});
+
+dom.graphCanvas?.addEventListener('click', (event) => {
+  if (event.button !== 0) return;
+  if (Date.now() < graphCanvasSuppressClickUntil) return;
+  if (event.target.closest?.('[data-graph-node-id]')) return;
+  if (event.target.closest?.('[data-graph-link-id]')) return;
+  if (event.target.closest?.('[data-graph-create-menu], [data-graph-node-menu]')) return;
+  if (graphDragState?.moved) return;
+  if (graphCanvasDragState?.moved) return;
+
+  const screen = graphClientPoint(event);
+  setGraphCreateMenuOpen(true, graphScreenToWorld(screen), screen);
+});
+
+dom.graphCreateKindButtons?.forEach((button) => {
+  button.addEventListener('click', () => {
+    if (!graphCreatePoint) return;
+    const point = { ...graphCreatePoint };
+    const kind = button.dataset.graphCreateKind;
+    setGraphCreateMenuOpen(false);
+    createGraphNode(point.x, point.y, kind);
+  });
 });
 
 dom.graphNodes?.addEventListener('pointerdown', (event) => {
+  setGraphCreateMenuOpen(false);
+  setGraphNodeMenuOpen(false);
   const nodeElement = event.target.closest('[data-graph-node-id]');
   if (!nodeElement || event.button !== 0) return;
 
   const node = graphNodeById(nodeElement.dataset.graphNodeId);
   if (!node) return;
+
+  const now = Date.now();
+  const isDoublePress = graphLastPress.id === node.id && now - graphLastPress.at < 420;
+  graphLastPress = { id: node.id, at: now };
+
+  if (isDoublePress) {
+    graphDragState = null;
+    graphState = {
+      ...graphState,
+      selectedNodeId: node.id,
+      pendingLinkNodeId: graphState.linkMode ? node.id : graphState.pendingLinkNodeId,
+    };
+    renderAll();
+    openGraphMemo(node.id);
+    event.preventDefault();
+    return;
+  }
 
   graphDragState = {
     id: node.id,
@@ -2593,56 +4089,270 @@ dom.graphNodes?.addEventListener('pointerdown', (event) => {
   event.preventDefault();
 });
 
+dom.graphNodes?.addEventListener('contextmenu', (event) => {
+  const nodeElement = event.target.closest('[data-graph-node-id]');
+  if (!nodeElement) return;
+
+  const node = graphNodeById(nodeElement.dataset.graphNodeId);
+  if (!node) return;
+
+  event.preventDefault();
+  graphState = {
+    ...graphState,
+    selectedNodeId: node.id,
+    selectedLinkId: null,
+  };
+  setGraphNodeMenuOpen(true, node.id, graphClientPoint(event));
+  renderKnowledgeGraph();
+});
+
+dom.graphNodeDelete?.addEventListener('click', () => {
+  const node = graphNodeById(graphNodeMenuId);
+  const deleted = deleteGraphNode(graphNodeMenuId);
+  if (!deleted) return;
+  setServiceStatus(`${node?.label || '노드'}를 사건판에서 삭제했습니다.`, 'ready');
+});
+
+dom.graphNodes?.addEventListener('keydown', (event) => {
+  if (!['Enter', ' '].includes(event.key)) return;
+  const nodeElement = event.target.closest('[data-graph-node-id]');
+  if (!nodeElement) return;
+  const node = graphNodeById(nodeElement.dataset.graphNodeId);
+  if (!node) return;
+  event.preventDefault();
+  openGraphMemo(node.id);
+});
+
 dom.graphNodes?.addEventListener('dblclick', (event) => {
   const nodeElement = event.target.closest('[data-graph-node-id]');
   if (!nodeElement) return;
   const node = graphNodeById(nodeElement.dataset.graphNodeId);
   if (!node) return;
+  event.preventDefault();
+  openGraphMemo(node.id);
+});
 
-  const nextLabel = window.prompt('인물 또는 주체 이름', node.label);
-  if (nextLabel === null) return;
-  const nextRole = window.prompt('역할 또는 관계', node.role || '역할 미정');
-  if (nextRole === null) return;
-  const nextLayer = window.prompt('분류: 핵심 / 주변 / 확인 필요', graphLayerLabel(node.layer));
-  if (nextLayer === null) return;
-  const nextNote = window.prompt('사건 메모: 행위, 증거, 시점, 장소 등', node.note || '');
-  if (nextNote === null) return;
+dom.graphLinks?.addEventListener('click', (event) => {
+  const linkId = graphLinkIdFromEvent(event);
+  if (!linkId) return;
+  const now = Date.now();
+  const isDoublePress = graphLastLinkPress.id === linkId && now - graphLastLinkPress.at < 430;
+  graphLastLinkPress = { id: linkId, at: now };
 
   graphState = {
     ...graphState,
-    nodes: graphState.nodes.map((item) => (
-      item.id === node.id
-        ? {
-            ...item,
-            label: nextLabel.trim().slice(0, 26) || item.label,
-            role: nextRole.trim().slice(0, 30) || '역할 미정',
-            layer: normalizeGraphLayer(nextLayer),
-            note: nextNote.trim().slice(0, 90),
-          }
-        : item
-    )),
-    selectedNodeId: node.id,
-    pendingLinkNodeId: graphState.linkMode ? node.id : graphState.pendingLinkNodeId,
+    selectedLinkId: linkId,
+    selectedNodeId: null,
   };
   renderAll();
+
+  if (isDoublePress) {
+    event.preventDefault();
+    openGraphRelation(linkId);
+  }
+});
+
+dom.graphLinks?.addEventListener('dblclick', (event) => {
+  const linkId = graphLinkIdFromEvent(event);
+  if (!linkId) return;
+  event.preventDefault();
+  openGraphRelation(linkId);
+});
+
+dom.graphConfirmBackdrop?.addEventListener('click', () => {
+  resolveGraphConfirm(false);
+});
+
+dom.graphConfirmCancel?.addEventListener('click', () => {
+  resolveGraphConfirm(false);
+});
+
+dom.graphConfirmOk?.addEventListener('click', () => {
+  resolveGraphConfirm(true);
+});
+
+dom.graphMemoBackdrop?.addEventListener('click', () => {
+  setGraphMemoOpen(false);
+});
+
+dom.graphMemoClose?.addEventListener('click', () => {
+  setGraphMemoOpen(false);
+});
+
+dom.graphMemoLayerButtons?.forEach((button) => {
+  button.addEventListener('click', () => {
+    setGraphMemoLayer(button.dataset.graphMemoLayer);
+  });
+});
+
+dom.graphMemoSave?.addEventListener('click', () => {
+  const saved = saveGraphMemo({ status: 'draft' });
+  if (!saved) return;
+  setGraphMemoOpen(false);
+  setServiceStatus('사안 메모를 노드에 저장했습니다.', 'ready');
+});
+
+dom.graphMemoSubmit?.addEventListener('click', async () => {
+  const saved = saveGraphMemo({ status: 'analyzing' });
+  if (!saved) return;
+
+  const message = buildGraphMemoAgentMessage(saved);
+  setGraphMemoOpen(false);
+  setServiceStatus('노드 메모를 에이전트에게 전달하고 있습니다.', 'ready');
+
+  const result = await invokeChat({
+    message,
+    forceReport: true,
+    structuredInput: buildGraphNodeStructuredInput(saved),
+  });
+  const nextStatus = result?.ok ? 'synced' : 'failed';
+
+  if (result?.ok) {
+    enrichKnowledgeGraphFromMemo(
+      saved,
+      [
+        result.response?.assistantMessage,
+        result.conversation?.report_markdown,
+      ].filter(Boolean).join('\n\n')
+    );
+  }
+
+  graphState = {
+    ...graphState,
+    nodes: graphState.nodes.map((node) => (
+      node.id === saved.node.id
+        ? {
+            ...node,
+            analysisStatus: nextStatus,
+            analyzedAt: result?.ok ? new Date().toISOString() : node.analyzedAt,
+          }
+        : node
+    )),
+  };
+
+  renderAll();
+
+  if (!result?.ok) {
+    setServiceStatus(result?.reason ? `에이전트 반영 실패: ${result.reason}` : '에이전트 반영 실패: 잠시 뒤 다시 시도해 주세요.', 'error');
+  }
+});
+
+dom.graphRelationBackdrop?.addEventListener('click', () => {
+  setGraphRelationOpen(false);
+});
+
+dom.graphRelationClose?.addEventListener('click', () => {
+  setGraphRelationOpen(false);
+});
+
+dom.graphRelationStrengthButtons?.forEach((button) => {
+  button.addEventListener('click', () => {
+    setGraphRelationStrength(button.dataset.graphRelationStrength);
+  });
+});
+
+dom.graphRelationSave?.addEventListener('click', () => {
+  const saved = saveGraphRelation({ status: 'draft' });
+  if (!saved) return;
+  setGraphRelationOpen(false);
+  setServiceStatus('관계선 근거를 저장했습니다.', 'ready');
+});
+
+dom.graphRelationSubmit?.addEventListener('click', async () => {
+  const savedLink = saveGraphRelation({ status: 'analyzing' });
+  if (!savedLink) return;
+
+  const message = buildGraphRelationAgentMessage({ link: savedLink });
+  setGraphRelationOpen(false);
+  setServiceStatus('관계 기록을 에이전트에게 전달하고 있습니다.', 'ready');
+
+  const result = await invokeChat({
+    message,
+    forceReport: true,
+    structuredInput: buildGraphRelationStructuredInput({ link: savedLink }),
+  });
+  const nextStatus = result?.ok ? 'synced' : 'failed';
+
+  if (result?.ok) {
+    enrichKnowledgeGraphFromRelation(
+      { link: savedLink },
+      [
+        result.response?.assistantMessage,
+        result.conversation?.report_markdown,
+      ].filter(Boolean).join('\n\n')
+    );
+  }
+
+  graphState = {
+    ...graphState,
+    links: graphState.links.map((link) => (
+      link.id === savedLink.id
+        ? {
+            ...link,
+            analysisStatus: nextStatus,
+            analyzedAt: result?.ok ? new Date().toISOString() : link.analyzedAt,
+          }
+        : link
+    )),
+  };
+
+  renderAll();
+
+  if (!result?.ok) {
+    setServiceStatus(result?.reason ? `관계 기록 반영 실패: ${result.reason}` : '관계 기록 반영 실패: 잠시 뒤 다시 시도해 주세요.', 'error');
+  }
+});
+
+dom.graphRelationDelete?.addEventListener('click', () => {
+  const deleted = deleteGraphRelation();
+  if (!deleted) return;
+  setGraphRelationOpen(false);
+  setServiceStatus('관계선을 삭제했습니다.', 'ready');
 });
 
 window.addEventListener('pointermove', (event) => {
+  if (graphCanvasDragState && dom.graphCanvas) {
+    const currentScreen = graphClientPoint(event);
+    const dx = currentScreen.x - graphCanvasDragState.startScreen.x;
+    const dy = currentScreen.y - graphCanvasDragState.startScreen.y;
+    const moved = Math.abs(dx) > 6 || Math.abs(dy) > 6;
+
+    graphCanvasDragState = {
+      ...graphCanvasDragState,
+      currentScreen,
+      moved: graphCanvasDragState.moved || moved,
+    };
+
+    if (graphCanvasDragState.moved) {
+      setGraphCreateMenuOpen(false);
+      setGraphNodeMenuOpen(false);
+      setGraphMarquee({
+        left: Math.min(graphCanvasDragState.startScreen.x, currentScreen.x),
+        top: Math.min(graphCanvasDragState.startScreen.y, currentScreen.y),
+        width: Math.abs(dx),
+        height: Math.abs(dy),
+      });
+    }
+  }
+
   if (!graphDragState || !dom.graphCanvas) return;
 
   const dx = event.clientX - graphDragState.startX;
   const dy = event.clientY - graphDragState.startY;
   if (Math.abs(dx) > 3 || Math.abs(dy) > 3) graphDragState.moved = true;
 
-  const rect = dom.graphCanvas.getBoundingClientRect();
+  const nextPoint = clampGraphWorldPoint({
+    x: graphDragState.nodeX + dx / graphViewport.scale,
+    y: graphDragState.nodeY + dy / graphViewport.scale,
+  });
   graphState = {
     ...graphState,
     nodes: graphState.nodes.map((node) => (
       node.id === graphDragState.id
         ? {
             ...node,
-            x: Math.max(86, Math.min(rect.width - 86, graphDragState.nodeX + dx)),
-            y: Math.max(52, Math.min(rect.height - 52, graphDragState.nodeY + dy)),
+            x: nextPoint.x,
+            y: nextPoint.y,
           }
         : node
     )),
@@ -2651,7 +4361,53 @@ window.addEventListener('pointermove', (event) => {
   renderKnowledgeGraph();
 });
 
-window.addEventListener('pointerup', () => {
+window.addEventListener('pointerup', async () => {
+  if (graphCanvasDragState) {
+    const selectionState = graphCanvasDragState;
+    graphCanvasDragState = null;
+    setGraphMarquee(null);
+
+    if (selectionState.moved) {
+      graphCanvasSuppressClickUntil = Date.now() + 160;
+      const minScreen = {
+        x: Math.min(selectionState.startScreen.x, selectionState.currentScreen.x),
+        y: Math.min(selectionState.startScreen.y, selectionState.currentScreen.y),
+      };
+      const maxScreen = {
+        x: Math.max(selectionState.startScreen.x, selectionState.currentScreen.x),
+        y: Math.max(selectionState.startScreen.y, selectionState.currentScreen.y),
+      };
+      const worldA = graphScreenToWorld(minScreen);
+      const worldB = graphScreenToWorld(maxScreen);
+      const minX = Math.min(worldA.x, worldB.x);
+      const maxX = Math.max(worldA.x, worldB.x);
+      const minY = Math.min(worldA.y, worldB.y);
+      const maxY = Math.max(worldA.y, worldB.y);
+      const selectedNodes = graphState.nodes.filter((node) => (
+        node.x >= minX && node.x <= maxX && node.y >= minY && node.y <= maxY
+      ));
+
+      if (selectedNodes.length >= 2) {
+        const confirmed = await requestGraphConfirm({
+          title: '클러스터로 묶을까요?',
+          message: `${selectedNodes.length}개 노드를 하나의 클러스터 영역으로 묶습니다.`,
+          detail: selectedNodes.map((node) => node.label).join(' · '),
+          okLabel: '클러스터 생성',
+        });
+
+        if (confirmed) {
+          const cluster = createGraphCluster(selectedNodes);
+          setServiceStatus(`${cluster?.label || '클러스터'} 영역에 ${selectedNodes.length}개 노드를 포섭했습니다.`, 'ready');
+        } else {
+          setServiceStatus('클러스터 생성을 취소했습니다.', 'ready');
+        }
+      } else {
+        setServiceStatus('클러스터는 인물·사건 노드 2개 이상을 드래그로 감싸면 생성됩니다.', 'ready');
+      }
+      return;
+    }
+  }
+
   if (!graphDragState) return;
 
   const targetId = graphDragState.id;
@@ -2659,7 +4415,7 @@ window.addEventListener('pointerup', () => {
   graphDragState = null;
 
   if (!wasMoved) {
-    selectGraphNode(targetId);
+    await selectGraphNode(targetId);
     return;
   }
 
