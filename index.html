@@ -28,7 +28,7 @@
 
       <button class="case-license-mini" type="button" aria-label="라이선스 요약 열기" data-license-open data-license-line>비로그인 · 대화 불가 · 0%</button>
 
-      <button class="case-report-toggle" type="button" aria-expanded="false" aria-label="사안보고서 열기" data-report-toggle>
+      <button class="case-report-toggle" type="button" aria-expanded="false" aria-label="명령 블록 열기" data-report-toggle>
         <span></span>
       </button>
 
@@ -684,7 +684,7 @@
             <strong>좌클릭: 노드 생성 · 좌클릭 드래그: 클러스터 · 우클릭 드래그: 평면 이동 · 더블클릭: 기록</strong>
           </div>
           <div class="case-graph-actions">
-            <button type="button" data-generate-report>보고서 작성</button>
+            <button type="button" data-command-add>명령 추가</button>
             <button type="button" data-graph-link-mode>관계선 모드</button>
             <button type="button" data-graph-clear>그래프 초기화</button>
           </div>
@@ -752,13 +752,13 @@
         <label class="case-graph-memo-text">
           <span data-graph-memo-note-label>사안 메모</span>
           <textarea rows="8" placeholder="행위, 발언, 증거, 시점, 장소, 관계 근거를 적어주세요. 예: 관련 인물: 홍길동, 김철수" data-graph-memo-note></textarea>
+          <div class="case-graph-mention-menu" data-graph-mention-menu hidden></div>
         </label>
 
-        <p class="case-graph-memo-hint" data-graph-memo-hint>기록은 에이전트와 보고서에 반영됩니다. 그래프의 노드와 관계선은 사용자가 직접 배치합니다.</p>
+        <p class="case-graph-memo-hint" data-graph-memo-hint>기록은 수사지식그래프에 저장됩니다. 명령 블록은 저장된 그래프 정보를 기반으로 실행됩니다.</p>
 
         <footer>
-          <button type="button" data-graph-memo-save>노드에만 저장</button>
-          <button type="button" data-graph-memo-submit>에이전트에게 반영</button>
+          <button type="button" data-graph-memo-save>그래프에 저장</button>
         </footer>
       </section>
 
@@ -791,7 +791,6 @@
         <footer>
           <button type="button" data-graph-relation-delete>관계선 삭제</button>
           <button type="button" data-graph-relation-save>관계선 저장</button>
-          <button type="button" data-graph-relation-submit>에이전트에게 반영</button>
         </footer>
       </section>
 
@@ -831,23 +830,60 @@
         <textarea rows="1" placeholder="사건 메모, 관계 역학, 시간 공백, 강점·약점으로 분석할 내용을 입력하세요" data-chat-input></textarea>
         <button type="submit" aria-label="전송">↑</button>
       </form>
-      <p class="case-composer-note" data-composer-note>관계 그래프와 사건 메모를 바탕으로 정밀 분석 보고서를 갱신합니다.</p>
+      <p class="case-composer-note" data-composer-note>명령 블록은 저장된 수사지식그래프를 기반으로 실행됩니다.</p>
     </section>
 
     <div class="case-report-backdrop" data-report-backdrop hidden></div>
-    <aside class="case-report-panel" aria-label="정밀 분석 보고서">
-      <div class="case-report-toolbar">
+    <aside class="case-report-panel case-command-panel" aria-label="명령 블록">
+      <div class="case-report-toolbar case-command-toolbar">
         <div>
-          <span>보고서</span>
-          <h2>정밀 분석 보고서</h2>
+          <span>Command Blocks</span>
+          <h2>명령 블록</h2>
         </div>
+        <button type="button" data-command-add>추가하기</button>
         <button class="case-report-close" type="button" data-report-close>닫기</button>
       </div>
-      <article class="case-report-preview" data-report-preview>
-        <h2>정밀 분석 보고서</h2>
-        <p>인물, 사건, 관계선, 시간축을 입력하면 관계 역학과 논리적 강약점이 갱신됩니다.</p>
+      <article class="case-report-preview case-command-list" data-report-preview data-command-list>
+        <section class="case-command-empty">
+          <span>아직 실행된 명령이 없습니다</span>
+          <h2>그래프를 만든 뒤 명령을 추가하세요</h2>
+          <p>오른쪽 수사지식그래프의 인물, 사건, 관계, 클러스터 정보를 바탕으로 에이전트가 답변을 생성하고 이곳에 블록으로 저장합니다.</p>
+        </section>
       </article>
     </aside>
+
+    <div class="case-command-backdrop" data-command-backdrop hidden></div>
+    <section class="case-command-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="command-modal-title" data-command-modal hidden>
+      <header>
+        <div>
+          <span>명령 블록</span>
+          <h2 id="command-modal-title">수사지식그래프에 명령 실행</h2>
+        </div>
+        <button type="button" data-command-close>닫기</button>
+      </header>
+      <label>
+        <span>명령</span>
+        <textarea rows="8" placeholder="예: 현재 그래프에서 가장 취약한 관계선을 우선순위로 분석하고, 보강할 증거를 제안해줘." data-command-input></textarea>
+      </label>
+      <p>명령은 오른쪽 그래프의 노드, 관계선, 클러스터, 시간축 정보를 함께 전달해 실행됩니다. 결과는 하나의 블록으로 저장됩니다.</p>
+      <footer>
+        <button type="button" data-command-close>취소</button>
+        <button type="button" data-command-run>실행하기</button>
+      </footer>
+    </section>
+
+    <div class="case-command-result-backdrop" data-command-result-backdrop hidden></div>
+    <section class="case-command-result-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="command-result-title" data-command-result-modal hidden>
+      <header>
+        <div>
+          <span>명령 결과</span>
+          <h2 id="command-result-title" data-command-result-title>명령 실행 결과</h2>
+          <p data-command-result-meta></p>
+        </div>
+        <button type="button" data-command-result-close>닫기</button>
+      </header>
+      <article class="case-command-result-body" data-command-result-output></article>
+    </section>
   </main>
 </body>
 </html>
