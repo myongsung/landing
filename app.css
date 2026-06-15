@@ -439,11 +439,93 @@ body[data-workspace-access="true"] .case-chat-header button {
 .case-graph-links {
   position: absolute;
   inset: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
   overflow: visible;
   pointer-events: auto;
   transform-origin: 0 0;
+}
+
+.case-graph-time-axis {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.case-graph-time-axis::after {
+  content: "";
+  position: absolute;
+  right: 24px;
+  bottom: 29px;
+  left: 88px;
+  height: 1px;
+  background: linear-gradient(to right, rgba(186, 230, 253, 0.08), rgba(125, 211, 252, 0.72), rgba(186, 230, 253, 0.08));
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.38);
+}
+
+.case-graph-time-axis strong {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  padding: 4px 8px;
+  border: 1px solid rgba(186, 230, 253, 0.62);
+  border-radius: 999px;
+  background: rgba(8, 47, 73, 0.82);
+  color: #e0f7ff;
+  font-size: 0.68rem;
+  font-weight: 620;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.26);
+}
+
+.case-graph-time-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+}
+
+.case-graph-time-tick::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(186, 230, 253, 0), rgba(125, 211, 252, 0.5) 20%, rgba(186, 230, 253, 0.66) 78%, rgba(186, 230, 253, 0));
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.42);
+}
+
+.case-graph-time-tick b,
+.case-graph-time-tick i {
+  position: absolute;
+  left: 50%;
+  max-width: 118px;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.case-graph-time-tick b {
+  bottom: 38px;
+  padding: 3px 7px;
+  border: 1px solid rgba(186, 230, 253, 0.54);
+  border-radius: 999px;
+  background: rgba(8, 47, 73, 0.86);
+  color: #f0fbff;
+  font-size: 0.66rem;
+  font-weight: 640;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.24);
+}
+
+.case-graph-time-tick i {
+  bottom: 18px;
+  color: rgba(240, 249, 255, 0.82);
+  font-size: 0.62rem;
+  font-style: normal;
 }
 
 .case-graph-link-group {
@@ -480,6 +562,7 @@ body[data-workspace-access="true"] .case-chat-header button {
 .case-graph-nodes {
   position: absolute;
   inset: 0;
+  z-index: 2;
   pointer-events: none;
   transform-origin: 0 0;
 }
@@ -507,6 +590,14 @@ body[data-workspace-access="true"] .case-chat-header button {
   cursor: grabbing;
 }
 
+.case-graph-canvas {
+  cursor: crosshair;
+}
+
+.case-graph-canvas.is-panning {
+  cursor: grabbing;
+}
+
 .case-graph-cluster-area {
   position: absolute;
   z-index: 1;
@@ -520,7 +611,9 @@ body[data-workspace-access="true"] .case-chat-header button {
   background: rgba(14, 165, 233, 0.1);
   box-shadow: inset 0 0 0 1px rgba(186, 230, 253, 0.08), 0 18px 46px rgba(2, 132, 199, 0.08);
   color: #dff6ff;
-  pointer-events: none;
+  cursor: move;
+  pointer-events: auto;
+  user-select: none;
 }
 
 .case-graph-cluster-area div {
@@ -7729,6 +7822,20 @@ body:not([data-workspace-access="true"]) .case-topbar {
   gap: 12px;
 }
 
+.case-graph-memo-time {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.case-graph-memo-time[hidden] {
+  display: none !important;
+}
+
+.case-graph-memo-time input {
+  color-scheme: dark;
+}
+
 .case-graph-memo-modal label,
 .case-graph-relation-modal label {
   display: grid;
@@ -7881,6 +7988,7 @@ body[data-workspace-access="true"] .case-graph-inspector small {
 
 @media (max-width: 720px) {
   .case-graph-memo-grid,
+  .case-graph-memo-time,
   .case-graph-memo-layer {
     grid-template-columns: 1fr;
   }
@@ -8859,4 +8967,311 @@ body:not([data-workspace-access="true"]) .case-footer-links button {
   .case-founder-profile dl div {
     grid-template-columns: 36px minmax(0, 1fr);
   }
+}
+
+/* Workspace split: report 3 / graph plane 7 */
+body[data-workspace-access="true"] .case-home-shell {
+  grid-template-columns: minmax(320px, 3fr) minmax(0, 7fr) !important;
+}
+
+body[data-workspace-access="true"] .case-strategy-overview {
+  display: none !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .case-report-panel {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .case-chat-main {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+}
+
+/* Precision report readability layer */
+body[data-workspace-access="true"] .case-home-shell .case-report-panel {
+  background: #07090d !important;
+  border-right: 1px solid rgba(148, 163, 184, 0.14) !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .case-report-preview {
+  margin: 10px !important;
+  padding: 15px !important;
+  border-color: rgba(148, 163, 184, 0.16) !important;
+  background: #080a0f !important;
+  color: #d8e0ea !important;
+  font-size: 12.5px !important;
+  line-height: 1.72 !important;
+  box-shadow: none !important;
+}
+
+body[data-busy="true"] .case-report-preview::after {
+  content: "정밀 분석 보고서 작성 중" !important;
+  border-color: rgba(85, 190, 240, 0.3) !important;
+  background: rgba(8, 47, 73, 0.92) !important;
+  color: #d7f3ff !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-cover {
+  padding: 16px !important;
+  border: 1px solid rgba(85, 190, 240, 0.18) !important;
+  border-radius: 10px !important;
+  background: #0d141d !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-cover span,
+body[data-workspace-access="true"] .case-home-shell .report-meta span {
+  color: #8ccfee !important;
+  letter-spacing: 0 !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-cover h1,
+body[data-workspace-access="true"] .case-home-shell .report-cover h2 {
+  color: #f6fbff !important;
+  font-size: 1.04rem !important;
+  font-weight: 620 !important;
+  line-height: 1.34 !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-cover p {
+  color: #aab8c6 !important;
+  font-size: 0.78rem !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-meta {
+  gap: 5px !important;
+  padding: 10px 0 !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-meta span {
+  min-height: 22px !important;
+  border-color: rgba(85, 190, 240, 0.18) !important;
+  background: rgba(85, 190, 240, 0.06) !important;
+  font-size: 0.66rem !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-intelligence-panel {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 14px;
+  border: 1px solid rgba(85, 190, 240, 0.22);
+  border-radius: 10px;
+  background: #08131c;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-intelligence-head {
+  display: grid;
+  gap: 4px;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-intelligence-head span,
+body[data-workspace-access="true"] .case-home-shell .report-intelligence-main span,
+body[data-workspace-access="true"] .case-home-shell .report-next-question span {
+  color: #7dd3fc;
+  font-size: 0.66rem;
+  font-weight: 650;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-intelligence-head strong {
+  color: #f8fbff;
+  font-size: 0.92rem;
+  font-weight: 620;
+  line-height: 1.38;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-intelligence-grid {
+  display: grid;
+  gap: 10px;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-intelligence-main {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-intelligence-main p,
+body[data-workspace-access="true"] .case-home-shell .report-intelligence-main small {
+  margin: 0;
+  color: #dbe7f1;
+  font-size: 0.78rem;
+  line-height: 1.62;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-intelligence-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-intelligence-stats span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 9px 6px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 8px;
+  background: #0c1017;
+  text-align: center;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-intelligence-stats b {
+  color: #ffffff;
+  font-size: 0.96rem;
+  font-weight: 680;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-intelligence-stats i {
+  color: #9aa8b7;
+  font-size: 0.64rem;
+  font-style: normal;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-insight-grid {
+  display: grid;
+  gap: 8px;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-insight-list {
+  padding: 11px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-left: 3px solid #55bef0;
+  border-radius: 8px;
+  background: #0b1017;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-insight-list.is-weak {
+  border-left-color: #f59e0b;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-insight-list.is-action {
+  border-left-color: #38bdf8;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-insight-list h3 {
+  margin: 0 0 7px !important;
+  color: #eef7ff !important;
+  font-size: 0.76rem !important;
+  font-weight: 650 !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-next-question {
+  margin: 0 !important;
+  padding: 10px 11px;
+  border-radius: 8px;
+  background: rgba(85, 190, 240, 0.08);
+  color: #d7edf7 !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-next-question span {
+  display: block;
+  margin-bottom: 4px;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-section {
+  margin: 0 0 10px !important;
+  padding: 14px 14px 15px 42px !important;
+  border: 1px solid rgba(148, 163, 184, 0.14) !important;
+  border-radius: 10px !important;
+  background: #0d0f14 !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-section::before {
+  content: attr(data-section-index) !important;
+  position: absolute !important;
+  top: 14px !important;
+  left: 13px !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  border: 1px solid rgba(85, 190, 240, 0.28) !important;
+  border-radius: 999px !important;
+  background: rgba(85, 190, 240, 0.08) !important;
+  color: #8ddcff !important;
+  font-size: 0.66rem !important;
+  font-weight: 700 !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-section h2 {
+  margin: 0 0 10px !important;
+  padding-left: 0 !important;
+  border-left: 0 !important;
+  color: #f7fbff !important;
+  font-size: 0.92rem !important;
+  font-weight: 650 !important;
+  line-height: 1.35 !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-section h3 {
+  margin: 14px 0 7px !important;
+  padding-top: 10px !important;
+  border-top: 1px solid rgba(148, 163, 184, 0.12) !important;
+  color: #bfe9ff !important;
+  font-size: 0.78rem !important;
+  font-weight: 650 !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .case-report-preview p,
+body[data-workspace-access="true"] .case-home-shell .case-report-preview li {
+  color: #c9d4df !important;
+  font-size: 0.76rem !important;
+  line-height: 1.72 !important;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-divider {
+  border: 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  margin: 13px 0;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-table-wrap {
+  display: none !important;
+}
+
+.report-table-cards {
+  display: none;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-table-cards {
+  display: grid;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-row-card {
+  display: grid;
+  gap: 7px;
+  padding: 11px;
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-radius: 8px;
+  background: #090d13;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-row-card div {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-row-card div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-row-card span {
+  color: #7dd3fc;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+body[data-workspace-access="true"] .case-home-shell .report-row-card p {
+  margin: 0 !important;
+  color: #d8e2ec !important;
+  font-size: 0.74rem !important;
+  line-height: 1.58 !important;
 }
