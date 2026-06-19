@@ -1,4 +1,24 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.106.0';
+import {
+  GRAPH_SCHEMA_VERSION,
+  buildGraphQueryPackage,
+  buildKnowledgeGraphGuidanceV2,
+  createSourceClaimPatchFromText,
+  defaultAssessment,
+  ensurePatchConnectivityCandidates,
+  ensureSourceClaimPatchPaths,
+  filterSourceRefsByText,
+  mergeSourceRefsForEdge,
+  normalizeGraphKind as normalizeGraphKindV2,
+  normalizeGraphSnapshotV2,
+  relationCandidateToEdge,
+  runDeterministicGraphCommand,
+  sanitizeGraphEdgeV2,
+  sanitizeGraphNodeV2,
+  sanitizeRelationCandidate,
+  sourceRefQuoteExistsInText,
+  suggestRelationCandidateBetweenNodes,
+} from './graph-v2.js';
 
 const config = window.ROOSYCOZY_SUPABASE ?? {};
 const supabaseUrl = config.url ?? '';
@@ -134,6 +154,7 @@ const dom = {
   graphMarquee: document.querySelector('[data-graph-marquee]'),
   graphClear: document.querySelector('[data-graph-clear]'),
   graphLinkMode: document.querySelector('[data-graph-link-mode]'),
+  graphCommandPresetButtons: document.querySelectorAll('[data-graph-command-preset]'),
   graphMemoBackdrop: document.querySelector('[data-graph-memo-backdrop]'),
   graphMemoModal: document.querySelector('[data-graph-memo-modal]'),
   graphMemoClose: document.querySelector('[data-graph-memo-close]'),
@@ -159,6 +180,13 @@ const dom = {
   graphRelationModal: document.querySelector('[data-graph-relation-modal]'),
   graphRelationClose: document.querySelector('[data-graph-relation-close]'),
   graphRelationLabel: document.querySelector('[data-graph-relation-label]'),
+  graphRelationType: document.querySelector('[data-graph-relation-type]'),
+  graphRelationRole: document.querySelector('[data-graph-relation-role]'),
+  graphRelationVerification: document.querySelector('[data-graph-relation-verification]'),
+  graphRelationLegalSufficiency: document.querySelector('[data-graph-relation-legal-sufficiency]'),
+  graphRelationExtractionConfidence: document.querySelector('[data-graph-relation-extraction-confidence]'),
+  graphRelationSourceReliability: document.querySelector('[data-graph-relation-source-reliability]'),
+  graphRelationSourceQuote: document.querySelector('[data-graph-relation-source-quote]'),
   graphRelationBasis: document.querySelector('[data-graph-relation-basis]'),
   graphRelationStrengthButtons: document.querySelectorAll('[data-graph-relation-strength]'),
   graphRelationSave: document.querySelector('[data-graph-relation-save]'),
@@ -242,9 +270,13 @@ let lastVerificationEmail = '';
 let evidenceFiles = [];
 let pdfJsLoader = null;
 let graphState = {
+  schemaVersion: GRAPH_SCHEMA_VERSION,
   nodes: [],
   links: [],
+  relationCandidates: [],
   clusters: [],
+  activeLegalTemplateId: 'none',
+  analysisResults: {},
   selectedNodeId: null,
   selectedLinkId: null,
   pendingLinkNodeId: null,
@@ -304,7 +336,14 @@ const graphLayerLabels = {
 const graphKindLabels = {
   person: '인물',
   event: '주요 사건',
-  evidence: '증거',
+  evidence: '근거(증거)',
+  claim: '주장',
+  premise: '기반명제',
+  source_span: '근거(증거)',
+  inference: '기반명제',
+  legal_element: '기반명제',
+  hypothesis: '주장',
+  unknown: '미분류',
 };
 
 const graphStrengthLabels = {
@@ -314,7 +353,7 @@ const graphStrengthLabels = {
 };
 
 const graphSnapshotKind = 'knowledge_graph_snapshot';
-const graphSnapshotVersion = 1;
+const graphSnapshotVersion = GRAPH_SCHEMA_VERSION;
 const commandBlockKind = 'command_block';
 const commandBlockVersion = 1;
 
@@ -1404,7 +1443,11 @@ ${items}
 
 function reportInlineHtml(value) {
   return escapeHtml(value)
-    .replace(/\*\*(.+?)\*\*/g, '<span class="report-emphasis">$1</span>');
+    .replace(/\*\*(.+?)\*\*/g, '<span class="report-emphasis">$1</span>')
+    .replace(/\b((?:node|link|candidate)-[A-Za-z0-9_.:-]+)\b/g, (match) => {
+      const kind = match.startsWith('node-') ? 'node' : 'link';
+      return `<button type="button" class="graph-inline-ref" data-graph-ref-kind="${kind}" data-graph-ref-id="${match}">${match}</button>`;
+    });
 }
 
 function splitMarkdownTableRow(line) {
@@ -1966,6 +2009,53 @@ function graphWorldToScreen(point) {
   };
 }
 
+function centerGraphOnPoint(point) {
+  const rect = dom.graphCanvas?.getBoundingClientRect();
+  if (!rect || !point) return;
+  graphViewport = {
+    ...graphViewport,
+    x: rect.width / 2 - point.x * graphViewport.scale,
+    y: rect.height / 2 - point.y * graphViewport.scale,
+  };
+}
+
+function focusGraphEntity(kind, id) {
+  const refKind = String(kind || '').trim();
+  const refId = String(id || '').trim();
+  if (!refId) return false;
+
+  if (refKind === 'node' || refId.startsWith('node-')) {
+    const node = graphNodeById(refId);
+    if (!node) return false;
+    graphState = {
+      ...graphState,
+      selectedNodeId: node.id,
+      selectedLinkId: null,
+    };
+    centerGraphOnPoint(node);
+    renderAll();
+    return true;
+  }
+
+  const link = graphLinkById(refId);
+  if (!link) return false;
+  const source = graphNodeById(link.source);
+  const target = graphNodeById(link.target);
+  if (source && target) {
+    centerGraphOnPoint({
+      x: (source.x + target.x) / 2,
+      y: (source.y + target.y) / 2,
+    });
+  }
+  graphState = {
+    ...graphState,
+    selectedNodeId: null,
+    selectedLinkId: link.id,
+  };
+  renderAll();
+  return true;
+}
+
 function graphWorldBounds() {
   const rect = dom.graphCanvas?.getBoundingClientRect();
   const width = Math.max(1, rect?.width || 1);
@@ -2002,9 +2092,13 @@ function applyGraphViewport() {
 
 function resetKnowledgeGraph() {
   graphState = {
+    schemaVersion: GRAPH_SCHEMA_VERSION,
     nodes: [],
     links: [],
+    relationCandidates: [],
     clusters: [],
+    activeLegalTemplateId: 'none',
+    analysisResults: {},
     selectedNodeId: null,
     selectedLinkId: null,
     pendingLinkNodeId: null,
@@ -2032,9 +2126,13 @@ function resetKnowledgeGraph() {
 
 function graphDefaultState() {
   return {
+    schemaVersion: GRAPH_SCHEMA_VERSION,
     nodes: [],
     links: [],
+    relationCandidates: [],
     clusters: [],
+    activeLegalTemplateId: 'none',
+    analysisResults: {},
     selectedNodeId: null,
     selectedLinkId: null,
     pendingLinkNodeId: null,
@@ -2057,44 +2155,63 @@ function safeGraphNumber(value, fallback = 0) {
   return Number.isFinite(number) ? number : fallback;
 }
 
-function normalizeGraphKind(value) {
-  const text = String(value || '').trim().toLowerCase();
-  if (text === 'event' || /사건|event/.test(text)) return 'event';
-  if (text === 'evidence' || /증거|자료|문서|pdf|evidence/.test(text)) return 'evidence';
-  return 'person';
+function normalizeGraphKind(value, fallback = 'unknown') {
+  const kind = normalizeGraphKindV2(value);
+  return kind === 'unknown' ? fallback : kind;
 }
 
 function sanitizeGraphNode(node) {
-  const kind = normalizeGraphKind(node?.kind);
+  const base = sanitizeGraphNodeV2(node || {});
+  const kind = normalizeGraphKind(base.kind);
+  const importance = normalizeGraphLayer(base.importance || base.layer);
+  const label = humanizeGraphPatchLabel(kind, base.label, {
+    index: internalGraphLabelIndex(base.label),
+    note: base.note || base.description || '',
+    sourceRefs: base.sourceRefs || [],
+    claimText: base.claimText || '',
+  });
 
   return {
-    id: String(node?.id || '').slice(0, 120),
+    ...base,
+    id: String(base.id || '').slice(0, 120),
     kind,
-    label: String(node?.label || '').slice(0, 60),
-    role: String(node?.role || '').slice(0, 80),
-    layer: normalizeGraphLayer(node?.layer),
-    note: String(node?.note || '').slice(0, 2200),
-    eventDate: String(node?.eventDate || '').slice(0, 10),
-    eventTime: String(node?.eventTime || '').slice(0, 5),
-    sourceEvidenceId: String(node?.sourceEvidenceId || '').slice(0, 120),
-    sourceFileName: String(node?.sourceFileName || '').slice(0, 180),
-    analysisStatus: String(node?.analysisStatus || 'draft').slice(0, 40),
-    memoUpdatedAt: String(node?.memoUpdatedAt || ''),
-    clusterId: String(node?.clusterId || ''),
-    x: safeGraphNumber(node?.x),
-    y: safeGraphNumber(node?.y),
+    label: String(label || base.label || '').slice(0, 120),
+    role: String(base.role || '').slice(0, 120),
+    importance,
+    layer: importance,
+    note: String(base.note || '').slice(0, 2400),
+    eventDate: String(base.eventDate || '').slice(0, 10),
+    eventTime: String(base.eventTime || '').slice(0, 5),
+    sourceEvidenceId: String(base.sourceEvidenceId || '').slice(0, 120),
+    sourceFileName: String(base.sourceFileName || '').slice(0, 180),
+    analysisStatus: String(base.analysisStatus || 'draft').slice(0, 40),
+    memoUpdatedAt: String(base.memoUpdatedAt || ''),
+    clusterId: String(base.clusterId || ''),
+    x: safeGraphNumber(base.x),
+    y: safeGraphNumber(base.y),
   };
 }
 
 function sanitizeGraphLink(link) {
+  const edge = sanitizeGraphEdgeV2({
+    ...link,
+    type: link?.type || link?.relationType || 'LEGACY_RELATED_TO',
+    assessment: link?.assessment || {
+      ...defaultAssessment({}),
+      supportStrength: normalizeGraphStrength(link?.strength) === 'confirmed'
+        ? 'strong'
+        : normalizeGraphStrength(link?.strength) === 'likely'
+          ? 'moderate'
+          : 'weak',
+    },
+  });
   return {
-    id: String(link?.id || '').slice(0, 120),
-    source: String(link?.source || '').slice(0, 120),
-    target: String(link?.target || '').slice(0, 120),
-    label: String(link?.label || '관계').slice(0, 80),
-    basis: String(link?.basis || '').slice(0, 1200),
-    strength: normalizeGraphStrength(link?.strength),
-    analysisStatus: String(link?.analysisStatus || 'draft').slice(0, 40),
+    ...edge,
+    id: String(edge.id || '').slice(0, 120),
+    label: String(edge.label || edge.type || '관계').slice(0, 120),
+    basis: String(edge.basis || '').slice(0, 1400),
+    strength: normalizeGraphStrength(link?.strength || edge.assessment?.supportStrength),
+    analysisStatus: String(edge.analysisStatus || 'draft').slice(0, 40),
   };
 }
 
@@ -2125,6 +2242,9 @@ function graphSnapshotForStorage() {
   const links = graphState.links
     .map(sanitizeGraphLink)
     .filter((link) => link.id && nodeIds.has(link.source) && nodeIds.has(link.target));
+  const relationCandidates = (graphState.relationCandidates || [])
+    .map(sanitizeRelationCandidate)
+    .filter((candidate) => candidate.id && nodeIds.has(candidate.source) && nodeIds.has(candidate.target));
   const clusters = (graphState.clusters || [])
     .map(sanitizeGraphCluster)
     .map((cluster) => ({
@@ -2142,7 +2262,10 @@ function graphSnapshotForStorage() {
       ...state,
       nodes,
       links,
+      relationCandidates,
       clusters,
+      activeLegalTemplateId: graphState.activeLegalTemplateId || 'none',
+      analysisResults: graphState.analysisResults || {},
       selectedNodeId: nodeIds.has(graphState.selectedNodeId) ? graphState.selectedNodeId : null,
       selectedLinkId: links.some((link) => link.id === graphState.selectedLinkId) ? graphState.selectedLinkId : null,
       pendingLinkNodeId: nodeIds.has(graphState.pendingLinkNodeId) ? graphState.pendingLinkNodeId : null,
@@ -2157,6 +2280,10 @@ function graphSnapshotForStorage() {
       y: safeGraphNumber(graphViewport.y),
       scale: clampGraphScale(graphViewport.scale),
     },
+    commandBlocks: commandBlocks
+      .map(sanitizeCommandBlock)
+      .filter(Boolean)
+      .slice(0, 80),
   };
 }
 
@@ -2166,7 +2293,7 @@ function graphSnapshotSortValue(snapshot) {
 }
 
 function normalizeGraphSnapshot(value) {
-  const snapshot = unwrapPayload(value);
+  const snapshot = normalizeGraphSnapshotV2(unwrapPayload(value));
   if (!snapshot || typeof snapshot !== 'object') return null;
   const sourceState = snapshot.state && typeof snapshot.state === 'object' ? snapshot.state : snapshot;
   const nodes = Array.isArray(sourceState.nodes) ? sourceState.nodes.map(sanitizeGraphNode).filter((node) => node.id) : [];
@@ -2174,22 +2301,42 @@ function normalizeGraphSnapshot(value) {
   const links = Array.isArray(sourceState.links)
     ? sourceState.links.map(sanitizeGraphLink).filter((link) => link.id && nodeIds.has(link.source) && nodeIds.has(link.target))
     : [];
+  const relationCandidates = Array.isArray(sourceState.relationCandidates)
+    ? sourceState.relationCandidates
+        .map(sanitizeRelationCandidate)
+        .filter((candidate) => candidate.id && nodeIds.has(candidate.source) && nodeIds.has(candidate.target))
+    : [];
   const clusters = Array.isArray(sourceState.clusters)
     ? sourceState.clusters
         .map(sanitizeGraphCluster)
         .map((cluster) => ({ ...cluster, nodeIds: cluster.nodeIds.filter((id) => nodeIds.has(id)) }))
         .filter((cluster) => cluster.id && cluster.nodeIds.length >= 2)
     : [];
+  const rawCommandBlocks = Array.isArray(snapshot.commandBlocks)
+    ? snapshot.commandBlocks
+    : Array.isArray(sourceState.commandBlocks)
+      ? sourceState.commandBlocks
+      : Array.isArray(snapshot.command_blocks)
+        ? snapshot.command_blocks
+        : null;
+  const bundledCommandBlocks = Array.isArray(rawCommandBlocks)
+    ? rawCommandBlocks.map(sanitizeCommandBlock).filter(Boolean).slice(0, 80)
+    : [];
 
   return {
-    version: Number(snapshot.version) || graphSnapshotVersion,
+    version: GRAPH_SCHEMA_VERSION,
     kind: graphSnapshotKind,
     savedAt: String(snapshot.savedAt || snapshot.created_at || ''),
+    commandBlocks: bundledCommandBlocks,
+    hasBundledCommandBlocks: Array.isArray(rawCommandBlocks),
     state: {
       ...graphDefaultState(),
       nodes,
       links,
+      relationCandidates,
       clusters,
+      activeLegalTemplateId: sourceState.activeLegalTemplateId || 'none',
+      analysisResults: sourceState.analysisResults || {},
       selectedNodeId: nodeIds.has(sourceState.selectedNodeId) ? sourceState.selectedNodeId : null,
       selectedLinkId: links.some((link) => link.id === sourceState.selectedLinkId) ? sourceState.selectedLinkId : null,
       pendingLinkNodeId: nodeIds.has(sourceState.pendingLinkNodeId) ? sourceState.pendingLinkNodeId : null,
@@ -2424,7 +2571,11 @@ async function persistGraphStateRemote({ reason = 'auto' } = {}) {
   const snapshotKey = JSON.stringify({
     nodes: snapshot.state.nodes,
     links: snapshot.state.links,
+    relationCandidates: snapshot.state.relationCandidates,
     clusters: snapshot.state.clusters,
+    activeLegalTemplateId: snapshot.state.activeLegalTemplateId,
+    analysisResults: snapshot.state.analysisResults,
+    commandBlocks: snapshot.commandBlocks,
     viewport: snapshot.viewport,
   });
 
@@ -2460,6 +2611,15 @@ async function persistGraphStateRemote({ reason = 'auto' } = {}) {
       .eq('user_id', session.user.id)
       .eq('metadata->>kind', graphSnapshotKind)
       .neq('id', snapshotMessage.id)
+      .then(() => {})
+      .catch(() => {});
+
+    await supabase
+      .from('report_messages')
+      .delete()
+      .eq('conversation_id', activeConversation.id)
+      .eq('user_id', session.user.id)
+      .eq('metadata->>kind', commandBlockKind)
       .then(() => {})
       .catch(() => {});
   }
@@ -2547,7 +2707,8 @@ function graphLayerLabel(value) {
 }
 
 function graphKindLabel(value) {
-  return graphKindLabels[value] || graphKindLabels.person;
+  const kind = normalizeGraphKind(value);
+  return graphKindLabels[kind] || graphKindLabels.unknown;
 }
 
 function normalizeGraphLayer(value) {
@@ -2559,8 +2720,8 @@ function normalizeGraphLayer(value) {
 
 function normalizeGraphStrength(value) {
   const text = String(value || '').trim();
-  if (/확인|confirmed|문서|녹취|원자료|캡처|증거/i.test(text)) return 'confirmed';
-  if (/개연|likely|추정|정황|가능/i.test(text)) return 'likely';
+  if (/강|strong|확인|confirmed|문서|녹취|원자료|캡처|증거/i.test(text)) return 'confirmed';
+  if (/중간|moderate|개연|likely|추정|정황|가능/i.test(text)) return 'likely';
   return 'weak';
 }
 
@@ -2597,7 +2758,21 @@ function graphEventDateTimeLabel(node) {
 }
 
 function graphLinkById(id) {
-  return graphState.links.find((link) => link.id === id) ?? null;
+  const link = graphState.links.find((item) => item.id === id);
+  if (link) return { ...link, isCandidate: false };
+  const candidate = (graphState.relationCandidates || []).find((item) => item.id === id);
+  if (!candidate) return null;
+  return {
+    ...candidate,
+    isCandidate: true,
+    type: candidate.suggestedType || 'LEGACY_RELATED_TO',
+    role: candidate.suggestedRole || '',
+    label: candidate.suggestedType || '후보 관계',
+    basis: candidate.basis || '',
+    strength: candidate.confidence === 'high' ? 'likely' : 'weak',
+    verificationStatus: 'unverified',
+    assessment: defaultAssessment({ extractionConfidence: candidate.confidence || 'unknown' }),
+  };
 }
 
 function graphLinkIdFromEvent(event) {
@@ -2676,29 +2851,96 @@ function setGraphMarquee(rect) {
   dom.graphMarquee.hidden = false;
 }
 
+function nearestGraphNodeToPoint(point, excludeId = '') {
+  return graphState.nodes
+    .filter((node) => node.id !== excludeId)
+    .map((node) => ({
+      node,
+      distance: Math.hypot(safeGraphNumber(node.x) - safeGraphNumber(point.x), safeGraphNumber(node.y) - safeGraphNumber(point.y)),
+    }))
+    .sort((a, b) => a.distance - b.distance)[0]?.node || null;
+}
+
+function connectGraphNodeToContextCandidate(node, contextNode, reason = 'manual_node_create') {
+  if (!node || !contextNode || node.id === contextNode.id) return null;
+
+  const candidate = suggestRelationCandidateBetweenNodes(contextNode, node, {
+    reason,
+    basis: '새 노드가 사건 평면에서 고립되지 않도록 기존 노드와 후보 관계로 연결했습니다. 후보를 더블클릭해 근거와 유형을 확정할 수 있습니다.',
+    sourceText: [contextNode.note, node.note].filter(Boolean).join('\n'),
+    createdBy: 'rule',
+  });
+
+  return candidate ? upsertGraphRelationCandidate(candidate) : null;
+}
+
 function createGraphNode(x, y, kind = 'person', options = {}) {
-  const nodeKind = normalizeGraphKind(kind);
+  const nodeKind = normalizeGraphKind(kind, kind === 'person' ? 'person' : 'unknown');
   const isEvent = nodeKind === 'event';
   const isEvidence = nodeKind === 'evidence';
+  const isSourceSpan = nodeKind === 'source_span';
+  const isClaim = nodeKind === 'claim';
+  const isPremise = nodeKind === 'premise';
+  const isInference = nodeKind === 'inference';
+  const isLegalElement = nodeKind === 'legal_element';
+  const isHypothesis = nodeKind === 'hypothesis';
   const sequence = isEvent
     ? graphState.nextEventNumber
     : isEvidence
       ? graphState.nextEvidenceNumber
       : graphState.nextNodeNumber;
   const id = `${nodeKind}-${Date.now()}-${sequence}`;
-  const label = options.label || (isEvent ? `주요 사건 ${sequence}` : isEvidence ? `증거 ${sequence}` : `인물 ${sequence}`);
-  const point = clampGraphWorldPoint({ x, y });
+  const label = options.label || (
+    isEvent ? `주요 사건 ${sequence}`
+      : isEvidence ? `근거 ${sequence}`
+        : isClaim ? `주장 ${sequence}`
+          : isPremise ? `기반명제 ${sequence}`
+            : isSourceSpan ? `근거 ${sequence}`
+            : isInference ? `기반명제 ${sequence}`
+              : isLegalElement ? `기반명제 ${sequence}`
+                : isHypothesis ? `주장 ${sequence}`
+                  : `인물 ${sequence}`
+  );
+  const point = findAvailableGraphPoint(clampGraphWorldPoint({ x, y }), {
+    minXGap: 178,
+    minYGap: 116,
+  });
+  const contextNode = options.skipAutoConnect
+    ? null
+    : graphNodeById(options.connectToNodeId || graphState.selectedNodeId)
+      || nearestGraphNodeToPoint(point);
+  const importance = normalizeGraphLayer(options.importance || options.layer || (isEvent ? 'core' : isEvidence || isSourceSpan || isClaim || isPremise || isInference || isLegalElement || isHypothesis ? 'support' : 'uncertain'));
   const node = {
     id,
     kind: nodeKind,
     label,
-    role: options.role || (isEvent ? '사건' : isEvidence ? '증거 자료' : '역할 미정'),
-    layer: normalizeGraphLayer(options.layer || (isEvent ? 'core' : isEvidence ? 'support' : 'uncertain')),
+    role: options.role || (isEvent ? '주요사건' : isEvidence || isSourceSpan ? '근거 자료' : isClaim || isHypothesis ? '주장' : isPremise || isInference || isLegalElement ? '기반명제' : '역할 미정'),
+    importance,
+    layer: importance,
+    epistemicStatus: options.epistemicStatus || (isClaim || isSourceSpan || isPremise ? 'asserted' : 'unknown'),
+    polarity: options.polarity || 'neutral',
     note: String(options.note || '').slice(0, 2200),
+    sourceRefs: Array.isArray(options.sourceRefs) ? options.sourceRefs : [],
+    timeStart: String(options.timeStart || options.eventDate || '').slice(0, 40),
+    timeEnd: String(options.timeEnd || '').slice(0, 40),
+    timePrecision: String(options.timePrecision || '').slice(0, 40),
+    place: String(options.place || '').slice(0, 180),
+    createdBy: options.createdBy || 'user',
     eventDate: String(options.eventDate || '').slice(0, 10),
     eventTime: String(options.eventTime || '').slice(0, 5),
     sourceEvidenceId: String(options.sourceEvidenceId || '').slice(0, 120),
     sourceFileName: String(options.sourceFileName || '').slice(0, 180),
+    claimText: String(options.claimText || '').slice(0, 1800),
+    subjectId: String(options.subjectId || '').slice(0, 120),
+    predicate: String(options.predicate || '').slice(0, 120),
+    objectId: String(options.objectId || '').slice(0, 120),
+    value: String(options.value || '').slice(0, 300),
+    templateId: String(options.templateId || '').slice(0, 120),
+    elementKey: String(options.elementKey || '').slice(0, 120),
+    required: Boolean(options.required),
+    description: String(options.description || '').slice(0, 900),
+    expectedEvidenceTypes: Array.isArray(options.expectedEvidenceTypes) ? options.expectedEvidenceTypes.slice(0, 12) : [],
+    hypothesisStatus: options.hypothesisStatus || 'active',
     analysisStatus: 'draft',
     x: point.x,
     y: point.y,
@@ -2710,10 +2952,12 @@ function createGraphNode(x, y, kind = 'person', options = {}) {
     selectedNodeId: id,
     selectedLinkId: null,
     pendingLinkNodeId: graphState.linkMode ? id : null,
-    nextNodeNumber: nodeKind === 'person' ? graphState.nextNodeNumber + 1 : graphState.nextNodeNumber,
+    nextNodeNumber: isEvent || isEvidence ? graphState.nextNodeNumber : graphState.nextNodeNumber + 1,
     nextEventNumber: isEvent ? graphState.nextEventNumber + 1 : graphState.nextEventNumber,
     nextEvidenceNumber: isEvidence ? graphState.nextEvidenceNumber + 1 : graphState.nextEvidenceNumber,
   };
+
+  connectGraphNodeToContextCandidate(node, contextNode);
 
   setGraphCreateMenuOpen(false);
   renderAll();
@@ -2842,12 +3086,20 @@ function graphReferencePrefix(kind = 'person') {
   const normalized = normalizeGraphKind(kind);
   if (normalized === 'event') return '#';
   if (normalized === 'evidence') return '$';
+  if (normalized === 'source_span') return '%';
+  if (normalized === 'claim') return '!';
+  if (normalized === 'legal_element') return '§';
+  if (normalized === 'hypothesis') return '?';
   return '@';
 }
 
 function graphReferenceKindFromTrigger(trigger = '@') {
   if (trigger === '#') return 'event';
   if (trigger === '$') return 'evidence';
+  if (trigger === '%') return 'source_span';
+  if (trigger === '!') return 'claim';
+  if (trigger === '§') return 'legal_element';
+  if (trigger === '?') return 'hypothesis';
   return 'person';
 }
 
@@ -2994,36 +3246,46 @@ function openGraphMemo(nodeId) {
   setGraphMentionOpen(false);
   const isEvent = node.kind === 'event';
   const isEvidence = node.kind === 'evidence';
+  const isSourceSpan = node.kind === 'source_span';
+  const isClaim = node.kind === 'claim';
+  const isInference = node.kind === 'inference';
+  const isLegalElement = node.kind === 'legal_element';
+  const isHypothesis = node.kind === 'hypothesis';
   graphMemoNodeId = node.id;
   graphMemoClusterId = null;
-  if (dom.graphMemoKicker) dom.graphMemoKicker.textContent = isEvent ? '사건 노드 편집' : isEvidence ? '증거 노드 편집' : '주체 노드 편집';
-  if (dom.graphMemoTitle) dom.graphMemoTitle.textContent = isEvent ? '주요 사건 분석' : isEvidence ? '증거 노드 분석' : '인물·주체 분석';
-  if (dom.graphMemoNameLabel) dom.graphMemoNameLabel.textContent = isEvent ? '사건명' : isEvidence ? '증거명' : '인물·주체명';
-  if (dom.graphMemoRoleLabel) dom.graphMemoRoleLabel.textContent = isEvent ? '사건 유형' : isEvidence ? '증거 유형·출처' : '역할·관계';
+  if (dom.graphMemoKicker) dom.graphMemoKicker.textContent = `${graphKindLabel(node.kind)} 노드 편집`;
+  const isPremise = node.kind === 'premise' || isInference || isLegalElement;
+  if (dom.graphMemoTitle) dom.graphMemoTitle.textContent = isEvent ? '주요 사건 정리' : isEvidence || isSourceSpan ? '근거 정리' : isClaim || isHypothesis ? '주장 정리' : isPremise ? '기반명제 정리' : '인물 정리';
+  if (dom.graphMemoNameLabel) dom.graphMemoNameLabel.textContent = isEvent ? '사건명' : isEvidence || isSourceSpan ? '근거명' : isClaim || isHypothesis ? '주장 제목' : isPremise ? '기반명제 제목' : '인물명';
+  if (dom.graphMemoRoleLabel) dom.graphMemoRoleLabel.textContent = isEvent ? '사건 유형' : isEvidence || isSourceSpan ? '근거 유형·출처' : isClaim || isHypothesis ? '주장 유형' : isPremise ? '기반명제 역할' : '역할·관계';
   if (dom.graphMemoDateLabel) dom.graphMemoDateLabel.textContent = isEvent ? '사건 일자' : '작성·확보 일자';
   if (dom.graphMemoTimeLabel) dom.graphMemoTimeLabel.textContent = isEvent ? '사건 시간' : '작성·확보 시간';
-  if (dom.graphMemoNoteLabel) dom.graphMemoNoteLabel.textContent = isEvent ? '사건 분석 메모' : isEvidence ? '증거 분석 메모' : '주체 분석 메모';
+  if (dom.graphMemoNoteLabel) dom.graphMemoNoteLabel.textContent = isEvent ? '사건 메모' : isEvidence || isSourceSpan ? '근거 메모' : isClaim || isHypothesis ? '주장 메모' : isPremise ? '기반명제 메모' : '인물 메모';
   if (dom.graphMemoHint) {
     dom.graphMemoHint.innerHTML = isEvent
-      ? '사건 노드는 <b>일자와 시간</b>을 반드시 입력합니다. 메모에서 <b>@인물</b>, <b>#사건</b>, <b>$증거</b>를 입력하면 저장 시 관계선으로 자동 연결됩니다.'
-      : isEvidence
-        ? '증거 분석에는 <b>원본성:</b>, <b>작성·확보 시점:</b>, <b>보관 경로:</b>, <b>입증 취지:</b>, <b>연결 사건:</b>을 적어주세요. <b>@/#/$</b> 참조는 관계선으로 연결됩니다.'
-        : '인물 분석에는 <b>행위:</b>, <b>진술:</b>, <b>증거:</b>, <b>관련 인물:</b>, <b>이해관계:</b>를 적어주세요. <b>@/#/$</b> 참조는 관계선으로 연결됩니다.';
+      ? '주요사건은 <b>일자와 시간</b>을 입력하면 시간순 그래프에 반영됩니다. 메모에서 <b>@인물</b>, <b>#사건</b>, <b>$근거</b>를 입력하면 저장 시 관계선으로 자동 연결됩니다.'
+      : isEvidence || isSourceSpan
+        ? '근거에는 <b>자료명:</b>, <b>작성·확보 시점:</b>, <b>보관 경로:</b>, <b>어떤 주장을 뒷받침하는지</b>를 적어주세요.'
+        : isClaim || isHypothesis
+          ? '주장에는 <b>누가 무엇을 주장하는지</b>, <b>어떤 사건에서 나온 주장인지</b>, <b>근거가 무엇인지</b>를 적어주세요.'
+          : isPremise
+            ? '기반명제에는 주장을 이해하기 위해 먼저 참이어야 하는 전제 사실을 적어주세요.'
+            : '인물에는 <b>행위:</b>, <b>진술:</b>, <b>관련 사건:</b>, <b>이해관계:</b>를 적어주세요.';
   }
   if (dom.graphMemoLabel) dom.graphMemoLabel.value = node.label || '';
   if (dom.graphMemoRole) dom.graphMemoRole.value = node.role || '';
-  if (dom.graphMemoTimeFields) dom.graphMemoTimeFields.hidden = !(isEvent || isEvidence);
+  if (dom.graphMemoTimeFields) dom.graphMemoTimeFields.hidden = !(isEvent || isEvidence || isSourceSpan);
   if (dom.graphMemoDate) {
-    dom.graphMemoDate.value = (isEvent || isEvidence) ? node.eventDate || '' : '';
+    dom.graphMemoDate.value = (isEvent || isEvidence || isSourceSpan) ? node.eventDate || node.timeStart?.slice(0, 10) || '' : '';
     dom.graphMemoDate.required = isEvent;
   }
   if (dom.graphMemoTime) {
-    dom.graphMemoTime.value = (isEvent || isEvidence) ? node.eventTime || '' : '';
+    dom.graphMemoTime.value = (isEvent || isEvidence || isSourceSpan) ? node.eventTime || '' : '';
     dom.graphMemoTime.required = isEvent;
   }
   if (dom.graphMemoNote) dom.graphMemoNote.value = node.note || '';
-  if (dom.graphMemoLabel) dom.graphMemoLabel.placeholder = isEvent ? '예: 6월 3일 면담, 자료 제출 요구' : isEvidence ? '예: CCTV 파일, 진술서, PDF 원자료' : '예: 인물 1, 기관명, 담당자';
-  if (dom.graphMemoRole) dom.graphMemoRole.placeholder = isEvent ? '예: 발언, 제출, 충돌, 요청, 회의' : isEvidence ? '예: PDF 원자료, CCTV, 녹취록, 캡처' : '예: 직접 행위자, 목격자, 관리자';
+  if (dom.graphMemoLabel) dom.graphMemoLabel.placeholder = isEvent ? '예: 6월 3일 면담, 자료 제출 요구' : isEvidence || isSourceSpan ? '예: CCTV 파일, 진술서, PDF 자료' : isClaim || isHypothesis ? '예: 원금 보장 발언 주장' : isPremise ? '예: 송금이 이루어졌다는 전제 사실' : '예: 인물 1, 기관명, 담당자';
+  if (dom.graphMemoRole) dom.graphMemoRole.placeholder = isEvent ? '예: 발언, 제출, 충돌, 요청, 회의' : isEvidence || isSourceSpan ? '예: PDF 자료, CCTV, 녹취록, 캡처' : isClaim || isHypothesis ? '예: 당사자 주장, 반박 주장, 문서 기반 주장' : isPremise ? '예: 전제 사실, 배경 사실, 연결 사실' : '예: 직접 행위자, 목격자, 관리자';
   if (dom.graphMemoNote) {
     dom.graphMemoNote.placeholder = isEvent
       ? '장소, 참여자, 행위 순서, 남은 증거를 적어주세요. 예: @인물1이 #교실사건에서 $CCTV에 남은 행위를 함'
@@ -3116,6 +3378,22 @@ function openGraphRelation(linkId) {
     selectedNodeId: null,
   };
   if (dom.graphRelationLabel) dom.graphRelationLabel.value = link.label || '관계';
+  if (dom.graphRelationType) dom.graphRelationType.value = link.type || 'LEGACY_RELATED_TO';
+  if (dom.graphRelationRole) dom.graphRelationRole.value = link.role || '';
+  if (dom.graphRelationVerification) dom.graphRelationVerification.value = link.verificationStatus || 'unverified';
+  if (dom.graphRelationLegalSufficiency) {
+    dom.graphRelationLegalSufficiency.value = link.assessment?.legalSufficiency || 'not_applicable';
+  }
+  if (dom.graphRelationExtractionConfidence) {
+    dom.graphRelationExtractionConfidence.value = link.assessment?.extractionConfidence || 'unknown';
+  }
+  if (dom.graphRelationSourceReliability) {
+    dom.graphRelationSourceReliability.value = link.assessment?.sourceReliability || 'unknown';
+  }
+  if (dom.graphRelationSourceQuote) {
+    const firstQuote = (link.sourceRefs || []).map((ref) => ref?.quote).find(Boolean) || '';
+    dom.graphRelationSourceQuote.value = firstQuote;
+  }
   if (dom.graphRelationBasis) dom.graphRelationBasis.value = link.basis || '';
   setGraphRelationStrength(link.strength || 'weak');
   renderKnowledgeGraph();
@@ -3123,14 +3401,93 @@ function openGraphRelation(linkId) {
   requestAnimationFrame(() => dom.graphRelationLabel?.focus());
 }
 
+function graphRelationSourceRefsFromForm(link) {
+  const quote = String(dom.graphRelationSourceQuote?.value || '').trim().slice(0, 1400);
+  const existingRefs = Array.isArray(link?.sourceRefs) ? link.sourceRefs : [];
+  if (!quote) return existingRefs;
+
+  const baseRef = existingRefs[0] || {};
+  return [
+    {
+      sourceNodeId: baseRef.sourceNodeId || null,
+      evidenceNodeId: baseRef.evidenceNodeId || null,
+      fileName: baseRef.fileName || '',
+      pageNumber: baseRef.pageNumber ?? null,
+      paragraphIndex: baseRef.paragraphIndex ?? null,
+      startOffset: baseRef.startOffset ?? null,
+      endOffset: baseRef.endOffset ?? null,
+      quote,
+    },
+    ...existingRefs.slice(1),
+  ];
+}
+
 function saveGraphRelation({ status = 'draft' } = {}) {
   const link = graphLinkById(graphRelationId);
   if (!link) return null;
 
+  if (link.isCandidate) {
+    const sourceCandidate = (graphState.relationCandidates || []).find((item) => item.id === link.id);
+    if (!sourceCandidate) return null;
+    const candidateSourceRefs = graphRelationSourceRefsFromForm(link);
+    const requestedVerificationStatus = String(dom.graphRelationVerification?.value || 'asserted');
+    const safeVerificationStatus = candidateSourceRefs.some((ref) => String(ref?.quote || '').trim())
+      ? requestedVerificationStatus
+      : 'unverified';
+    const acceptedEdge = relationCandidateToEdge(sourceCandidate, {
+      id: `link-${Date.now()}-${graphState.links.length + 1}`,
+      type: String(dom.graphRelationType?.value || link.type || 'LEGACY_RELATED_TO'),
+      role: String(dom.graphRelationRole?.value || '').trim().slice(0, 80),
+      label: normalizeEntityName(dom.graphRelationLabel?.value) || String(dom.graphRelationType?.value || link.type || '관계'),
+      basis: String(dom.graphRelationBasis?.value || '').trim().slice(0, 1400),
+      verificationStatus: safeVerificationStatus,
+      assessment: {
+        ...defaultAssessment(link.assessment || {}),
+        extractionConfidence: String(dom.graphRelationExtractionConfidence?.value || 'unknown'),
+        sourceReliability: String(dom.graphRelationSourceReliability?.value || 'unknown'),
+        supportStrength: graphRelationStrength === 'confirmed' ? 'strong' : graphRelationStrength === 'likely' ? 'moderate' : 'weak',
+        legalSufficiency: String(dom.graphRelationLegalSufficiency?.value || 'not_applicable'),
+      },
+      sourceRefs: candidateSourceRefs,
+      createdBy: 'user',
+    });
+    graphState = {
+      ...graphState,
+      links: [...graphState.links, { ...acceptedEdge, strength: graphRelationStrength, analysisStatus: status }],
+      relationCandidates: (graphState.relationCandidates || []).map((candidate) => (
+        candidate.id === link.id
+          ? { ...candidate, status: 'accepted', reviewedAt: new Date().toISOString() }
+          : candidate
+      )),
+      selectedLinkId: acceptedEdge.id,
+      selectedNodeId: null,
+    };
+    graphRelationId = acceptedEdge.id;
+    renderAll();
+    scheduleGraphRemotePersistence('graph_relation_candidate_accept');
+    return acceptedEdge;
+  }
+
+  const nextSourceRefs = graphRelationSourceRefsFromForm(link);
+  const nextRequestedVerificationStatus = String(dom.graphRelationVerification?.value || link.verificationStatus || 'unverified');
+  const nextSafeVerificationStatus = nextSourceRefs.some((ref) => String(ref?.quote || '').trim())
+    ? nextRequestedVerificationStatus
+    : 'unverified';
   const nextLink = {
     ...link,
     label: normalizeEntityName(dom.graphRelationLabel?.value) || '관계',
-    basis: String(dom.graphRelationBasis?.value || '').trim().slice(0, 500),
+    type: String(dom.graphRelationType?.value || link.type || 'LEGACY_RELATED_TO'),
+    role: String(dom.graphRelationRole?.value || '').trim().slice(0, 80),
+    verificationStatus: nextSafeVerificationStatus,
+    assessment: {
+      ...defaultAssessment(link.assessment || {}),
+      extractionConfidence: String(dom.graphRelationExtractionConfidence?.value || link.assessment?.extractionConfidence || 'unknown'),
+      sourceReliability: String(dom.graphRelationSourceReliability?.value || link.assessment?.sourceReliability || 'unknown'),
+      supportStrength: graphRelationStrength === 'confirmed' ? 'strong' : graphRelationStrength === 'likely' ? 'moderate' : 'weak',
+      legalSufficiency: String(dom.graphRelationLegalSufficiency?.value || link.assessment?.legalSufficiency || 'not_applicable'),
+    },
+    sourceRefs: nextSourceRefs,
+    basis: String(dom.graphRelationBasis?.value || '').trim().slice(0, 1400),
     strength: graphRelationStrength,
     analysisStatus: status,
   };
@@ -3149,6 +3506,21 @@ function saveGraphRelation({ status = 'draft' } = {}) {
 function deleteGraphRelation() {
   const link = graphLinkById(graphRelationId);
   if (!link) return false;
+
+  if (link.isCandidate) {
+    graphState = {
+      ...graphState,
+      relationCandidates: (graphState.relationCandidates || []).map((candidate) => (
+        candidate.id === link.id
+          ? { ...candidate, status: 'rejected', reviewedAt: new Date().toISOString() }
+          : candidate
+      )),
+      selectedLinkId: null,
+    };
+    renderAll();
+    scheduleGraphRemotePersistence('graph_relation_candidate_reject');
+    return true;
+  }
 
   graphState = {
     ...graphState,
@@ -3252,7 +3624,39 @@ function graphNodeByLabelAnyKind(label) {
   )) ?? null;
 }
 
-function inferGraphKindFromLabel(label, fallbackKind = 'person') {
+function isEvidenceLikeLabel(label) {
+  return /cctv|녹취|녹음|녹취록|캡처|문자|카톡|메일|진술서|메모|pdf|보고서|사진|영상|파일|출석부|상담록|회의록|압수물|통화기록|증거|자료|문서|게시글|게시물|댓글|블로그|카페글|sns|포렌식|계좌|송금내역|입금내역|영수증/i.test(String(label || ''));
+}
+
+function isEventLikeLabel(label) {
+  return /사건|사안|상황|회의|통화|제출|조사|상담|방문|폭행|협박|민원|신고|진술|기록|발생|대화|면담|충돌|송금|입금|게시|삭제|전송|촬영|접촉|연락|보고|요청|거절/.test(String(label || ''));
+}
+
+function isPersonLikeLabel(label) {
+  const text = normalizeGraphReferenceName(label);
+  if (!text || isEvidenceLikeLabel(text) || isEventLikeLabel(text)) return false;
+  if (/교사|학생|학부모|담당자|피해자|가해자|목격자|관리자|담임|부장|교감|교장|수사관|경찰|검사|피의자|피해자|참고인|진술자/.test(text)) return true;
+  return /^[가-힣]{2,5}$/.test(text) || /^[A-Z][A-Za-z]{1,20}$/.test(text);
+}
+
+function normalizeExtractedGraphKind(label, declaredKind = 'unknown') {
+  const normalizedLabel = normalizeGraphReferenceName(label);
+  const declared = normalizeGraphKind(declaredKind);
+  if (declared === 'source_span') return 'evidence';
+  if (['inference', 'legal_element'].includes(declared)) return 'premise';
+  if (declared === 'hypothesis') return 'claim';
+
+  if (isEvidenceLikeLabel(normalizedLabel)) return 'evidence';
+  if (isEventLikeLabel(normalizedLabel) && declared !== 'evidence') return 'event';
+  if (declared === 'person' && /게시|글|댓글|자료|문서|파일|기록|상황|사건|메모|계좌|내역/.test(normalizedLabel)) {
+    return inferGraphKindFromLabel(normalizedLabel, 'unknown');
+  }
+  if (declared === 'unknown' && isPersonLikeLabel(normalizedLabel)) return 'person';
+
+  return declared;
+}
+
+function inferGraphKindFromLabel(label, fallbackKind = 'unknown') {
   const normalizedLabel = normalizeGraphReferenceName(label);
   const existing = graphNodeByLabelAnyKind(normalizedLabel);
   if (existing) return normalizeGraphKind(existing.kind);
@@ -3262,13 +3666,15 @@ function inferGraphKindFromLabel(label, fallbackKind = 'person') {
     return graphReferenceKindFromTrigger(String(label || '').charAt(0));
   }
 
-  if (/cctv|녹취|녹음|캡처|문자|카톡|메일|진술서|메모|pdf|보고서|사진|영상|파일|출석부|상담록|회의록|압수물|통화기록|증거|자료|문서/i.test(text)) {
+  if (isEvidenceLikeLabel(text)) {
     return 'evidence';
   }
 
-  if (/사건|사안|상황|회의|통화|제출|조사|상담|방문|폭행|협박|민원|신고|진술|기록|발생|대화|면담|충돌/.test(normalizedLabel)) {
+  if (isEventLikeLabel(normalizedLabel)) {
     return 'event';
   }
+
+  if (isPersonLikeLabel(normalizedLabel)) return 'person';
 
   return normalizeGraphKind(fallbackKind);
 }
@@ -3290,6 +3696,104 @@ function sentenceChunks(value) {
     .map((chunk) => chunk.trim())
     .filter(Boolean)
     .slice(0, 80);
+}
+
+function contextSnippetForGraphNode(label, kind, context = '', fallback = '') {
+  const normalizedLabel = normalizeGraphReferenceName(label);
+  const chunks = sentenceChunks(context);
+  const mentioned = normalizedLabel
+    ? chunks.filter((chunk) => (
+        chunk.includes(normalizedLabel)
+        || chunk.includes(`${graphReferencePrefix(kind)}${normalizedLabel}`)
+      ))
+    : [];
+  const snippet = mentioned.slice(0, 2).join('\n');
+  return compactText(snippet || fallback || '').slice(0, 700);
+}
+
+function graphTextLabelFromContent(value, fallback = '') {
+  const text = compactText(value)
+    .replace(/^["'“”‘’]+|["'“”‘’]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!text) return fallback;
+  return text.length > 42 ? `${text.slice(0, 42)}...` : text;
+}
+
+function isInternalGraphLabel(label) {
+  return /^(?:person|event|evidence|claim|premise|source[_\s-]?span|span|inference|legal[_\s-]?element|hypothesis|candidate|node|edge|link)[_\s:-]*\d*$/i.test(String(label || '').trim());
+}
+
+function internalGraphLabelIndex(label) {
+  const match = String(label || '').trim().match(/(\d+)\s*$/);
+  const number = Number(match?.[1]);
+  return Number.isFinite(number) && number > 0 ? number - 1 : 0;
+}
+
+function humanizeGraphPatchLabel(kind, label, options = {}) {
+  const normalizedKind = normalizeGraphKind(kind);
+  const text = normalizeGraphReferenceName(label);
+  const index = Number.isFinite(Number(options.index)) ? Number(options.index) : internalGraphLabelIndex(text);
+  const claimText = compactText(options.claimText || '');
+  const quote = compactText(options.sourceRefs?.[0]?.quote || '');
+  const note = compactText(options.note || '');
+  const fallbackByKind = {
+    person: `인물 ${index + 1}`,
+    event: `주요 사건 ${index + 1}`,
+    evidence: `근거 ${index + 1}`,
+    source_span: `근거 ${index + 1}`,
+    claim: `주장 ${index + 1}`,
+    premise: `기반명제 ${index + 1}`,
+    inference: `기반명제 ${index + 1}`,
+    legal_element: `기반명제 ${index + 1}`,
+    hypothesis: `주장 ${index + 1}`,
+    unknown: `미분류 ${index + 1}`,
+  };
+  const fallback = fallbackByKind[normalizedKind] || `${graphKindLabel(normalizedKind)} ${index + 1}`;
+  const isInternal = isInternalGraphLabel(text);
+
+  if (normalizedKind === 'source_span') {
+    if (!text || isInternal || /source[_\s-]?span|원문\s*구간/i.test(text)) {
+      return fallback;
+    }
+  }
+
+  if (normalizedKind === 'claim') {
+    if (!text || isInternal || /^명제\s*\d*$/i.test(text)) {
+      return graphTextLabelFromContent(claimText || quote || note, fallback);
+    }
+  }
+
+  if (normalizedKind === 'premise') {
+    if (!text || isInternal || /^기반명제\s*\d*$/i.test(text)) {
+      return graphTextLabelFromContent(claimText || note || quote, fallback);
+    }
+  }
+
+  if (['person', 'event', 'evidence', 'inference', 'legal_element', 'hypothesis', 'unknown'].includes(normalizedKind) && (!text || isInternal)) {
+    if (['event', 'evidence', 'hypothesis', 'inference', 'legal_element'].includes(normalizedKind)) {
+      return graphTextLabelFromContent(note || quote, fallback);
+    }
+    return fallback;
+  }
+
+  return text || fallback;
+}
+
+function fallbackSourceRefFromText(quote, sourceText, overrides = {}) {
+  const normalizedQuote = compactText(quote);
+  if (!normalizedQuote || !sourceText.includes(normalizedQuote)) return null;
+  const startOffset = sourceText.indexOf(normalizedQuote);
+  return {
+    sourceNodeId: overrides.sourceNodeId || '',
+    evidenceNodeId: overrides.evidenceNodeId || '',
+    fileName: overrides.fileName || '',
+    pageNumber: null,
+    paragraphIndex: null,
+    startOffset,
+    endOffset: startOffset + normalizedQuote.length,
+    quote: normalizedQuote,
+  };
 }
 
 function parseGraphReferences(text) {
@@ -3440,6 +3944,139 @@ function situationGraphPoint(kind, index = 0) {
   };
 }
 
+function graphPointsOverlap(left, right, minXGap = 174, minYGap = 112) {
+  if (!left || !right) return false;
+  return Math.abs(safeGraphNumber(left.x) - safeGraphNumber(right.x)) < minXGap
+    && Math.abs(safeGraphNumber(left.y) - safeGraphNumber(right.y)) < minYGap;
+}
+
+function findAvailableGraphPoint(preferredPoint, options = {}) {
+  const preferred = clampGraphWorldPoint(preferredPoint);
+  const excludeIds = new Set(options.excludeIds || []);
+  const reserved = Array.isArray(options.reservedPoints) ? options.reservedPoints : [];
+  const occupied = [
+    ...graphState.nodes
+      .filter((node) => !excludeIds.has(node.id))
+      .map((node) => ({ id: node.id, x: node.x, y: node.y })),
+    ...reserved,
+  ];
+  const minXGap = options.minXGap || 174;
+  const minYGap = options.minYGap || 112;
+  const isFree = (point) => !occupied.some((other) => graphPointsOverlap(point, other, minXGap, minYGap));
+
+  if (isFree(preferred)) return preferred;
+
+  const offsets = [{ x: 0, y: 0 }];
+  const xStep = minXGap + 34;
+  const yStep = minYGap + 28;
+  for (let ring = 1; ring <= 8; ring += 1) {
+    for (let dx = -ring; dx <= ring; dx += 1) {
+      offsets.push({ x: dx * xStep, y: -ring * yStep });
+      offsets.push({ x: dx * xStep, y: ring * yStep });
+    }
+    for (let dy = -ring + 1; dy <= ring - 1; dy += 1) {
+      offsets.push({ x: -ring * xStep, y: dy * yStep });
+      offsets.push({ x: ring * xStep, y: dy * yStep });
+    }
+  }
+
+  for (const offset of offsets) {
+    const candidate = clampGraphWorldPoint({
+      x: preferred.x + offset.x,
+      y: preferred.y + offset.y,
+    });
+    if (isFree(candidate)) return candidate;
+  }
+
+  return preferred;
+}
+
+function graphNodeLayoutKind(node = {}) {
+  const kind = normalizeGraphKind(node.kind);
+  if (kind === 'evidence' && /manual_source|사용자 입력 원문|원자료/i.test(`${node.role || ''} ${node.label || ''}`)) {
+    return 'raw';
+  }
+  if (kind === 'source_span') return 'source';
+  if (kind === 'claim') return 'claim';
+  if (kind === 'premise') return 'premise';
+  if (kind === 'person') return 'person';
+  if (kind === 'event') return 'event';
+  if (kind === 'evidence') return 'evidence';
+  if (['inference', 'legal_element', 'hypothesis'].includes(kind)) return 'analysis';
+  return 'other';
+}
+
+function autoLayoutGraphNodes(nodeIds = []) {
+  const ids = [...new Set([...nodeIds].filter(Boolean))];
+  if (!ids.length) return;
+
+  const anchor = situationGraphAnchorPoint();
+  const groups = {
+    raw: [],
+    source: [],
+    claim: [],
+    premise: [],
+    person: [],
+    event: [],
+    evidence: [],
+    analysis: [],
+    other: [],
+  };
+
+  ids.map(graphNodeById).filter(Boolean).forEach((node) => {
+    groups[graphNodeLayoutKind(node)]?.push(node);
+  });
+
+  const laneConfig = {
+    raw: { x: 560, y: -260, step: 132 },
+    source: { x: 560, y: -260, step: 132 },
+    event: { x: -80, y: 0, step: 132 },
+    person: { x: -380, y: -160, step: 118 },
+    claim: { x: 250, y: -30, step: 122 },
+    evidence: { x: 560, y: -120, step: 122 },
+    premise: { x: 560, y: 170, step: 122 },
+    analysis: { x: 560, y: 170, step: 122 },
+    other: { x: 520, y: 260, step: 122 },
+  };
+  const initialPositions = new Map();
+
+  Object.entries(groups).forEach(([groupName, nodes]) => {
+    const config = laneConfig[groupName] || laneConfig.other;
+    const startY = anchor.y + config.y - ((nodes.length - 1) * config.step) / 2;
+    nodes.forEach((node, index) => {
+      initialPositions.set(node.id, clampGraphWorldPoint({
+        x: anchor.x + config.x + (index % 2) * 18,
+        y: startY + index * config.step,
+      }));
+    });
+  });
+
+  const nextPositions = new Map();
+  const movingIds = new Set(ids);
+  const reservedPoints = [];
+  const orderedIds = Object.values(groups).flat().map((node) => node.id);
+  orderedIds.forEach((id) => {
+    const preferred = initialPositions.get(id);
+    if (!preferred) return;
+    const point = findAvailableGraphPoint(preferred, {
+      excludeIds: movingIds,
+      reservedPoints,
+      minXGap: 178,
+      minYGap: 116,
+    });
+    nextPositions.set(id, point);
+    reservedPoints.push({ id, x: point.x, y: point.y });
+  });
+
+  graphState = {
+    ...graphState,
+    nodes: graphState.nodes.map((node) => {
+      const point = nextPositions.get(node.id);
+      return point ? { ...node, x: point.x, y: point.y } : node;
+    }),
+  };
+}
+
 function findOrCreateSituationNode(ref, context = '', index = 0) {
   const label = normalizeGraphReferenceName(ref?.label);
   const kind = normalizeGraphKind(ref?.kind);
@@ -3447,7 +4084,7 @@ function findOrCreateSituationNode(ref, context = '', index = 0) {
 
   const existing = graphNodeByKindAndLabel(kind, label);
   if (existing) {
-    const contextText = String(context || '').trim();
+    const contextText = contextSnippetForGraphNode(label, kind, context);
     if (contextText && !String(existing.note || '').includes(contextText.slice(0, 80))) {
       graphState = {
         ...graphState,
@@ -3471,7 +4108,7 @@ function findOrCreateSituationNode(ref, context = '', index = 0) {
     label,
     role: kind === 'event' ? '상황 사건' : kind === 'evidence' ? '증거 자료' : '관련 인물',
     layer: kind === 'event' ? 'core' : kind === 'evidence' ? 'support' : 'uncertain',
-    note: String(context || '').trim().slice(0, 1600),
+    note: contextSnippetForGraphNode(label, kind, context),
     eventDate: kind === 'event' || kind === 'evidence' ? dateTime.eventDate : '',
     eventTime: kind === 'event' ? dateTime.eventTime : '',
   });
@@ -3481,24 +4118,27 @@ function buildSituationRelations(nodes, context = '') {
   const uniqueNodes = nodes.filter(Boolean).filter((node, index, list) => (
     list.findIndex((item) => item.id === node.id) === index
   ));
-  const links = [];
+  const candidates = [];
 
   for (let i = 0; i < uniqueNodes.length; i += 1) {
     for (let j = i + 1; j < uniqueNodes.length; j += 1) {
       const source = uniqueNodes[i];
       const target = uniqueNodes[j];
-      const link = upsertGraphLink({
-        sourceId: source.id,
-        targetId: target.id,
-        label: graphRelationLabelForKinds(source.kind, target.kind),
-        basis: String(context || '').trim().slice(0, 500) || '같은 상황 기록에서 함께 참조됨',
-        strength: [source.kind, target.kind].includes('evidence') ? 'likely' : normalizeGraphStrength(context),
+      const candidate = upsertGraphRelationCandidate({
+        source: source.id,
+        target: target.id,
+        suggestedType: 'LEGACY_RELATED_TO',
+        reason: 'same_input',
+        basis: String(context || '').trim().slice(0, 500) || '같은 상황 기록에서 함께 참조됨. 직접 근거 승인 전에는 후보 관계입니다.',
+        confidence: [source.kind, target.kind].includes('evidence') ? 'low' : 'unknown',
+        status: 'pending',
+        createdBy: 'rule',
       });
-      if (link) links.push(link);
+      if (candidate) candidates.push(candidate);
     }
   }
 
-  return links;
+  return candidates;
 }
 
 function applySituationTextToGraph(rawText) {
@@ -3510,54 +4150,19 @@ function applySituationTextToGraph(rawText) {
   const before = {
     nodes: graphState.nodes.length,
     links: graphState.links.length,
+    candidates: (graphState.relationCandidates || []).length,
   };
-  const chunks = sentenceChunks(text);
-  const allRefs = parseGraphReferences(text);
-  const createdOrTouched = [];
-  const relationIds = new Set();
-
-  chunks.forEach((chunk, chunkIndex) => {
-    const refs = parseGraphReferences(chunk);
-    if (!refs.length) return;
-    const nodes = refs
-      .map((ref, refIndex) => findOrCreateSituationNode(ref, chunk, createdOrTouched.length + chunkIndex + refIndex))
-      .filter(Boolean);
-    nodes.forEach((node) => {
-      if (!createdOrTouched.some((item) => item.id === node.id)) createdOrTouched.push(node);
-    });
-    buildSituationRelations(nodes, chunk).forEach((link) => relationIds.add(link.id));
-  });
-
-  if (!allRefs.length) {
-    const title = parseSituationTitle(text);
-    const eventNode = findOrCreateSituationNode({ kind: 'event', label: title }, text, 0);
-    if (eventNode) createdOrTouched.push(eventNode);
-
-    const people = uniqueGraphLabels([
-      ...parseFallbackGraphList(text, ['관련 인물', '당사자', '상대', '피해자', '가해자', '목격자', '담당자', '교사', '학생']),
-      ...inferPlainPersonReferences(text),
-    ]);
-    const evidence = uniqueGraphLabels([
-      ...parseFallbackGraphList(text, ['증거', '자료', '문서', 'PDF', '녹취', 'CCTV', '캡처', '문자', '카톡']),
-      ...inferPlainEvidenceReferences(text),
-    ]);
-    const fallbackNodes = [
-      eventNode,
-      ...people.map((label, index) => findOrCreateSituationNode({ kind: 'person', label }, text, index + 1)),
-      ...evidence.map((label, index) => findOrCreateSituationNode({ kind: 'evidence', label }, text, index + 1 + people.length)),
-    ].filter(Boolean);
-    fallbackNodes.forEach((node) => {
-      if (!createdOrTouched.some((item) => item.id === node.id)) createdOrTouched.push(node);
-    });
-    buildSituationRelations(fallbackNodes, text).forEach((link) => relationIds.add(link.id));
-  }
+  const patch = createSourceClaimPatchFromText(text, { evidenceLabel: '입력된 사안 근거' });
+  const result = applyGraphExtractionPatch(patch, text);
+  if (!result?.ok) return result;
 
   const after = {
     nodes: graphState.nodes.length,
     links: graphState.links.length,
+    candidates: (graphState.relationCandidates || []).length,
   };
 
-  const lastNode = createdOrTouched[createdOrTouched.length - 1];
+  const lastNode = graphState.nodes[graphState.nodes.length - 1];
   graphState = {
     ...graphState,
     selectedNodeId: lastNode?.id || graphState.selectedNodeId,
@@ -3571,20 +4176,21 @@ function applySituationTextToGraph(rawText) {
   return {
     ok: true,
     createdNodes: Math.max(0, after.nodes - before.nodes),
-    touchedNodes: createdOrTouched.length,
+    touchedNodes: result.touchedNodes || 0,
     createdLinks: Math.max(0, after.links - before.links),
-    touchedLinks: relationIds.size,
+    touchedLinks: result.touchedLinks || 0,
+    createdCandidates: Math.max(0, after.candidates - before.candidates),
     output: situationTransformOutput(text, {
       createdNodes: Math.max(0, after.nodes - before.nodes),
-      touchedNodes: createdOrTouched.length,
+      touchedNodes: result.touchedNodes || 0,
       createdLinks: Math.max(0, after.links - before.links),
-      touchedLinks: relationIds.size,
-      nodes: createdOrTouched,
+      touchedLinks: result.touchedLinks || 0,
+      nodes: graphState.nodes.slice(-Math.max(1, result.touchedNodes || 1)),
     }),
   };
 }
 
-function normalizeGraphExtractionPatch(value) {
+function normalizeGraphExtractionPatch(value, sourceText = '') {
   const payload = unwrapPayload(value);
   const candidates = [
     payload?.graphPatch,
@@ -3606,17 +4212,60 @@ function normalizeGraphExtractionPatch(value) {
   if (!patch || typeof patch !== 'object') return null;
 
   const nodes = Array.isArray(patch.nodes)
-    ? patch.nodes.map((node) => ({
-        id: String(node?.id || node?.key || '').slice(0, 80),
-        kind: normalizeGraphKind(node?.kind || node?.type || node?.nodeType),
-        label: normalizeGraphReferenceName(node?.label || node?.name || node?.title),
-        role: normalizeEntityName(node?.role || node?.category || node?.subtitle || ''),
-        layer: normalizeGraphLayer(node?.layer || node?.importance || node?.status),
-        note: compactText(node?.note || node?.memo || node?.description || node?.summary || '').slice(0, 2200),
-        eventDate: String(node?.eventDate || node?.date || '').slice(0, 10),
-        eventTime: String(node?.eventTime || node?.time || '').slice(0, 5),
-      })).filter((node) => node.label)
+    ? limitExtractedGraphNodes(patch.nodes.map((node, index) => {
+        const rawLabel = normalizeGraphReferenceName(node?.label || node?.name || node?.title);
+        const kind = normalizeExtractedGraphKind(rawLabel, node?.kind || node?.type || node?.nodeType);
+        const claimText = compactText(node?.claimText || '').slice(0, 1800);
+        let sourceRefs = filterSourceRefsByText(
+          Array.isArray(node?.sourceRefs || node?.source_refs) ? (node.sourceRefs || node.source_refs) : [],
+          sourceText
+        );
+        const directNote = compactText(node?.note || node?.memo || node?.description || node?.summary || claimText || sourceRefs[0]?.quote || '');
+        const fallbackRef = fallbackSourceRefFromText(
+          kind === 'source_span' ? directNote || sourceText.slice(0, 1200) : claimText || directNote,
+          sourceText
+        );
+        if (!sourceRefs.length && fallbackRef) sourceRefs = [fallbackRef];
+        const label = humanizeGraphPatchLabel(kind, rawLabel, {
+          index,
+          claimText,
+          sourceRefs,
+          note: directNote,
+        });
+        return {
+          id: String(node?.id || node?.clientId || node?.key || '').slice(0, 120),
+          clientId: String(node?.clientId || node?.id || node?.key || '').slice(0, 120),
+          kind,
+          label,
+          role: normalizeEntityName(node?.role || node?.category || node?.subtitle || ''),
+          importance: normalizeGraphLayer(node?.importance || node?.layer || node?.status),
+          layer: normalizeGraphLayer(node?.importance || node?.layer || node?.status),
+          epistemicStatus: node?.epistemicStatus || 'unknown',
+          polarity: node?.polarity || 'neutral',
+          note: contextSnippetForGraphNode(label, kind, sourceText, directNote).slice(0, 900),
+          sourceRefs,
+          timeStart: String(node?.timeStart || node?.eventDate || node?.date || '').slice(0, 40),
+          timeEnd: String(node?.timeEnd || '').slice(0, 40),
+          timePrecision: String(node?.timePrecision || '').slice(0, 40),
+          place: String(node?.place || '').slice(0, 180),
+          createdBy: node?.createdBy || 'ai',
+          eventDate: String(node?.eventDate || node?.date || '').slice(0, 10),
+          eventTime: String(node?.eventTime || node?.time || '').slice(0, 5),
+          claimText,
+          subjectId: String(node?.subjectId || '').slice(0, 120),
+          predicate: String(node?.predicate || '').slice(0, 120),
+          objectId: String(node?.objectId || '').slice(0, 120),
+          value: String(node?.value || '').slice(0, 300),
+          templateId: String(node?.templateId || '').slice(0, 120),
+          elementKey: String(node?.elementKey || '').slice(0, 120),
+          required: Boolean(node?.required),
+          description: compactText(node?.description || '').slice(0, 900),
+          expectedEvidenceTypes: Array.isArray(node?.expectedEvidenceTypes) ? node.expectedEvidenceTypes : [],
+          hypothesisStatus: node?.hypothesisStatus || 'active',
+        };
+      }).filter((node) => node.label))
     : [];
+  const allowedPatchRefs = graphPatchAllowedRefs(nodes);
 
   const links = Array.isArray(patch.links || patch.relationships)
     ? (patch.links || patch.relationships).map((link) => ({
@@ -3624,10 +4273,51 @@ function normalizeGraphExtractionPatch(value) {
         target: link?.target || link?.to || link?.targetLabel || link?.target_name || '',
         sourceKind: normalizeGraphKind(link?.sourceKind || link?.source_type || link?.fromKind),
         targetKind: normalizeGraphKind(link?.targetKind || link?.target_type || link?.toKind),
-        label: normalizeEntityName(link?.label || link?.relation || link?.nature || '관계') || '관계',
+        type: String(link?.type || link?.relationType || '').trim() || graphEdgeTypeFromLabel(link?.label || link?.relation || link?.nature || ''),
+        role: String(link?.role || '').slice(0, 80),
+        directed: link?.directed !== false,
+        label: normalizeEntityName(link?.label || link?.relation || link?.nature || link?.type || '관계') || '관계',
         basis: compactText(link?.basis || link?.evidence || link?.reason || link?.description || '').slice(0, 1200),
+        sourceRefs: filterSourceRefsByText(
+          Array.isArray(link?.sourceRefs || link?.source_refs) ? (link.sourceRefs || link.source_refs) : [],
+          sourceText
+        ),
+        verificationStatus: link?.verificationStatus || link?.status || 'unverified',
+        assessment: link?.assessment || {},
+        createdBy: link?.createdBy || 'ai',
         strength: normalizeGraphStrength(link?.strength || link?.confidence || link?.status),
-      })).filter((link) => link.source && link.target)
+      })).filter((link) => (
+        link.source
+        && link.target
+        && graphPatchEndpointAllowed(link.source, allowedPatchRefs)
+        && graphPatchEndpointAllowed(link.target, allowedPatchRefs)
+      ))
+    : [];
+
+  const relationCandidates = Array.isArray(patch.relation_candidates || patch.relationCandidates)
+    ? (patch.relation_candidates || patch.relationCandidates).map((candidate) => ({
+        id: String(candidate?.id || '').slice(0, 140),
+        source: candidate?.source || '',
+        target: candidate?.target || '',
+        suggestedType: String(candidate?.suggestedType || candidate?.suggested_type || candidate?.type || 'LEGACY_RELATED_TO').trim(),
+        suggestedRole: String(candidate?.suggestedRole || candidate?.suggested_role || candidate?.role || '').slice(0, 80),
+        reason: String(candidate?.reason || 'ai_candidate').slice(0, 240),
+        basis: compactText(candidate?.basis || candidate?.description || '').slice(0, 1200),
+        sourceRefs: filterSourceRefsByText(
+          Array.isArray(candidate?.sourceRefs || candidate?.source_refs) ? (candidate.sourceRefs || candidate.source_refs) : [],
+          sourceText
+        ),
+        confidence: candidate?.confidence || 'unknown',
+        status: candidate?.status || 'pending',
+        createdBy: candidate?.createdBy || 'ai',
+        createdAt: candidate?.createdAt || new Date().toISOString(),
+        reviewedAt: candidate?.reviewedAt || '',
+      })).filter((candidate) => (
+        candidate.source
+        && candidate.target
+        && graphPatchEndpointAllowed(candidate.source, allowedPatchRefs)
+        && graphPatchEndpointAllowed(candidate.target, allowedPatchRefs)
+      ))
     : [];
 
   const clusters = Array.isArray(patch.clusters)
@@ -3644,12 +4334,20 @@ function normalizeGraphExtractionPatch(value) {
       })).filter((cluster) => cluster.nodeLabels.length >= 2)
     : [];
 
-  return {
+  const normalizedPatch = {
     summary: String(patch.summary || payload?.assistantMessage || payload?.assistant_message || '').trim(),
     nodes,
     links,
+    relationCandidates,
     clusters,
+    warnings: Array.isArray(patch.warnings) ? patch.warnings.map(String) : [],
   };
+
+  const withSourcePaths = nodes.some((node) => node.kind === 'source_span')
+    ? ensureSourceClaimPatchPaths(normalizedPatch, sourceText)
+    : normalizedPatch;
+
+  return ensurePatchConnectivityCandidates(withSourcePaths, sourceText);
 }
 
 function graphPatchNodeKey(kind, label) {
@@ -3657,14 +4355,38 @@ function graphPatchNodeKey(kind, label) {
 }
 
 function upsertGraphPatchNode(nodePatch, index = 0, context = '') {
-  const kind = normalizeGraphKind(nodePatch?.kind);
-  const label = normalizeGraphReferenceName(nodePatch?.label);
+  const rawLabel = normalizeGraphReferenceName(nodePatch?.label);
+  const kind = normalizeExtractedGraphKind(rawLabel, nodePatch?.kind);
+  const label = humanizeGraphPatchLabel(kind, rawLabel, {
+    index,
+    claimText: nodePatch?.claimText,
+    sourceRefs: nodePatch?.sourceRefs,
+    note: nodePatch?.note || nodePatch?.description || '',
+  });
   if (!label) return null;
 
-  const existing = graphNodeByKindAndLabel(kind, label);
+  const mergeable = !['claim', 'source_span', 'inference'].includes(kind);
+  const existing = mergeable ? graphNodeByKindAndLabel(kind, label) : null;
   const dateTime = parseSituationDateTime([nodePatch?.note, context].filter(Boolean).join('\n'));
-  const nextRole = normalizeEntityName(nodePatch?.role) || (kind === 'event' ? '상황 사건' : kind === 'evidence' ? '증거 자료' : '관련 인물');
-  const nextNote = compactText(nodePatch?.note || context).slice(0, 2200);
+  const nextRole = normalizeEntityName(nodePatch?.role) || (
+    kind === 'event' ? '상황 사건'
+      : kind === 'evidence' ? '근거 자료'
+        : kind === 'claim' ? '주장'
+          : kind === 'premise' ? '기반명제'
+          : kind === 'source_span' ? '근거 자료'
+            : kind === 'inference' ? '기반명제'
+              : kind === 'legal_element' ? '기반명제'
+                : kind === 'hypothesis' ? '주장'
+                  : '관련 인물'
+  );
+  const directNote = compactText(
+    nodePatch?.note
+    || nodePatch?.claimText
+    || nodePatch?.description
+    || nodePatch?.sourceRefs?.[0]?.quote
+    || ''
+  );
+  const nextNote = contextSnippetForGraphNode(label, kind, context, directNote).slice(0, 900);
   const nextEventDate = nodePatch?.eventDate || (kind === 'event' || kind === 'evidence' ? dateTime.eventDate : '');
   const nextEventTime = nodePatch?.eventTime || (kind === 'event' ? dateTime.eventTime : '');
 
@@ -3694,8 +4416,29 @@ function upsertGraphPatchNode(nodePatch, index = 0, context = '') {
     role: nextRole,
     layer: normalizeGraphLayer(nodePatch?.layer || (kind === 'event' ? 'core' : kind === 'evidence' ? 'support' : 'uncertain')),
     note: nextNote,
+    importance: nodePatch?.importance || nodePatch?.layer,
+    epistemicStatus: nodePatch?.epistemicStatus,
+    polarity: nodePatch?.polarity,
+    sourceRefs: nodePatch?.sourceRefs || [],
+    timeStart: nodePatch?.timeStart || nextEventDate,
+    timeEnd: nodePatch?.timeEnd || '',
+    timePrecision: nodePatch?.timePrecision || '',
+    place: nodePatch?.place || '',
+    createdBy: nodePatch?.createdBy || 'ai',
     eventDate: nextEventDate,
     eventTime: nextEventTime,
+    claimText: nodePatch?.claimText || '',
+    subjectId: nodePatch?.subjectId || '',
+    predicate: nodePatch?.predicate || '',
+    objectId: nodePatch?.objectId || '',
+    value: nodePatch?.value || '',
+    templateId: nodePatch?.templateId || '',
+    elementKey: nodePatch?.elementKey || '',
+    required: Boolean(nodePatch?.required),
+    description: nodePatch?.description || '',
+    expectedEvidenceTypes: nodePatch?.expectedEvidenceTypes || [],
+    hypothesisStatus: nodePatch?.hypothesisStatus || 'active',
+    skipAutoConnect: true,
   });
 }
 
@@ -3771,8 +4514,18 @@ function graphContextChunks(text) {
 
 function textMentionsGraphNode(text, node) {
   const label = normalizeGraphReferenceName(node?.label || '');
-  if (!label) return false;
-  return String(text || '').includes(label) || String(text || '').includes(`${graphReferencePrefix(node.kind)}${label}`);
+  const haystack = String(text || '');
+  if (!haystack) return false;
+  const claimText = compactText(node?.claimText || '');
+  const note = compactText(node?.note || '');
+  const quotes = Array.isArray(node?.sourceRefs)
+    ? node.sourceRefs.map((ref) => compactText(ref?.quote || '')).filter(Boolean)
+    : [];
+
+  if (label && (haystack.includes(label) || haystack.includes(`${graphReferencePrefix(node.kind)}${label}`))) return true;
+  if (claimText && (haystack.includes(claimText) || claimText.includes(haystack))) return true;
+  if (node?.kind === 'source_span' && note && (note.includes(haystack) || haystack.includes(note))) return true;
+  return quotes.some((quote) => haystack.includes(quote) || quote.includes(haystack));
 }
 
 function nodesShareTextChunk(left, right, chunks) {
@@ -3792,7 +4545,96 @@ function addSemanticGraphLink(source, target, label, basis, strength, touchedLin
   return link;
 }
 
-function enrichGraphPatchRelations(touchedNodes, sourceText, touchedLinkIds) {
+function upsertGraphRelationCandidate(rawCandidate) {
+  const candidate = sanitizeRelationCandidate({
+    ...rawCandidate,
+    id: rawCandidate?.id || `candidate-${Date.now()}-${(graphState.relationCandidates || []).length + 1}`,
+  });
+  if (!candidate.source || !candidate.target || candidate.source === candidate.target) return null;
+
+  const existing = (graphState.relationCandidates || []).find((item) => (
+    item.source === candidate.source
+    && item.target === candidate.target
+    && item.suggestedType === candidate.suggestedType
+    && String(item.suggestedRole || '') === String(candidate.suggestedRole || '')
+    && String(item.reason || '') === String(candidate.reason || '')
+  ));
+
+  if (existing) {
+    const nextCandidate = {
+      ...existing,
+      ...candidate,
+      id: existing.id,
+      status: existing.status === 'rejected' ? 'rejected' : candidate.status,
+      reviewedAt: existing.reviewedAt || candidate.reviewedAt,
+    };
+    graphState = {
+      ...graphState,
+      relationCandidates: (graphState.relationCandidates || []).map((item) => (
+        item.id === existing.id ? nextCandidate : item
+      )),
+    };
+    return nextCandidate;
+  }
+
+  graphState = {
+    ...graphState,
+    relationCandidates: [...(graphState.relationCandidates || []), candidate],
+  };
+  return candidate;
+}
+
+function limitExtractedGraphNodes(nodes = []) {
+  const limits = {
+    source_span: 0,
+    claim: 8,
+    premise: 8,
+    person: 12,
+    event: 8,
+    evidence: 8,
+    inference: 0,
+    legal_element: 0,
+    hypothesis: 0,
+    unknown: 4,
+  };
+  const counts = {};
+
+  return nodes.filter((node) => {
+    const kind = normalizeGraphKind(node?.kind);
+    counts[kind] = (counts[kind] || 0) + 1;
+    return counts[kind] <= (limits[kind] || 6);
+  });
+}
+
+function graphPatchEndpointKey(endpoint) {
+  if (!endpoint) return '';
+  if (typeof endpoint === 'object') {
+    return String(endpoint.id || endpoint.clientId || endpoint.key || endpoint.label || endpoint.name || '').trim();
+  }
+  return String(endpoint || '').trim();
+}
+
+function graphPatchAllowedRefs(nodes = []) {
+  const refs = new Set();
+  nodes.forEach((node) => {
+    [node.id, node.clientId, node.label].forEach((value) => {
+      const text = String(value || '').trim();
+      if (!text) return;
+      refs.add(text);
+      refs.add(normalizeGraphReferenceName(text).toLowerCase());
+    });
+  });
+  return refs;
+}
+
+function graphPatchEndpointAllowed(endpoint, allowedRefs) {
+  const key = graphPatchEndpointKey(endpoint);
+  if (!key) return false;
+  if (allowedRefs.has(key) || allowedRefs.has(normalizeGraphReferenceName(key).toLowerCase())) return true;
+  return Boolean(graphNodeById(key) || graphNodeByLabelAnyKind(key));
+}
+
+function generateGraphPatchRelationCandidates(touchedNodes, sourceText, touchedLinkIds) {
   const nodes = touchedNodes.filter(Boolean).filter((node, index, list) => (
     list.findIndex((item) => item.id === node.id) === index
   ));
@@ -3801,58 +4643,228 @@ function enrichGraphPatchRelations(touchedNodes, sourceText, touchedLinkIds) {
   const people = nodes.filter((node) => node.kind === 'person');
   const events = nodes.filter((node) => node.kind === 'event');
   const evidence = nodes.filter((node) => node.kind === 'evidence');
+  const claims = nodes.filter((node) => node.kind === 'claim');
+  const sourceSpans = nodes.filter((node) => node.kind === 'source_span');
   const chunks = graphContextChunks(sourceText);
   let created = 0;
+
+  const hasAcceptedLinkBetween = (source, target, type = '') => graphState.links.some((link) => (
+    link.verificationStatus !== 'rejected'
+    && (
+      (link.source === source.id && link.target === target.id)
+      || (link.source === target.id && link.target === source.id)
+    )
+    && (!type || link.type === type)
+  ));
+
+  const candidateBetween = (source, target, suggestedType, reason, basis, confidence = 'low', suggestedRole = '') => {
+    if (!source || !target || source.id === target.id) return;
+    if (hasAcceptedLinkBetween(source, target, suggestedType)) return;
+    const candidate = upsertGraphRelationCandidate({
+      source: source.id,
+      target: target.id,
+      suggestedType,
+      suggestedRole,
+      reason,
+      basis,
+      confidence,
+      status: 'pending',
+      createdBy: 'rule',
+    });
+    if (candidate) created += 1;
+  };
+
+  claims.slice(0, 8).forEach((claimNode) => {
+    people.slice(0, 10).forEach((personNode) => {
+      const sameSentence = nodesShareTextChunk(claimNode, personNode, chunks);
+      if (!sameSentence) return;
+      candidateBetween(
+        claimNode,
+        personNode,
+        'LEGACY_RELATED_TO',
+        'claim_mentions_actor',
+        '주장과 인물이 같은 근거 맥락에 등장했습니다. 행위자·진술자·대상자 역할은 승인 전까지 후보로만 둡니다.',
+        'medium',
+        'actor_context'
+      );
+    });
+
+    events.slice(0, 8).forEach((eventNode) => {
+      const sameSentence = nodesShareTextChunk(claimNode, eventNode, chunks);
+      if (!sameSentence) return;
+      candidateBetween(
+        claimNode,
+        eventNode,
+        'EXPLAINS',
+        'claim_explains_event',
+        '주장이 사건 장면을 설명할 가능성이 있어 후보 관계로 표시합니다.',
+        'medium'
+      );
+    });
+
+    evidence.slice(0, 8).forEach((evidenceNode) => {
+      if (evidenceNode.role === 'manual_source') return;
+      const sameSentence = nodesShareTextChunk(claimNode, evidenceNode, chunks);
+      if (!sameSentence) return;
+      candidateBetween(
+        evidenceNode,
+        claimNode,
+        'SUPPORTS',
+        'evidence_mentions_claim',
+        '근거와 주장이 같은 맥락에 등장했습니다. 실제 지지 여부는 근거 확인 후 승인합니다.',
+        'medium'
+      );
+    });
+  });
+
+  sourceSpans.slice(0, 3).forEach((spanNode) => {
+    [...people, ...events, ...evidence].slice(0, 18).forEach((entityNode) => {
+      if (entityNode.role === 'manual_source') return;
+      if (!nodesShareTextChunk(spanNode, entityNode, chunks)) return;
+      candidateBetween(
+        spanNode,
+        entityNode,
+        'LEGACY_RELATED_TO',
+        'source_context_entity',
+        '근거와 대상 블록이 같은 발췌 맥락에 등장했습니다. 직접 의미 관계는 승인 전까지 후보로 유지합니다.',
+        'medium'
+      );
+    });
+  });
 
   const primaryEvents = events.length ? events : graphState.nodes.filter((node) => node.kind === 'event').slice(0, 2);
 
   primaryEvents.forEach((eventNode) => {
     people.slice(0, 8).forEach((personNode) => {
-      const link = addSemanticGraphLink(
-        personNode,
-        eventNode,
-        '사건 관련',
-        nodesShareTextChunk(personNode, eventNode, chunks)
-          ? '같은 문장 또는 장면에서 인물과 사건이 함께 언급됨.'
-          : '같은 상황 입력에서 인물과 사건이 함께 추출됨. 구체 행위는 확인 필요.',
-        nodesShareTextChunk(personNode, eventNode, chunks) ? 'likely' : 'weak',
-        touchedLinkIds
-      );
-      if (link) created += 1;
+      const sameSentence = nodesShareTextChunk(personNode, eventNode, chunks);
+      if (!sameSentence || hasAcceptedLinkBetween(personNode, eventNode, 'PARTICIPATES_AS')) return;
+      const candidate = upsertGraphRelationCandidate({
+        source: personNode.id,
+        target: eventNode.id,
+        suggestedType: 'PARTICIPATES_AS',
+        suggestedRole: 'unknown',
+        reason: 'same_sentence',
+        basis: '같은 문장에 인물과 사건이 등장했지만 명시적 역할 근거는 아직 승인되지 않았습니다.',
+        confidence: 'medium',
+        status: 'pending',
+        createdBy: 'rule',
+      });
+      if (candidate) created += 1;
     });
 
     evidence.slice(0, 8).forEach((evidenceNode) => {
-      const link = addSemanticGraphLink(
-        evidenceNode,
-        eventNode,
-        '증거 연결',
-        nodesShareTextChunk(evidenceNode, eventNode, chunks)
-          ? '같은 문장 또는 장면에서 증거와 사건이 함께 언급됨.'
-          : '같은 상황 입력에서 증거와 사건이 함께 추출됨. 원본성·작성시점·보관경로는 확인 필요.',
-        nodesShareTextChunk(evidenceNode, eventNode, chunks) ? 'likely' : 'weak',
-        touchedLinkIds
-      );
-      if (link) created += 1;
+      const sameSentence = nodesShareTextChunk(evidenceNode, eventNode, chunks);
+      if (!sameSentence || hasAcceptedLinkBetween(evidenceNode, eventNode)) return;
+      const candidate = upsertGraphRelationCandidate({
+        source: evidenceNode.id,
+        target: eventNode.id,
+        suggestedType: 'LEGACY_RELATED_TO',
+        reason: 'same_sentence',
+        basis: '같은 문장에 증거와 사건이 등장했지만 정확한 sourceRef.quote가 없어 후보로만 보존합니다.',
+        confidence: 'medium',
+        status: 'pending',
+        createdBy: 'rule',
+      });
+      if (candidate) created += 1;
     });
   });
 
   evidence.slice(0, 8).forEach((evidenceNode) => {
     people.slice(0, 8).forEach((personNode) => {
       const directMention = nodesShareTextChunk(evidenceNode, personNode, chunks);
-      const shouldConnect = directMention || (people.length <= 5 && evidence.length <= 5);
-      if (!shouldConnect) return;
+      if (!directMention) return;
+      const candidate = upsertGraphRelationCandidate({
+        source: evidenceNode.id,
+        target: personNode.id,
+        suggestedType: 'LEGACY_RELATED_TO',
+        reason: 'same_sentence',
+        basis: '같은 문장에 증거와 인물이 등장했지만, 증거가 어떤 명제를 지지하는지 sourceRef로 확인해야 합니다.',
+        confidence: 'low',
+        status: 'pending',
+        createdBy: 'rule',
+      });
+      if (candidate) created += 1;
+    });
+  });
 
-      const link = addSemanticGraphLink(
-        evidenceNode,
-        personNode,
-        '증거 관련',
-        directMention
-          ? '같은 문장 또는 장면에서 증거와 인물이 함께 언급됨.'
-          : '같은 상황 입력에서 증거와 인물이 함께 추출됨. 직접 관련성은 확인 필요.',
-        directMention ? 'likely' : 'weak',
-        touchedLinkIds
-      );
-      if (link) created += 1;
+  return created;
+}
+
+function ensureFiveBlockAcceptedConnections(touchedNodes, sourceText, touchedLinkIds) {
+  const nodes = touchedNodes.filter(Boolean).filter((node, index, list) => (
+    list.findIndex((item) => item.id === node.id) === index
+  ));
+  if (nodes.length < 2) return 0;
+
+  const chunks = graphContextChunks(sourceText);
+  const claims = nodes.filter((node) => node.kind === 'claim');
+  const events = nodes.filter((node) => node.kind === 'event');
+  const people = nodes.filter((node) => node.kind === 'person');
+  const evidence = nodes.filter((node) => node.kind === 'evidence' && node.role !== 'manual_source');
+  const premises = nodes.filter((node) => node.kind === 'premise');
+  let created = 0;
+
+  const hasDirectLink = (source, target, type = '') => graphState.links.some((link) => (
+    link.verificationStatus !== 'rejected'
+    && link.source === source.id
+    && link.target === target.id
+    && (!type || link.type === type)
+  ));
+
+  const linkWithContext = (source, target, type, label, role = '') => {
+    if (!source || !target || source.id === target.id || hasDirectLink(source, target, type)) return null;
+    const sourceRefs = mergeSourceRefsForEdge({}, source, target, sourceText)
+      .filter((ref) => sourceRefQuoteExistsInText(ref, sourceText))
+      .slice(0, 3);
+    if (!sourceRefs.length) return null;
+    const link = upsertGraphLink({
+      sourceId: source.id,
+      targetId: target.id,
+      label,
+      basis: `${graphKindLabel(source.kind)}와 ${graphKindLabel(target.kind)}가 같은 입력 근거 안에서 직접 연결됩니다.`,
+      strength: 'likely',
+      type,
+      role,
+      sourceRefs,
+      verificationStatus: 'asserted',
+      assessment: {
+        extractionConfidence: 'medium',
+        sourceReliability: 'unknown',
+        supportStrength: 'moderate',
+        legalSufficiency: 'not_applicable',
+      },
+      createdBy: 'rule',
+    });
+    if (link) {
+      touchedLinkIds?.add?.(link.id);
+      created += 1;
+    }
+    return link;
+  };
+
+  claims.forEach((claimNode) => {
+    const relatedEvents = events.filter((eventNode) => nodesShareTextChunk(claimNode, eventNode, chunks)).slice(0, 1);
+    const relatedPeople = people.filter((personNode) => nodesShareTextChunk(claimNode, personNode, chunks)).slice(0, 4);
+    const relatedEvidence = evidence.filter((evidenceNode) => nodesShareTextChunk(claimNode, evidenceNode, chunks)).slice(0, 3);
+    const relatedPremises = premises.filter((premiseNode) => nodesShareTextChunk(claimNode, premiseNode, chunks)).slice(0, 2);
+
+    relatedEvents.forEach((eventNode) => {
+      linkWithContext(eventNode, claimNode, 'EXPLAINS', '주요사건에서 나온 주장');
+      relatedPeople.forEach((personNode) => {
+        linkWithContext(eventNode, personNode, 'PARTICIPATES_AS', '주요사건 관련 인물', 'related_person');
+      });
+    });
+
+    relatedPeople.forEach((personNode) => {
+      linkWithContext(personNode, claimNode, 'ASSERTS', '인물과 연결된 주장', 'mentioned_actor');
+    });
+
+    relatedEvidence.forEach((evidenceNode) => {
+      linkWithContext(evidenceNode, claimNode, 'SUPPORTS', '근거 자료가 주장을 뒷받침');
+    });
+
+    relatedPremises.forEach((premiseNode) => {
+      linkWithContext(premiseNode, claimNode, 'SUPPORTS', '기반명제가 주장을 뒷받침');
     });
   });
 
@@ -3860,18 +4872,20 @@ function enrichGraphPatchRelations(touchedNodes, sourceText, touchedLinkIds) {
 }
 
 function applyGraphExtractionPatch(patch, sourceText = '') {
-  const normalized = normalizeGraphExtractionPatch({ graphPatch: patch }) || patch;
+  const normalized = normalizeGraphExtractionPatch({ graphPatch: patch }, sourceText) || patch;
   const nodes = Array.isArray(normalized?.nodes) ? normalized.nodes : [];
   const links = Array.isArray(normalized?.links) ? normalized.links : [];
+  const relationCandidates = Array.isArray(normalized?.relationCandidates) ? normalized.relationCandidates : [];
   const clusters = Array.isArray(normalized?.clusters) ? normalized.clusters : [];
 
-  if (!nodes.length && !links.length && !clusters.length) {
+  if (!nodes.length && !links.length && !relationCandidates.length && !clusters.length) {
     return { ok: false, reason: 'AI가 그래프 패치를 반환하지 않았습니다.' };
   }
 
   const before = {
     nodes: graphState.nodes.length,
     links: graphState.links.length,
+    candidates: (graphState.relationCandidates || []).length,
     clusters: (graphState.clusters || []).length,
   };
   const nodeMap = new Map();
@@ -3882,6 +4896,7 @@ function applyGraphExtractionPatch(patch, sourceText = '') {
     if (!node) return;
     nodeMap.set(graphPatchNodeKey(node.kind, node.label), node);
     if (nodePatch.id) nodeMap.set(String(nodePatch.id), node);
+    if (nodePatch.clientId) nodeMap.set(String(nodePatch.clientId), node);
     touchedNodeIds.add(node.id);
   });
 
@@ -3893,15 +4908,58 @@ function applyGraphExtractionPatch(patch, sourceText = '') {
     touchedNodeIds.add(source.id);
     touchedNodeIds.add(target.id);
 
+    const linkSourceRefs = mergeSourceRefsForEdge(linkPatch, source, target, sourceText);
+    const hasQuotedSource = linkSourceRefs.some((ref) => sourceRefQuoteExistsInText(ref, sourceText));
+    if (!hasQuotedSource) {
+      const candidate = upsertGraphRelationCandidate({
+        source: source.id,
+        target: target.id,
+        suggestedType: linkPatch.type || graphEdgeTypeFromLabel(linkPatch.label),
+        suggestedRole: linkPatch.role || '',
+        reason: 'missing_source_quote',
+        basis: linkPatch.basis || 'AI가 관계를 제안했지만 정확한 근거 발췌가 없어 후보로 보존합니다.',
+        sourceRefs: linkSourceRefs,
+        confidence: linkPatch.assessment?.extractionConfidence || 'unknown',
+        status: 'pending',
+        createdBy: linkPatch.createdBy || 'ai',
+      });
+      if (candidate) touchedLinkIds.add(candidate.id);
+      return;
+    }
+
     const link = upsertGraphLink({
       sourceId: source.id,
       targetId: target.id,
       label: linkPatch.label || graphRelationLabelForKinds(source.kind, target.kind),
       basis: linkPatch.basis || 'AI 상황 판별에 따른 관계 후보',
       strength: linkPatch.strength || 'weak',
+      type: linkPatch.type,
+      role: linkPatch.role,
+      sourceRefs: linkSourceRefs,
+      verificationStatus: linkPatch.verificationStatus || 'asserted',
+      assessment: linkPatch.assessment || {},
+      createdBy: linkPatch.createdBy || 'ai',
     });
     if (link) touchedLinkIds.add(link.id);
   });
+
+  relationCandidates.forEach((candidatePatch) => {
+    const source = resolveGraphPatchNode(candidatePatch.source, '', nodeMap, sourceText);
+    const target = resolveGraphPatchNode(candidatePatch.target, '', nodeMap, sourceText);
+    if (!source || !target || source.id === target.id) return;
+    const candidate = upsertGraphRelationCandidate({
+      ...candidatePatch,
+      source: source.id,
+      target: target.id,
+    });
+    if (candidate) touchedLinkIds.add(candidate.id);
+  });
+
+  ensureFiveBlockAcceptedConnections(
+    [...touchedNodeIds].map(graphNodeById).filter(Boolean),
+    sourceText,
+    touchedLinkIds
+  );
 
   clusters.forEach((clusterPatch) => {
     const clusterNodes = (clusterPatch.nodeLabels || [])
@@ -3930,11 +4988,12 @@ function applyGraphExtractionPatch(patch, sourceText = '') {
     };
   });
 
-  const enrichedRelations = enrichGraphPatchRelations(
+  const enrichedRelations = generateGraphPatchRelationCandidates(
     [...touchedNodeIds].map(graphNodeById).filter(Boolean),
     sourceText,
     touchedLinkIds
   );
+  autoLayoutGraphNodes([...touchedNodeIds]);
 
   const after = {
     nodes: graphState.nodes.length,
@@ -3959,6 +5018,7 @@ function applyGraphExtractionPatch(patch, sourceText = '') {
     touchedNodes: nodes.length,
     createdLinks: Math.max(0, after.links - before.links),
     touchedLinks: touchedLinkIds.size,
+    createdCandidates: Math.max(0, (graphState.relationCandidates || []).length - (before.candidates || 0)),
     enrichedRelations,
     createdClusters: Math.max(0, after.clusters - before.clusters),
     summary: normalized.summary || '',
@@ -3985,31 +5045,89 @@ function situationTransformOutput(text, result) {
     '## 참조 규칙',
     '- @ 인물 노드',
     '- # 사건 노드',
-    '- $ 증거 노드',
+    '- $ 근거 노드',
     '',
     '## 이번 입력에서 반영된 대상',
     `- 인물: ${line(people)}`,
     `- 사건: ${line(events)}`,
-    `- 증거: ${line(evidence)}`,
+    `- 근거: ${line(evidence)}`,
     '',
-    '## 원문',
+    '## 입력 내용',
     text.slice(0, 1800),
   ].join('\n');
 }
 
-function upsertGraphLink({ sourceId, targetId, label = '관계', basis = '', strength = 'weak' }) {
+function graphEdgeTypeFromLabel(label = '') {
+  const text = String(label || '').toUpperCase();
+  if (/SUPPORT|지지|뒷받침/.test(text)) return 'SUPPORTS';
+  if (/ATTACK|공격|반박/.test(text)) return 'ATTACKS';
+  if (/UNDERCUT|약화|탄핵/.test(text)) return 'UNDERCUTS';
+  if (/SATISF|충족|검토항목|논증항목/.test(text)) return 'SATISFIES';
+  if (/ASSERT|주장|명제화/.test(text)) return 'ASSERTS';
+  if (/CONTAIN|포함|원문/.test(text)) return 'CONTAINS';
+  if (/PARTICIPATE|참여|행위자|목격/.test(text)) return 'PARTICIPATES_AS';
+  if (/PRECEDE|선행|이전/.test(text)) return 'PRECEDES';
+  if (/CONTRADICT|모순|충돌/.test(text)) return 'CONTRADICTS';
+  return 'LEGACY_RELATED_TO';
+}
+
+function upsertGraphLink({
+  sourceId,
+  targetId,
+  label = '관계',
+  basis = '',
+  strength = 'weak',
+  type = '',
+  role = '',
+  sourceRefs = [],
+  verificationStatus = 'unverified',
+  assessment = null,
+  createdBy = 'user',
+}) {
   if (!sourceId || !targetId || sourceId === targetId) return null;
 
+  const edgeType = type || graphEdgeTypeFromLabel(label);
+  const nextAssessment = {
+    ...defaultAssessment(assessment || {}),
+    supportStrength: assessment?.supportStrength || (
+      normalizeGraphStrength(strength) === 'confirmed'
+        ? 'strong'
+        : normalizeGraphStrength(strength) === 'likely'
+          ? 'moderate'
+          : 'weak'
+    ),
+    legalSufficiency: assessment?.legalSufficiency || 'not_applicable',
+  };
+  const draft = sanitizeGraphLink({
+    id: '',
+    source: sourceId,
+    target: targetId,
+    type: edgeType,
+    directed: true,
+    role,
+    label: normalizeEntityName(label) || edgeType,
+    basis: String(basis || '').slice(0, 1400),
+    sourceRefs,
+    verificationStatus,
+    assessment: nextAssessment,
+    createdBy,
+    strength,
+  });
+
   const existing = graphState.links.find((link) => (
-    (link.source === sourceId && link.target === targetId)
-    || (link.source === targetId && link.target === sourceId)
+    link.source === draft.source
+    && link.target === draft.target
+    && (link.type || 'LEGACY_RELATED_TO') === draft.type
+    && String(link.role || '') === String(draft.role || '')
   ));
 
   if (existing) {
     const nextLink = {
       ...existing,
-      label: normalizeEntityName(label) || existing.label || '관계',
-      basis: String(basis || existing.basis || '').slice(0, 500),
+      ...draft,
+      id: existing.id,
+      label: draft.label || existing.label || draft.type,
+      basis: String(basis || existing.basis || '').slice(0, 1400),
       strength: normalizeGraphStrength(strength || existing.strength),
     };
 
@@ -4023,12 +5141,8 @@ function upsertGraphLink({ sourceId, targetId, label = '관계', basis = '', str
   }
 
   const link = {
+    ...draft,
     id: `link-${Date.now()}-${graphState.links.length + 1}`,
-    source: sourceId,
-    target: targetId,
-    label: normalizeEntityName(label) || '관계',
-    basis: String(basis || '').slice(0, 500),
-    strength: normalizeGraphStrength(strength),
   };
 
   graphState = {
@@ -4210,42 +5324,21 @@ function buildGraphClusterAgentMessage(saved) {
 }
 
 function graphSnapshotForAgent() {
+  const snapshot = graphSnapshotForStorage();
   return {
-    nodes: graphState.nodes.slice(0, 40).map((node) => ({
-      id: node.id,
-      kind: node.kind || 'person',
-      label: node.label,
-      role: node.role,
-      layer: node.layer,
-      note: String(node.note || '').slice(0, 260),
-      eventDate: node.eventDate || '',
-      eventTime: node.eventTime || '',
-      eventDateTime: graphEventDateTimeLabel(node),
-      sourceEvidenceId: node.sourceEvidenceId || '',
-      sourceFileName: node.sourceFileName || '',
-      clusterId: node.clusterId || '',
-    })),
-    links: graphState.links.slice(0, 60).map((link) => ({
-      id: link.id,
-      source: link.source,
-      target: link.target,
-      label: link.label,
-      strength: link.strength,
-      basis: String(link.basis || '').slice(0, 220),
-    })),
-    clusters: (graphState.clusters || []).slice(0, 16).map((cluster) => ({
-      id: cluster.id,
-      label: cluster.label,
-      nodeIds: (cluster.nodeIds || []).slice(0, 12),
-      nodeLabels: (cluster.nodeIds || [])
-        .map(graphNodeById)
-        .filter(Boolean)
-        .map((node) => node.label),
-      focus: cluster.focus || '',
-      layer: cluster.layer || 'support',
-      note: String(cluster.note || '').slice(0, 260),
-      analysisStatus: cluster.analysisStatus || 'draft',
-    })),
+    schemaVersion: GRAPH_SCHEMA_VERSION,
+    activeLegalTemplateId: graphState.activeLegalTemplateId || 'none',
+    selectedNodeId: graphState.selectedNodeId || '',
+    selectedLinkId: graphState.selectedLinkId || '',
+    nodes: snapshot.state.nodes,
+    links: snapshot.state.links,
+    relationCandidates: snapshot.state.relationCandidates || [],
+    clusters: snapshot.state.clusters,
+    commandBlocks: commandBlocks
+      .map(sanitizeCommandBlock)
+      .filter(Boolean)
+      .slice(0, 20),
+    analysisResults: graphState.analysisResults || {},
   };
 }
 
@@ -4256,17 +5349,28 @@ function buildGraphNodeStructuredInput(saved) {
   const isEvidence = node.kind === 'evidence';
 
   return {
-    kind: isEvent ? 'event_node' : isEvidence ? 'evidence_node' : 'person_node',
-    schemaVersion: 1,
+    kind: `${node.kind || 'unknown'}_node`,
+    schemaVersion: GRAPH_SCHEMA_VERSION,
     node: {
       id: node.id,
-      type: node.kind || 'person',
+      type: node.kind || 'unknown',
       label: node.label,
       role: node.role,
-      layer: node.layer,
+      importance: node.importance || node.layer || 'support',
+      epistemicStatus: node.epistemicStatus || 'unknown',
+      polarity: node.polarity || 'neutral',
       note: node.note,
+      sourceRefs: node.sourceRefs || [],
+      claimText: node.claimText || '',
+      templateId: node.templateId || '',
+      elementKey: node.elementKey || '',
+      hypothesisStatus: node.hypothesisStatus || '',
       eventDate: node.eventDate || '',
       eventTime: node.eventTime || '',
+      timeStart: node.timeStart || '',
+      timeEnd: node.timeEnd || '',
+      timePrecision: node.timePrecision || '',
+      place: node.place || '',
       eventDateTime: graphEventDateTimeLabel(node),
       sourceEvidenceId: node.sourceEvidenceId || '',
       sourceFileName: node.sourceFileName || '',
@@ -4298,7 +5402,7 @@ function buildGraphClusterStructuredInput(saved) {
   const { nodes, links } = clusterNodesAndLinks(cluster);
   return {
     kind: 'cluster_record',
-    schemaVersion: 1,
+    schemaVersion: GRAPH_SCHEMA_VERSION,
     cluster: {
       id: cluster.id,
       label: cluster.label,
@@ -4307,10 +5411,12 @@ function buildGraphClusterStructuredInput(saved) {
       note: cluster.note || '',
       nodes: nodes.map((node) => ({
         id: node.id,
-        type: node.kind || 'person',
+        type: node.kind || 'unknown',
         label: node.label,
         role: node.role,
-        layer: node.layer,
+        importance: node.importance || node.layer || 'support',
+        epistemicStatus: node.epistemicStatus || 'unknown',
+        polarity: node.polarity || 'neutral',
         note: node.note,
         eventDate: node.eventDate || '',
         eventTime: node.eventTime || '',
@@ -4325,8 +5431,11 @@ function buildGraphClusterStructuredInput(saved) {
           id: link.id,
           source: source?.label || link.source,
           target: target?.label || link.target,
+          type: link.type || 'LEGACY_RELATED_TO',
+          role: link.role || '',
           label: link.label || '관계',
-          strength: link.strength || 'weak',
+          verificationStatus: link.verificationStatus || 'unverified',
+          assessment: link.assessment || defaultAssessment(),
           basis: link.basis || '',
         };
       }),
@@ -4375,16 +5484,21 @@ function buildGraphRelationStructuredInput(saved) {
 
   return {
     kind: 'relation_record',
-    schemaVersion: 1,
+    schemaVersion: GRAPH_SCHEMA_VERSION,
     relation: {
       id: link.id,
+      type: link.type || 'LEGACY_RELATED_TO',
+      role: link.role || '',
       label: link.label || '관계',
-      strength: link.strength || 'weak',
-      strengthLabel: graphStrengthLabel(link.strength),
+      verificationStatus: link.verificationStatus || 'unverified',
+      assessment: link.assessment || defaultAssessment(),
+      strength: link.assessment?.supportStrength || link.strength || 'unknown',
+      strengthLabel: graphStrengthLabel(link.assessment?.supportStrength || link.strength),
       basis: link.basis || '',
+      sourceRefs: link.sourceRefs || [],
       source: {
         id: source.id,
-        type: source.kind || 'person',
+        type: source.kind || 'unknown',
         label: source.label,
         role: source.role,
         note: source.note,
@@ -4393,7 +5507,7 @@ function buildGraphRelationStructuredInput(saved) {
       },
       target: {
         id: target.id,
-        type: target.kind || 'person',
+        type: target.kind || 'unknown',
         label: target.label,
         role: target.role,
         note: target.note,
@@ -4420,8 +5534,10 @@ async function toggleGraphLink(sourceId, targetId) {
   if (!sourceNode || !targetNode) return;
 
   const exists = graphState.links.find((link) => (
-    (link.source === sourceId && link.target === targetId)
-    || (link.source === targetId && link.target === sourceId)
+    link.source === sourceId
+    && link.target === targetId
+    && (link.type || 'LEGACY_RELATED_TO') === 'LEGACY_RELATED_TO'
+    && !link.role
   ));
 
   if (exists) {
@@ -4438,8 +5554,8 @@ async function toggleGraphLink(sourceId, targetId) {
 
   const confirmed = await requestGraphConfirm({
     title: '관계선을 만들까요?',
-    message: `${sourceNode.label} ↔ ${targetNode.label} 사이에 새 관계선을 생성합니다.`,
-    detail: '생성 후 관계선을 더블클릭하면 관계명, 근거, 연결 강도를 입력하고 수사지식그래프에 저장할 수 있습니다.',
+    message: `${sourceNode.label} → ${targetNode.label} 방향의 새 관계선을 생성합니다.`,
+    detail: '생성 후 관계선을 더블클릭하면 관계 유형, 역할, 검증 상태, 근거와 검토 상태를 입력할 수 있습니다.',
     okLabel: '관계선 생성',
   });
 
@@ -4687,15 +5803,13 @@ function buildKnowledgeGraphGuidance() {
 
   return `
 [사용자가 사건 평면에 구성한 분석 데이터]
-${knowledgeGraphMarkdown()}
+${buildKnowledgeGraphGuidanceV2(graphSnapshotForAgent())}
 
 주의:
-- 위 그래프는 사용자가 직접 배치한 사건 구조다.
-- 보고서에는 화면 요소를 설명하지 말고 관계 역학, 시간 관련성, 논리적 강점, 논리적 약점, 공략점으로 흡수한다.
-- 파란 반투명 클러스터 영역은 사용자가 같은 맥락으로 묶은 노드 집합이다. 클러스터는 별도 인물이 아니라 사안 묶음으로 다룬다.
-- 그래프 관계선은 법적 판단이 아니라 사안 구조화 단서로만 다룬다.
-- PDF 증거 또는 사건 기록과 연결되지 않은 노드는 "확인 필요"로 남긴다.
-- "상황 시각화보드", "사건 노드 기록", "인물 노드 기록"이라는 제목은 보고서에 쓰지 않는다.
+- 보고서에는 UI 요소를 설명하지 말고 인물, 주요사건, 주장, 근거, 기반명제의 연결과 취약한 지점을 흡수한다.
+- 그래프 노드 수, 관계 수, 밀도는 사건의 강도나 법적 충분성이 아니다.
+- 가능한 경우 "주장 → 근거" 또는 "주장 → 기반명제 → 주요사건" 경로로 설명한다.
+- relationCandidates는 승인 전 계산 경로에 포함하지 않는다.
 `.trim();
 }
 
@@ -4764,20 +5878,119 @@ function renderGraphTimeAxis() {
   `;
 }
 
+function graphEdgePath(source, target, curveIndex = 0, curveTotal = 1) {
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
+  const length = Math.max(1, Math.hypot(dx, dy));
+  const normalX = -dy / length;
+  const normalY = dx / length;
+  const offset = (curveIndex - (curveTotal - 1) / 2) * 34;
+  const controlX = (source.x + target.x) / 2 + normalX * offset;
+  const controlY = (source.y + target.y) / 2 + normalY * offset;
+  return {
+    d: `M ${source.x} ${source.y} Q ${controlX} ${controlY} ${target.x} ${target.y}`,
+    labelX: controlX,
+    labelY: controlY,
+  };
+}
+
+function graphVisibleRelations() {
+  const accepted = (graphState.links || []).map((link) => ({ ...link, isCandidate: false }));
+  const candidates = (graphState.relationCandidates || [])
+    .filter((candidate) => candidate.status === 'pending')
+    .map((candidate) => ({
+      id: candidate.id,
+      source: candidate.source,
+      target: candidate.target,
+      type: candidate.suggestedType || 'LEGACY_RELATED_TO',
+      role: candidate.suggestedRole || '',
+      label: candidate.suggestedType || '후보',
+      basis: candidate.basis || '',
+      sourceRefs: candidate.sourceRefs || [],
+      strength: candidate.confidence === 'high' ? 'likely' : 'weak',
+      assessment: defaultAssessment({ extractionConfidence: candidate.confidence || 'unknown' }),
+      verificationStatus: 'unverified',
+      analysisStatus: 'candidate',
+      isCandidate: true,
+    }));
+  return [...accepted, ...candidates];
+}
+
+function graphNodePreviewText(node, fallback = '') {
+  const text = String(
+    node?.kind === 'claim'
+      ? node.claimText || node.note || fallback
+      : node?.kind === 'source_span'
+        ? node.note || node.sourceRefs?.[0]?.quote || fallback
+        : node?.note || fallback
+  )
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!text) return fallback;
+  return text.length > 82 ? `${text.slice(0, 82)}...` : text;
+}
+
+function graphRelationTypeClass(type = '') {
+  return String(type || 'LEGACY_RELATED_TO').toLowerCase().replace(/_/g, '-');
+}
+
+function graphRelationDisplayLabel(link = {}) {
+  const type = String(link.type || link.suggestedType || 'LEGACY_RELATED_TO').toUpperCase();
+  const labels = {
+    CONTAINS: '원자료',
+    ASSERTS: '명제화',
+    DERIVED_FROM: '출처',
+    PARTICIPATES_AS: '참여',
+    SUPPORTS: '지지',
+    ATTACKS: '반박',
+    UNDERCUTS: '약화',
+    SATISFIES: '논증 연결',
+    REQUIRED_FOR: '필요 항목',
+    PRECEDES: '선행',
+    OVERLAPS: '동시성',
+    CONTRADICTS: '충돌',
+    EXPLAINS: '장면 설명',
+    ALTERNATIVE_TO: '대체 가설',
+    INCOMPATIBLE_WITH: '양립 곤란',
+    LEGACY_RELATED_TO: '관련성',
+  };
+  const base = labels[type] || normalizeEntityName(link.label) || '관계';
+  return link.isCandidate ? `후보 · ${base}` : base;
+}
+
 function renderKnowledgeGraph() {
   if (!dom.graphCanvas || !dom.graphNodes || !dom.graphLinks) return;
 
   const rect = dom.graphCanvas.getBoundingClientRect();
+  const relations = graphVisibleRelations();
+  const relationGroups = new Map();
+  relations.forEach((link) => {
+    const key = `${link.source}->${link.target}`;
+    if (!relationGroups.has(key)) relationGroups.set(key, []);
+    relationGroups.get(key).push(link);
+  });
 
-  dom.graphLinks.innerHTML = graphState.links
+  dom.graphLinks.innerHTML = `
+    <defs>
+      <marker id="case-graph-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L9,3 z" class="case-graph-arrow"></path>
+      </marker>
+      <marker id="case-graph-arrow-candidate" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L9,3 z" class="case-graph-arrow is-candidate"></path>
+      </marker>
+    </defs>
+    ${relations
     .map((link) => {
       const source = graphNodeById(link.source);
       const target = graphNodeById(link.target);
       if (!source || !target) return '';
-      const midX = (source.x + target.x) / 2;
-      const midY = (source.y + target.y) / 2;
+      const siblings = relationGroups.get(`${link.source}->${link.target}`) || [link];
+      const curve = graphEdgePath(source, target, siblings.findIndex((item) => item.id === link.id), siblings.length);
       const selectedClass = link.id === graphState.selectedLinkId ? ' is-selected' : '';
       const strengthClass = ` is-${normalizeGraphStrength(link.strength)}`;
+      const typeClass = ` is-type-${graphRelationTypeClass(link.type)}`;
+      const candidateClass = link.isCandidate ? ' is-candidate' : '';
       const statusClass = link.analysisStatus ? ` is-${link.analysisStatus}` : '';
       const statusLabel = link.analysisStatus === 'synced'
         ? '저장됨'
@@ -4787,15 +6000,16 @@ function renderKnowledgeGraph() {
             ? '확인 필요'
             : graphStrengthLabel(link.strength);
       return `
-        <g class="case-graph-link-group${selectedClass}${strengthClass}${statusClass}" data-graph-link-id="${escapeHtml(link.id)}">
-          <line class="case-graph-link-hit" data-graph-link-id="${escapeHtml(link.id)}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}"></line>
-          <line class="case-graph-link" data-graph-link-id="${escapeHtml(link.id)}" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}"></line>
-          <text class="case-graph-link-label" data-graph-link-id="${escapeHtml(link.id)}" x="${midX}" y="${midY - 6}" text-anchor="middle">${escapeHtml(link.label || '관계')}</text>
-          <text class="case-graph-link-strength" data-graph-link-id="${escapeHtml(link.id)}" x="${midX}" y="${midY + 9}" text-anchor="middle">${escapeHtml(statusLabel)}</text>
+        <g class="case-graph-link-group${selectedClass}${strengthClass}${typeClass}${candidateClass}${statusClass}" data-graph-link-id="${escapeHtml(link.id)}">
+          <path class="case-graph-link-hit" data-graph-link-id="${escapeHtml(link.id)}" d="${escapeHtml(curve.d)}"></path>
+          <path class="case-graph-link" data-graph-link-id="${escapeHtml(link.id)}" d="${escapeHtml(curve.d)}" marker-end="url(#${link.isCandidate ? 'case-graph-arrow-candidate' : 'case-graph-arrow'})"></path>
+          <text class="case-graph-link-label" data-graph-link-id="${escapeHtml(link.id)}" x="${curve.labelX}" y="${curve.labelY - 6}" text-anchor="middle">${escapeHtml(graphRelationDisplayLabel(link))}</text>
+          <text class="case-graph-link-strength" data-graph-link-id="${escapeHtml(link.id)}" x="${curve.labelX}" y="${curve.labelY + 9}" text-anchor="middle">${escapeHtml(link.isCandidate ? '후보 · 직접 근거 검토' : statusLabel)}</text>
         </g>
       `;
     })
-    .join('');
+    .join('')}
+  `;
   dom.graphLinks.setAttribute('viewBox', `0 0 ${Math.max(1, rect.width)} ${Math.max(1, rect.height)}`);
 
   dom.graphNodes.innerHTML = '';
@@ -4831,16 +6045,28 @@ function renderKnowledgeGraph() {
   graphState.nodes.forEach((node) => {
     const eventDateTime = graphEventDateTimeLabel(node);
     const emptyMemo = node.kind === 'evidence'
-      ? '더블클릭으로 증거 메모 입력'
+      ? '더블클릭으로 근거 메모 입력'
       : node.kind === 'event'
         ? '더블클릭으로 사건 메모 입력'
-        : '더블클릭으로 인물 메모 입력';
+        : node.kind === 'source_span'
+          ? '근거 발췌 입력'
+          : node.kind === 'claim'
+            ? '주장 입력'
+            : node.kind === 'premise'
+              ? '기반명제 입력'
+            : node.kind === 'inference'
+              ? '기반명제 입력'
+              : node.kind === 'legal_element'
+                ? '기반명제 설명 입력'
+                : node.kind === 'hypothesis'
+                  ? '주장 입력'
+                  : '더블클릭으로 인물 메모 입력';
     const button = document.createElement('button');
     button.type = 'button';
     button.className = [
       'case-graph-node',
       `is-kind-${node.kind || 'person'}`,
-      `is-${node.layer || 'uncertain'}`,
+      `is-${node.importance || node.layer || 'uncertain'}`,
       node.analysisStatus === 'analyzing' ? 'is-analyzing' : '',
       node.analysisStatus === 'synced' ? 'is-synced' : '',
       node.analysisStatus === 'failed' ? 'is-failed' : '',
@@ -4856,7 +6082,7 @@ function renderKnowledgeGraph() {
       <i>${escapeHtml(graphKindLabel(node.kind))}</i>
       <b>${escapeHtml(node.label)}</b>
       <span>${escapeHtml(node.role)}</span>
-      <em>${escapeHtml([eventDateTime, node.note || emptyMemo].filter(Boolean).join(' · '))}</em>
+      <em>${escapeHtml([eventDateTime, graphNodePreviewText(node, emptyMemo)].filter(Boolean).join(' · '))}</em>
       ${node.analysisStatus === 'synced' ? '<u>저장됨</u>' : ''}
       ${node.analysisStatus === 'analyzing' ? '<u>분석 중</u>' : ''}
       ${node.analysisStatus === 'failed' ? '<u>확인 필요</u>' : ''}
@@ -4980,11 +6206,11 @@ function buildCommandMessage(command) {
     '[명령 블록 실행]',
     `명령: ${command}`,
     '',
-    '[수사지식그래프 요약]',
+    '[증거-논증 그래프 요약]',
     graphCommandSummary(),
     '',
     '요청:',
-    '- 오른쪽 수사지식그래프의 인물·사건·증거 노드, 관계선, 클러스터, 시간축 정보를 기반으로 답변해줘.',
+    '- 오른쪽 그래프의 인물, 주요사건, 주장, 근거, 기반명제 연결을 기반으로 답변해줘.',
     '- 보고서 전체를 작성하지 말고, 이 명령에 대한 실행 결과만 명확하게 출력해줘.',
     '- 사실, 주장, 추정, 확인 필요를 구분하고 자료상 한계를 함께 표시해줘.',
     '- 법률·수사·행정 결론은 단정하지 말고 보조적 분석으로 표현해줘.',
@@ -4992,68 +6218,322 @@ function buildCommandMessage(command) {
 }
 
 function buildCommandStructuredInput(command) {
+  const graphSnapshot = graphSnapshotForAgent();
+  const engineResult = runDeterministicGraphCommand(graphSnapshot, command, {
+    templateId: graphSnapshot.activeLegalTemplateId || 'none',
+    targetNodeId: graphState.selectedNodeId,
+    evidenceNodeId: graphState.nodes.find((node) => node.kind === 'evidence')?.id || '',
+  });
+  const queryPackage = buildGraphQueryPackage(graphSnapshot, command, {
+    engineResult,
+    templateId: graphSnapshot.activeLegalTemplateId || 'none',
+    targetNodeId: graphState.selectedNodeId,
+  });
+
   return {
     kind: 'command_block',
-    schemaVersion: commandBlockVersion,
+    schemaVersion: GRAPH_SCHEMA_VERSION,
     command,
     graphSummary: graphCommandSummary(),
-    graphSnapshot: graphSnapshotForAgent(),
+    graphSnapshot,
+    engineResult,
+    queryPackage,
   };
+}
+
+function readableGraphNodeName(id) {
+  const node = graphNodeById(id);
+  if (!node) return '';
+  const label = normalizeGraphReferenceName(node.label || node.claimText || node.note || id);
+  return `${graphKindLabel(node.kind)} · ${label || '이름 없음'}`;
+}
+
+function readableGraphNodeShortName(id) {
+  const node = graphNodeById(id);
+  if (!node) return '';
+  return normalizeGraphReferenceName(node.label || node.claimText || node.note || id) || '';
+}
+
+function readableGraphNodeKind(id) {
+  const node = graphNodeById(id);
+  return node ? normalizeGraphKind(node.kind) : '';
+}
+
+function readableGraphIdList(ids = []) {
+  return [...new Set(ids)]
+    .map((id) => readableGraphNodeName(id))
+    .filter(Boolean)
+    .slice(0, 6)
+    .join(' / ');
+}
+
+function readableGraphShortList(ids = [], limit = 3) {
+  return [...new Set(ids)]
+    .map((id) => readableGraphNodeShortName(id))
+    .filter(Boolean)
+    .slice(0, limit)
+    .join(', ');
+}
+
+function readableFindingTitle(item, index = 0) {
+  if (!item || typeof item !== 'object') return `발견 ${index + 1}`;
+  if (item.title) return String(item.title).replace(/(?:claim|person|event|evidence|premise|source_span|legal_element|hypothesis|inference)-[\w-]+/gi, '').trim() || `취약점 ${index + 1}`;
+  if (item.label) return item.label;
+  if (item.claimText) return graphTextLabelFromContent(item.claimText, `주장 ${index + 1}`);
+  if (item.sourceLabel && item.targetLabel) return `${item.sourceLabel} → ${item.targetLabel}`;
+  if (item.gap) return '보완이 필요한 지점';
+  if (item.type) return '연결 구조 점검';
+  return `취약점 ${index + 1}`;
+}
+
+function readableFindingSummary(item) {
+  if (!item || typeof item !== 'object') return String(item || '').slice(0, 220);
+  const parts = [];
+  const summary = item.summary || item.missingLinkDescription || item.gap || item.why_it_matters || item.weakness || '';
+  if (summary) {
+    parts.push(String(summary)
+      .replace(/원문\s*발췌/g, '직접 근거')
+      .replace(/사실명제/g, '주장')
+      .replace(/증거\s*경로/g, '근거 경로')
+      .replace(/(?:claim|person|event|evidence|premise|source_span|legal_element|hypothesis|inference)-[\w-]+/gi, '해당 블록')
+    );
+  }
+  if (Array.isArray(item.risks) && item.risks.length) parts.push(item.risks.slice(0, 3).join(' '));
+  if (item.impactCount) parts.push(`영향받는 연결 ${item.impactCount}개`);
+  if (item.singleEvidenceDependency) parts.push('하나의 근거에 크게 의존합니다.');
+  return parts.join(' ').trim();
+}
+
+function readableFindingNodeIds(item) {
+  return [
+    item?.elementId,
+    item?.evidenceNodeId,
+    item?.hypothesisId,
+    item?.claimId,
+    ...(Array.isArray(item?.node_ids) ? item.node_ids : []),
+    ...(Array.isArray(item?.nodeIds) ? item.nodeIds : []),
+    ...(Array.isArray(item?.affectedClaims) ? item.affectedClaims.map((claim) => claim.id) : []),
+  ].filter(Boolean);
+}
+
+function readableFindingStatus(value) {
+  const text = String(value || '').trim();
+  const map = {
+    unsupported: '연결 부족',
+    weakly_supported: '근거 약함',
+    contested: '다툼 가능',
+    supported_for_review: '검토 가능',
+    unverified: '확인 필요',
+    asserted: '주장됨',
+    corroborated: '보강됨',
+    disputed: '다툼 있음',
+    rejected: '제외됨',
+  };
+  return map[text] || text;
+}
+
+function readableFindingSectionTitle(key) {
+  const map = {
+    summary: '요약',
+    priorityFixes: '우선 보완할 취약점',
+    argumentGaps: '보완할 주장',
+    provenanceRisks: '약한 근거 연결',
+    evidenceRemovalRisks: '근거 의존 취약점',
+    singleEvidenceDependencies: '단일 근거 의존',
+    hypothesisRisks: '대체 주장',
+    contradictions: '충돌 가능성',
+    propositionRisks: '주장 보완',
+    candidateRisks: '확인 대기 연결',
+    evidencePlan: '추가할 근거',
+  };
+  return map[key] || key;
+}
+
+function graphSharpVulnerabilityMarkdown(commandInput) {
+  const result = commandInput?.engineResult || {};
+  const findings = result.findings;
+  if (!findings || typeof findings !== 'object' || !Array.isArray(findings.priorityFixes)) return '';
+
+  const priorityFixes = findings.priorityFixes || [];
+  const claimWeaknesses = priorityFixes.filter((item) => item.kind === 'claim_weakness');
+  const evidenceDependencies = priorityFixes.filter((item) => item.kind === 'evidence_dependency');
+  const contradictions = priorityFixes.filter((item) => item.kind === 'contradiction');
+  const lines = ['# 취약점분석', ''];
+
+  const headlineParts = [];
+  if (claimWeaknesses.length) headlineParts.push(`주장 연결 약점 ${claimWeaknesses.length}개`);
+  if (evidenceDependencies.length) headlineParts.push(`근거 의존 축 ${evidenceDependencies.length}개`);
+  if (contradictions.length) headlineParts.push(`충돌 가능성 ${contradictions.length}개`);
+  lines.push(`- ${headlineParts.length ? headlineParts.join(' · ') : '현재 그래프상 치명적인 단절은 크지 않습니다.'}`);
+
+  const insights = [];
+  claimWeaknesses.slice(0, 2).forEach((item) => {
+    const claimIds = readableFindingNodeIds(item).filter((id) => readableGraphNodeKind(id) === 'claim');
+    const claim = readableGraphShortList(claimIds, 1) || readableFindingTitle(item);
+    const summary = readableFindingSummary(item)
+      .replace(/어느 주요사건에서 나온 주장인지 연결이 필요합니다\.\s*/g, '발생 장면 연결이 약합니다. ')
+      .replace(/누구의 말이나 행위와 연결되는 주장인지 확인이 필요합니다\.\s*/g, '진술자/행위자 연결이 약합니다. ')
+      .replace(/이 주장을 받치는 기반명제가 부족합니다\.\s*/g, '전제 사실 보강이 필요합니다. ');
+    insights.push(`주장 「${claim}」은 ${summary || '사건·인물·근거 중 하나가 비어 있습니다.'}`);
+  });
+
+  evidenceDependencies.slice(0, 2).forEach((item) => {
+    const ids = readableFindingNodeIds(item);
+    const evidence = readableGraphShortList(ids.filter((id) => readableGraphNodeKind(id) === 'evidence'), 1) || readableFindingTitle(item).replace(/\s*의존성\s*점검$/g, '');
+    const claims = readableGraphShortList(ids.filter((id) => readableGraphNodeKind(id) === 'claim'), 2);
+    insights.push(`근거 「${evidence}」가 빠지면${claims ? ` 「${claims}」 축이 흔들립니다` : ' 연결된 주장 축이 약해집니다'}. 같은 사실을 받치는 독립 근거가 필요합니다.`);
+  });
+
+  contradictions.slice(0, 1).forEach((item) => {
+    const blocks = readableGraphShortList(readableFindingNodeIds(item), 3);
+    insights.push(`충돌 가능성은 ${blocks || '주장 간 관계'}에서 먼저 확인해야 합니다.`);
+  });
+
+  lines.push('', '## 핵심 취약점');
+  insights.length
+    ? insights.slice(0, 4).forEach((line) => lines.push(`- ${line}`))
+    : lines.push('- 지금 그래프는 큰 단절보다 개별 근거의 정확한 연결 보강이 더 중요합니다.');
+
+  const actions = [];
+  if (claimWeaknesses.length) actions.push('약한 주장을 해당 주요사건과 진술자/행위자에 직접 연결하세요.');
+  if (evidenceDependencies.length) actions.push('한 근거에만 기대는 주장은 다른 근거 또는 목격 진술을 추가로 붙이세요.');
+  if ((findings.summary?.pendingCandidateCount || 0) > 0) actions.push('후보 관계는 필요한 것만 승인하고, 직접 근거 없는 연결은 버리세요.');
+  if (!actions.length) actions.push('현재 연결을 유지하되, 각 근거의 실제 발췌문을 더 구체화하세요.');
+
+  lines.push('', '## 바로 할 일');
+  actions.slice(0, 3).forEach((line) => lines.push(`- ${line}`));
+
+  return lines.join('\n');
+}
+
+function graphEngineResultMarkdown(commandInput) {
+  const result = commandInput?.engineResult || {};
+  const type = result.analysis_type || 'freeform';
+  const findings = result.findings;
+  const limitations = Array.isArray(result.limitations) ? result.limitations : [];
+  const sharpMarkdown = type === 'vulnerability_analysis' ? graphSharpVulnerabilityMarkdown(commandInput) : '';
+  if (sharpMarkdown) return sharpMarkdown;
+  const lines = [
+    '# 취약점분석 결과',
+    '',
+  ];
+
+  const addFinding = (item, index) => {
+    if (!item || typeof item !== 'object') {
+      lines.push(`- ${String(item || '').slice(0, 220)}`);
+      return;
+    }
+    const title = readableFindingTitle(item, index);
+    const status = item.status ? ` · ${readableFindingStatus(item.status)}` : '';
+    const summary = readableFindingSummary(item);
+    lines.push(`- ${title}${status}${summary ? `: ${summary}` : ''}`);
+    const nodeLabels = readableGraphIdList(readableFindingNodeIds(item));
+    if (nodeLabels) lines.push(`  - 관련 블록: ${nodeLabels}`);
+    if (Array.isArray(item.sourceRefs) && item.sourceRefs.length) {
+      lines.push(`  - 근거 발췌: ${item.sourceRefs.slice(0, 2).map((ref) => ref.quote || ref.fileName || '').filter(Boolean).join(' / ') || '확인 필요'}`);
+    }
+  };
+
+  if (findings && typeof findings === 'object' && Array.isArray(findings.priorityFixes)) {
+    const summary = findings.summary && typeof findings.summary === 'object' ? findings.summary : {};
+    lines.push('## 한눈에 보기');
+    const summaryLine = [
+      summary.propositionRiskCount ? `보완할 주장 ${summary.propositionRiskCount}개` : '',
+      summary.weakArgumentEdgeCount ? `약한 연결 ${summary.weakArgumentEdgeCount}개` : '',
+      summary.evidenceRemovalRiskCount ? `근거 의존 취약점 ${summary.evidenceRemovalRiskCount}개` : '',
+      summary.contradictionCount ? `충돌 가능성 ${summary.contradictionCount}개` : '',
+    ].filter(Boolean).join(' · ');
+    lines.push(`- ${summaryLine || '현재 그래프에서 즉시 표시할 취약점은 많지 않습니다.'}`);
+    lines.push('', '## 우선 보완할 취약점');
+    findings.priorityFixes.length
+      ? findings.priorityFixes.slice(0, 12).forEach(addFinding)
+      : lines.push('- 구조적으로 탐지된 우선 보완 항목이 없습니다.');
+    const evidencePlan = Array.isArray(findings.evidencePlan) ? findings.evidencePlan : [];
+    if (evidencePlan.length) {
+      lines.push('', '## 추가할 근거');
+      evidencePlan.slice(0, 6).forEach(addFinding);
+    }
+  } else if (Array.isArray(findings)) {
+    lines.push('## 발견사항');
+    findings.length ? findings.slice(0, 18).forEach(addFinding) : lines.push('- 구조적으로 탐지된 항목이 없습니다.');
+  } else if (findings && typeof findings === 'object') {
+    lines.push('## 취약점');
+    Object.entries(findings).forEach(([key, value]) => {
+      if (key === 'summary') return;
+      lines.push(`### ${readableFindingSectionTitle(key)}`);
+      if (Array.isArray(value)) {
+        value.length ? value.slice(0, 12).forEach(addFinding) : lines.push('- 없음');
+      } else if (value && typeof value === 'object') {
+        const entries = Object.entries(value)
+          .filter(([, entryValue]) => entryValue !== undefined && entryValue !== null && entryValue !== '')
+          .map(([entryKey, entryValue]) => `${readableFindingSectionTitle(entryKey)} ${entryValue}`);
+        lines.push(entries.length ? `- ${entries.join(' · ')}` : '- 없음');
+      } else {
+        lines.push(`- ${String(value || '없음').slice(0, 700)}`);
+      }
+    });
+  } else {
+    lines.push('- 구조적 결과가 없습니다.');
+  }
+
+  if (limitations.length) {
+    lines.push('', '## 한계');
+    limitations.forEach((item) => lines.push(`- ${item}`));
+  }
+
+  return lines.join('\n');
+}
+
+function graphCommandResponseMarkdown(data) {
+  if (!data || typeof data !== 'object') return '';
+  const root = data.result && typeof data.result === 'object' ? data.result : data;
+  const message = String(root.assistant_message || root.assistantMessage || '').trim();
+  const findings = Array.isArray(root.findings) ? root.findings : [];
+  const citations = Array.isArray(root.citations) ? root.citations : [];
+  const limitations = Array.isArray(root.limitations) ? root.limitations : [];
+
+  if (!message && !findings.length && !citations.length && !limitations.length) return '';
+
+  const lines = [];
+  if (message) lines.push(message);
+  if (findings.length) {
+    lines.push('', '## 우선 보완할 취약점');
+    findings.slice(0, 18).forEach((finding, index) => {
+      const title = readableFindingTitle(finding, index);
+      const status = finding?.status ? ` · ${readableFindingStatus(finding.status)}` : '';
+      const summary = readableFindingSummary(finding);
+      lines.push(`- ${title}${status}${summary ? `: ${summary}` : ''}`);
+      const nodeLabels = readableGraphIdList(readableFindingNodeIds(finding));
+      if (nodeLabels) lines.push(`  - 관련 블록: ${nodeLabels}`);
+      if (Array.isArray(finding?.source_refs) || Array.isArray(finding?.sourceRefs)) {
+        const refs = finding.source_refs || finding.sourceRefs;
+        const refLine = refs.slice(0, 3).map((ref) => ref.quote || ref.fileName || ref.sourceNodeId).filter(Boolean).join(' / ');
+        if (refLine) lines.push(`  - 근거 발췌: ${refLine}`);
+      }
+    });
+  }
+  if (citations.length) {
+    lines.push('', '## 근거 발췌');
+    citations.slice(0, 12).forEach((citation) => {
+      const quote = citation?.quote || citation?.sourceRef?.quote || citation?.fileName || '';
+      lines.push(`- ${quote || JSON.stringify(citation).slice(0, 240)}`);
+    });
+  }
+  if (limitations.length) {
+    lines.push('', '## 한계');
+    limitations.forEach((item) => lines.push(`- ${typeof item === 'string' ? item : item?.summary || JSON.stringify(item).slice(0, 240)}`));
+  }
+  return lines.join('\n').trim();
 }
 
 async function persistCommandBlockRemote(block) {
-  if (!supabase || !session?.user) return false;
-
-  const ready = await ensureRemoteConversationForWorkspace(block.command || '명령 블록');
-  if (!ready || !activeConversation || activeConversation.isLocal) return false;
-
-  const payload = {
-    ...block,
-    remoteMessageId: '',
-  };
-
-  const { data, error } = await supabase
-    .from('report_messages')
-    .insert({
-      conversation_id: activeConversation.id,
-      user_id: session.user.id,
-      role: 'assistant',
-      content: block.output || '',
-      metadata: {
-        kind: commandBlockKind,
-        command_block: payload,
-      },
-    })
-    .select('id')
-    .single();
-
-  return error ? '' : String(data?.id || '');
+  if (!block) return false;
+  return persistGraphStateRemote({ reason: 'case_file_command_block_update' });
 }
 
 async function deleteCommandBlockRemote(block) {
-  if (!supabase || !session?.user || !block) return false;
-
-  if (block.remoteMessageId) {
-    const { error } = await supabase
-      .from('report_messages')
-      .delete()
-      .eq('id', block.remoteMessageId)
-      .eq('user_id', session.user.id);
-
-    return !error;
-  }
-
-  if (!activeConversation?.id || activeConversation.isLocal) return false;
-
-  const { error } = await supabase
-    .from('report_messages')
-    .delete()
-    .eq('conversation_id', activeConversation.id)
-    .eq('user_id', session.user.id)
-    .eq('metadata->>kind', commandBlockKind)
-    .eq('metadata->command_block->>id', block.id);
-
-  return !error;
+  if (!block) return false;
+  return persistGraphStateRemote({ reason: 'case_file_command_block_delete' });
 }
 
 async function deleteCommandBlock(blockId) {
@@ -5067,14 +6547,15 @@ async function deleteCommandBlock(blockId) {
   if (activeCommandResultBlockId === block.id) {
     setCommandResultOpen(false);
   }
+  persistGraphStateLocal();
   renderCommandBlocks();
 
   const deletedRemote = await deleteCommandBlockRemote(block);
-  const localOnly = !block.remoteMessageId && (!activeConversation?.id || activeConversation.isLocal);
+  const localOnly = !supabase || !session?.user || !activeConversation?.id || activeConversation.isLocal;
   setServiceStatus(
     deletedRemote || localOnly
-      ? '명령 블록을 삭제했습니다.'
-      : '명령 블록은 화면에서 삭제했지만 원격 삭제 반영이 지연되었습니다.',
+      ? '명령 블록을 삭제하고 현재 사안 파일에 반영했습니다.'
+      : '명령 블록은 화면에서 삭제했지만 원격 사안 파일 반영이 지연되었습니다.',
     deletedRemote || localOnly ? 'ready' : 'error'
   );
 }
@@ -5127,9 +6608,10 @@ async function invokeGraphCommand(command) {
   syncInteractionState();
   renderAll();
 
+  let commandInput = null;
   try {
     const usageBeforeRequest = { ...usageState };
-    const commandInput = buildCommandStructuredInput(normalizedCommand);
+    commandInput = buildCommandStructuredInput(normalizedCommand);
     const { data, error } = await withTimeout(
       supabase.functions.invoke('report-chat', {
         body: {
@@ -5169,11 +6651,13 @@ async function invokeGraphCommand(command) {
     if (data?.error) throw new Error(data.error);
 
     const output = String(
-      data?.output ??
-      data?.answer ??
-      data?.assistantMessage ??
-      data?.assistant_message ??
-      data?.result ??
+      graphCommandResponseMarkdown(data) ||
+      data?.output ||
+      data?.answer ||
+      data?.assistantMessage ||
+      data?.assistant_message ||
+      data?.result?.assistant_message ||
+      (typeof data?.result === 'string' ? data.result : '') ||
       ''
     ).trim();
 
@@ -5212,6 +6696,17 @@ async function invokeGraphCommand(command) {
     };
   } catch (error) {
     await loadUsage({ preserveOnError: true });
+    if (commandInput?.engineResult) {
+      return {
+        ok: true,
+        output: graphEngineResultMarkdown(commandInput),
+        usage: usageState,
+        meta: {
+          localOnly: true,
+          engineResult: commandInput.engineResult,
+        },
+      };
+    }
     return {
       ok: false,
       reason: friendlyServiceError(error instanceof Error ? error : '명령 실행에 실패했습니다.'),
@@ -5266,20 +6761,24 @@ async function invokeGraphExtraction(text) {
           },
           clientGuidance: [
             'graph_extract 모드입니다.',
-            '사용자의 줄글 상황을 수사지식그래프 패치 JSON으로 변환하세요.',
-            '인물 노드, 사건 노드, 증거 노드, 관계선을 분리하고, 날짜·시간·근거·관계 강도를 가능한 범위에서 채우세요.',
-            '법률 판단이나 책임 단정은 하지 말고 자료상 연결 정도만 표현하세요.',
+            '사용자의 줄글 상황을 인물, 주요사건, 주장, 근거(증거), 기반명제 5개 블록만으로 변환하세요.',
+            'source_span, legal_element, hypothesis, inference는 새 입력에서 만들지 마세요.',
+            '주요사건은 시간순으로 1~5개만 추출하고, 인물은 사건에 붙이고, 주장은 사건에서 파생되게 연결하세요.',
+            '근거(증거)는 주장을 뒷받침하거나 공격하는 자료로 연결하고, 기반명제는 주장을 이해하기 위한 전제 사실로 연결하세요.',
+            '게시글, 댓글, 캡처, 메모, 계좌내역, 문서, 자료는 인물이 아니라 근거(증거)입니다.',
+            '모든 링크는 단방향으로 반환하고, 노드가 고립되지 않도록 주요사건 -> 인물/주장 -> 근거/기반명제 흐름을 구성하세요.',
+            '사용자가 말하지 않은 법률 판단이나 책임 단정은 하지 말고, 사실 구조와 취약점 확인에 필요한 연결만 만드세요.',
           ].join('\n'),
           structuredInput: {
             kind: 'graph_extraction_request',
-            schemaVersion: 1,
+            schemaVersion: GRAPH_SCHEMA_VERSION,
             sourceText: normalizedText,
             existingGraph,
             expectedOutput: {
               graphPatch: {
-                nodes: [{ kind: 'person|event|evidence', label: '', role: '', layer: 'core|support|uncertain', note: '', eventDate: '', eventTime: '' }],
-                links: [{ source: '', target: '', sourceKind: 'person|event|evidence', targetKind: 'person|event|evidence', label: '', basis: '', strength: 'confirmed|likely|weak' }],
-                clusters: [{ label: '', focus: '', nodeLabels: [] }],
+                nodes: [{ clientId: '', kind: 'person|event|evidence|claim|premise', label: '', sourceRefs: [] }],
+                links: [{ source: '', target: '', type: 'PARTICIPATES_AS|EXPLAINS|SUPPORTS|ATTACKS|UNDERCUTS|PRECEDES|DERIVED_FROM', directed: true, verificationStatus: 'asserted|corroborated|disputed|unverified', sourceRefs: [] }],
+                relation_candidates: [{ source: '', target: '', suggestedType: '', reason: '', basis: '', status: 'pending' }],
               },
             },
           },
@@ -5326,8 +6825,8 @@ async function invokeGraphExtraction(text) {
     await loadUsage({ preserveOnError: true });
     applyLocalUsageIncrement(usageBeforeRequest, usageUnits);
 
-    const graphPatch = normalizeGraphExtractionPatch(data);
-    if (!graphPatch || (!graphPatch.nodes.length && !graphPatch.links.length && !graphPatch.clusters.length)) {
+    const graphPatch = normalizeGraphExtractionPatch(data, normalizedText);
+    if (!graphPatch || (!graphPatch.nodes.length && !graphPatch.links.length && !graphPatch.relationCandidates.length && !graphPatch.clusters.length)) {
       return { ok: false, reason: 'AI가 그래프 패치를 반환하지 않았습니다.' };
     }
 
@@ -5359,7 +6858,7 @@ async function runCommandBlock(command, options = {}) {
   }
 
   if (!graphState.nodes.length && !graphState.links.length && !(graphState.clusters || []).length) {
-    setServiceStatus('먼저 오른쪽 사건 평면에 인물, 사건, 증거, 관계 중 하나 이상을 입력해 주세요.', 'error');
+    setServiceStatus('먼저 오른쪽 사건 평면에 인물, 주요사건, 주장, 근거, 기반명제 중 하나 이상을 입력해 주세요.', 'error');
     return;
   }
 
@@ -5400,20 +6899,15 @@ async function runCommandBlock(command, options = {}) {
   renderAll();
   setCommandResultOpen(true, block);
 
-  const remoteMessageId = await persistCommandBlockRemote(block);
-  if (remoteMessageId) {
-    commandBlocks = commandBlocks.map((item) => (
-      item.id === block.id ? { ...item, remoteMessageId } : item
-    ));
-  }
+  const commandSaved = await persistCommandBlockRemote(block);
   persistGraphStateLocal();
   renderAll();
-  setCommandResultOpen(true, remoteMessageId ? { ...block, remoteMessageId } : block);
+  setCommandResultOpen(true, block);
   setServiceStatus(
-    remoteMessageId && (graphSavedBefore || graphSavedAfter)
-      ? '명령 블록과 수사지식그래프를 하나의 사안 파일에 저장했습니다.'
-      : '명령 블록은 생성했지만 일부 원격 저장이 지연되었습니다. 현재 화면의 기록은 유지됩니다.',
-    remoteMessageId ? 'ready' : 'error'
+    commandSaved || graphSavedBefore || graphSavedAfter
+      ? '전체 그래프와 명령 블록 묶음을 하나의 사안 파일로 저장했습니다.'
+      : '명령 블록은 화면에 생성했지만 원격 사안 파일 저장이 지연되었습니다. 현재 브라우저 기록은 유지됩니다.',
+    commandSaved || graphSavedBefore || graphSavedAfter ? 'ready' : 'error'
   );
 }
 
@@ -5422,6 +6916,7 @@ function situationResultSummary(result = {}) {
     `새 노드 ${result.createdNodes || 0}개`,
     `반영 노드 ${result.touchedNodes || 0}개`,
     `새 관계 ${result.createdLinks || 0}개`,
+    result.createdCandidates ? `검토 후보 ${result.createdCandidates}개` : '',
     result.createdClusters ? `새 클러스터 ${result.createdClusters}개` : '',
   ].filter(Boolean).join(' · ');
 }
@@ -5478,7 +6973,7 @@ async function runSituationGraphInput(text) {
   }
 
   setSituationOpen(false);
-  setServiceStatus('AI가 사안을 인물, 사건, 증거, 관계선으로 정리하고 있습니다.', 'ready');
+  setServiceStatus('AI가 사안을 인물, 주요사건, 주장, 근거, 기반명제로 정리하고 있습니다.', 'ready');
 
   const aiExtraction = await invokeGraphExtraction(normalizedText);
   let result = null;
@@ -5775,12 +7270,21 @@ async function loadMessages({ limit = 80, silent = false } = {}) {
 
   if (snapshot) {
     applyGraphSnapshot(snapshot);
+    commandBlocks = snapshot.hasBundledCommandBlocks
+      ? snapshot.commandBlocks
+      : commandBlocksFromMessages(rows);
     lastGraphRemoteSnapshotKey = JSON.stringify({
       nodes: graphState.nodes,
       links: graphState.links,
+      relationCandidates: graphState.relationCandidates,
       clusters: graphState.clusters,
+      activeLegalTemplateId: graphState.activeLegalTemplateId,
+      analysisResults: graphState.analysisResults,
+      commandBlocks,
       viewport: graphViewport,
     });
+  } else {
+    commandBlocks = commandBlocksFromMessages(rows);
   }
 }
 
@@ -7073,6 +8577,14 @@ dom.commandList?.addEventListener('click', async (event) => {
   await runCommandBlock(block.command, { sourceBlockId: block.id });
 });
 
+dom.commandResultOutput?.addEventListener('click', (event) => {
+  const refButton = event.target.closest('[data-graph-ref-id]');
+  if (!refButton) return;
+  event.preventDefault();
+  const ok = focusGraphEntity(refButton.dataset.graphRefKind, refButton.dataset.graphRefId);
+  setServiceStatus(ok ? '그래프 요소를 선택했습니다.' : '해당 그래프 요소를 찾지 못했습니다.', ok ? 'ready' : 'error');
+});
+
 dom.graphMemoBackdrop?.addEventListener('click', () => {
   setGraphMemoOpen(false);
 });
@@ -7373,6 +8885,12 @@ dom.graphLinkMode?.addEventListener('click', () => {
     pendingLinkNodeId: !graphState.linkMode ? graphState.selectedNodeId : null,
   };
   renderAll();
+});
+
+dom.graphCommandPresetButtons?.forEach((button) => {
+  button.addEventListener('click', () => {
+    runCommandBlock(button.dataset.graphCommandPreset || button.textContent || '');
+  });
 });
 
 dom.graphClear?.addEventListener('click', () => {

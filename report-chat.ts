@@ -108,13 +108,21 @@ function fallbackAiObject(content: string, mode: string) {
         summary: assistantMessage,
         nodes: [],
         links: [],
+        relation_candidates: [],
         clusters: [],
+        warnings: ['AI 응답을 구조화하지 못해 그래프 패치를 만들지 않았습니다.'],
       },
     };
   }
 
   if (mode === 'graph_command') {
-    return { assistant_message: assistantMessage };
+    return {
+      assistant_message: assistantMessage,
+      analysis_type: 'freeform',
+      findings: [],
+      citations: [],
+      limitations: ['AI 응답을 구조화하지 못했습니다. 프론트엔드 로컬 분석 결과를 우선 확인하세요.'],
+    };
   }
 
   return {
@@ -234,98 +242,299 @@ function inferEventDateTime(text: string) {
   };
 }
 
+function sentenceChunks(text: string) {
+  return compactText(text, 16000)
+    .split(/(?<=[.!?。！？])\s+|\n+/g)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .flatMap((chunk) => chunk.length > 420 ? chunk.match(/.{1,420}(?:\s|$)/g) || [chunk] : [chunk])
+    .map((chunk) => chunk.trim())
+    .filter(Boolean);
+}
+
+function inferClaimPolarity(text: string) {
+  return /아니|않|없|부인|반박|거짓|불가능|미제공|미지급/.test(text) ? 'negative' : 'positive';
+}
+
+function compactLabel(text: string, fallback: string) {
+  return compactText(text, 500)
+    .replace(/\s+/g, ' ')
+    .replace(/[.!?。！？]+$/g, '')
+    .slice(0, 34)
+    || fallback;
+}
+
+function eventLabelFromChunk(chunk: string, index: number) {
+  if (/폭행/.test(chunk)) return '폭행 사건';
+  if (/협박/.test(chunk)) return '협박 사건';
+  if (/파손/.test(chunk)) return '파손 관련 주장';
+  if (/송금|입금/.test(chunk)) return '송금 사건';
+  if (/게시|댓글/.test(chunk)) return '게시 행위';
+  if (/통화|연락/.test(chunk)) return '통화·연락 장면';
+  if (/제출/.test(chunk)) return '자료 제출';
+  if (/부인|반박/.test(chunk)) return '주장 부인';
+  if (/요구/.test(chunk)) return '요구 및 대응';
+  if (/조사|면담|상담/.test(chunk)) return '조사·면담 장면';
+  return compactLabel(chunk, `주요 사건 ${index + 1}`);
+}
+
+function premiseTextFromClaim(text: string) {
+  const cleaned = compactText(text, 600).replace(/[.!?。！？]+$/g, '').trim();
+  if (!cleaned) return '이 주장을 이해하기 위한 전제 사실 확인 필요';
+  if (/주장|진술|말했|설명|항의|요구|부인|인정/.test(cleaned)) {
+    return `${cleaned}라는 진술 또는 주장이 존재한다.`;
+  }
+  if (/캡처|문자|카톡|메일|녹취|CCTV|영상|사진|파일|보고서|메모|진술서|계좌|송금내역/.test(cleaned)) {
+    return `${cleaned}라는 자료가 근거로 언급된다.`;
+  }
+  return `${cleaned}라는 사실관계가 주장 구조의 전제가 된다.`;
+}
+
+function normalizeShortLabel(value: string) {
+  return compactText(value, 120)
+    .replace(/[은는이가을를에게와과로부터명의]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function uniqueLabels(values: string[], maxItems: number) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const label = normalizeShortLabel(value);
+    const key = label.toLowerCase();
+    if (!label || seen.has(key)) continue;
+    seen.add(key);
+    result.push(label);
+  }
+  return result.slice(0, maxItems);
+}
+
+function extractPersonLabels(text: string) {
+  const blocked = new Set(['학생', '교사', '학부모', '자신', '본인', '태블릿', '있었', 'CCTV']);
+  const values: string[] = [];
+  const rolePattern = /([가-힣]{2,5})\s*(교사|학생|학부모|담당자|피해자|가해자|목격자|관리자|담임|부장|교감|교장|수사관|경찰|검사|피의자|참고인|진술자)(?=\s*(?:은|는|이|가|을|를|에게|와|과|로부터|명의|쪽이|의))/g;
+  let roleMatch;
+  while ((roleMatch = rolePattern.exec(text)) !== null) {
+    values.push(`${roleMatch[1]} ${roleMatch[2]}`);
+  }
+  const simplePattern = /(^|[^\p{L}\p{N}_])([A-Z]|[가-힣]{2,5})(?=\s*(?:은|는|이|가|을|를|에게|와|과|로부터|명의|쪽이))/gu;
+  let match;
+  while ((match = simplePattern.exec(text)) !== null) {
+    const label = normalizeShortLabel(match[2]);
+    const around = text.slice(Math.max(0, match.index - 4), match.index + 8);
+    if (/CCTV|PDF|SNS|AI/i.test(around) && /^[A-Z]$/.test(label)) continue;
+    if (blocked.has(label)) continue;
+    values.push(label);
+  }
+  return uniqueLabels(values, 10);
+}
+
+function extractEvidenceLabels(text: string) {
+  const values: string[] = [];
+  const pattern = /([가-힣A-Za-z0-9_.-]{0,16}\s*(?:CCTV|녹취|녹음|녹취록|캡처|문자\s*캡처|카톡|메일|진술서|메모|PDF|보고서|사진|영상|파일|출석부|상담록|회의록|통화기록|게시글|게시물|댓글|계좌내역|송금내역|입금내역|영수증))/gi;
+  let match;
+  while ((match = pattern.exec(text)) !== null) values.push(match[1]);
+  return uniqueLabels(values, 8);
+}
+
 function deterministicGraphPatch(body: any, summary = '') {
   const text = compactText(body?.message || body?.structuredInput?.sourceText || '', 16000);
-  const dateTime = inferEventDateTime(text);
-  const eventLabels = inferEventLabels(text);
-  const personLabels = inferPersonLabels(text);
-  const evidenceLabels = inferEvidenceLabels(text);
-  const centralEvent = eventLabels[0] || '상황 기록';
+  const chunks = sentenceChunks(text).slice(0, 6);
+  const evidenceClientId = 'manual-evidence-1';
+  const sourceRef = {
+    sourceNodeId: '',
+    evidenceNodeId: evidenceClientId,
+    fileName: '',
+    pageNumber: null,
+    paragraphIndex: 0,
+    startOffset: 0,
+    endOffset: text.length,
+    quote: text.slice(0, 1200),
+  };
+  const nodes = [{
+    clientId: evidenceClientId,
+    kind: 'evidence',
+    label: '입력된 사안 근거',
+    role: '근거 자료',
+    importance: 'support',
+    epistemicStatus: 'asserted',
+    polarity: 'neutral',
+    note: text.slice(0, 1200),
+    sourceRefs: [sourceRef],
+    timeStart: '',
+    timeEnd: '',
+    timePrecision: '',
+    place: '',
+    createdBy: 'rule',
+  }];
+  const links: any[] = [];
 
-  const nodes = [
-    ...eventLabels.map((label) => ({
+  const addLink = (source: string, target: string, type: string, label: string, refs: any[], extra: any = {}) => {
+    if (!source || !target || source === target) return;
+    if (links.some((link) => link.source === source && link.target === target && link.type === type && link.role === (extra.role || ''))) return;
+    links.push({
+      source,
+      target,
+      type,
+      directed: true,
+      role: extra.role || '',
+      label,
+      basis: extra.basis || label,
+      sourceRefs: refs,
+      verificationStatus: extra.verificationStatus || 'asserted',
+      assessment: {
+        extractionConfidence: extra.extractionConfidence || 'medium',
+        sourceReliability: 'unknown',
+        supportStrength: extra.supportStrength || 'weak',
+        legalSufficiency: 'not_applicable',
+      },
+      createdBy: 'rule',
+    });
+  };
+
+  const eventCount = Math.max(1, Math.min(5, chunks.length || 1));
+  const eventNodes = chunks.slice(0, eventCount).map((chunk, index) => {
+    const dateTime = parseDateTime(chunk);
+    return {
+      clientId: `event-${index + 1}`,
       kind: 'event',
-      label,
-      role: '상황 사건',
-      layer: 'core',
-      note: text.slice(0, 1200),
-      eventDate: dateTime.eventDate,
-      eventTime: dateTime.eventTime,
-    })),
-    ...personLabels.map((label) => ({
-      kind: 'person',
-      label,
-      role: '관련 인물',
-      layer: 'uncertain',
-      note: text.slice(0, 900),
-      eventDate: '',
-      eventTime: '',
-    })),
-    ...evidenceLabels.map((label) => ({
-      kind: 'evidence',
-      label,
-      role: '증거 자료',
-      layer: 'support',
-      note: text.slice(0, 900),
-      eventDate: dateTime.eventDate,
-      eventTime: '',
-    })),
-  ];
+      label: eventLabelFromChunk(chunk, index),
+      role: '주요사건',
+      importance: index === 0 ? 'core' : 'support',
+      epistemicStatus: 'asserted',
+      polarity: 'neutral',
+      note: chunk,
+      sourceRefs: [{
+        ...sourceRef,
+        paragraphIndex: index,
+        quote: chunk,
+      }],
+      timeStart: dateTime.eventDate || '',
+      timeEnd: '',
+      timePrecision: dateTime.eventTime ? 'minute' : dateTime.eventDate ? 'day' : '',
+      place: '',
+      createdBy: 'rule',
+      eventDate: dateTime.eventDate || '',
+      eventTime: dateTime.eventTime || '',
+    };
+  });
+  nodes.push(...eventNodes);
 
-  const links = [
-    ...eventLabels.flatMap((eventLabel) => personLabels.map((personLabel) => ({
-      source: personLabel,
-      target: eventLabel,
-      sourceKind: 'person',
-      targetKind: 'event',
-      label: '사건 관련',
-      basis: '같은 상황 기록에서 인물과 사건이 함께 언급됨. 세부 행위와 관계 강도는 확인 필요.',
-      strength: 'weak',
-    }))),
-    ...eventLabels.flatMap((eventLabel) => evidenceLabels.map((evidenceLabel) => ({
-      source: evidenceLabel,
-      target: eventLabel,
-      sourceKind: 'evidence',
-      targetKind: 'event',
-      label: '증거 연결',
-      basis: '같은 상황 기록에서 증거 자료와 사건이 함께 언급됨. 원본성, 작성 시점, 보관 경로는 확인 필요.',
-      strength: 'likely',
-    }))),
-    ...evidenceLabels.flatMap((evidenceLabel) => personLabels.map((personLabel) => ({
-      source: evidenceLabel,
-      target: personLabel,
-      sourceKind: 'evidence',
-      targetKind: 'person',
-      label: '증거 관련',
-      basis: '같은 상황 기록에서 증거 자료와 인물이 함께 언급됨. 해당 증거가 어떤 행위 또는 진술을 뒷받침하는지는 확인 필요.',
-      strength: 'weak',
-    }))),
-    ...eventLabels.slice(1).map((eventLabel) => ({
-      source: centralEvent,
-      target: eventLabel,
-      sourceKind: 'event',
-      targetKind: 'event',
-      label: '시간·맥락',
-      basis: '같은 상황 기록에서 복수 사건으로 추출됨. 선후관계와 시간 간격은 확인 필요.',
-      strength: 'weak',
-    })),
-  ];
+  const personNodes = extractPersonLabels(text).map((label, index) => ({
+    clientId: `person-${index + 1}`,
+    kind: 'person',
+    label,
+    role: '관련 인물',
+    importance: 'uncertain',
+    epistemicStatus: 'asserted',
+    polarity: 'neutral',
+    note: '',
+    sourceRefs: [],
+    timeStart: '',
+    timeEnd: '',
+    timePrecision: '',
+    place: '',
+    createdBy: 'rule',
+  }));
+  const extraEvidenceNodes = extractEvidenceLabels(text).map((label, index) => ({
+    clientId: `evidence-${index + 2}`,
+    kind: 'evidence',
+    label,
+    role: '근거 자료',
+    importance: 'support',
+    epistemicStatus: 'asserted',
+    polarity: 'neutral',
+    note: '',
+    sourceRefs: [],
+    timeStart: '',
+    timeEnd: '',
+    timePrecision: '',
+    place: '',
+    createdBy: 'rule',
+  }));
+  nodes.push(...personNodes, ...extraEvidenceNodes);
 
-  const nodeLabels = nodes.map((node) => node.label);
-  const clusters = nodeLabels.length >= 2
-    ? [{
-        label: `${centralEvent} 묶음`,
-        focus: '상황 기록 기반 자동 묶음',
-        nodeLabels,
-        note: 'AI 응답이 비었거나 구조화되지 않은 경우에도 그래프 생성을 보장하기 위한 기본 묶음입니다.',
-      }]
-    : [];
+  chunks.forEach((chunk, index) => {
+    const claimId = `claim-${index + 1}`;
+    const premiseId = `premise-${index + 1}`;
+    const event = eventNodes[Math.min(index, eventNodes.length - 1)];
+    const relatedPeople = personNodes.filter((person) => chunk.includes(person.label.split(' ')[0])).slice(0, 4);
+    const relatedEvidence = extraEvidenceNodes.filter((evidence) => chunk.includes(evidence.label)).slice(0, 3);
+    const startOffset = text.indexOf(chunk);
+    const chunkRef = {
+      sourceNodeId: '',
+      evidenceNodeId: evidenceClientId,
+      fileName: '',
+      pageNumber: null,
+      paragraphIndex: index,
+      startOffset: startOffset >= 0 ? startOffset : null,
+      endOffset: startOffset >= 0 ? startOffset + chunk.length : null,
+      quote: chunk,
+    };
+    nodes.push({
+      clientId: claimId,
+      kind: 'claim',
+      label: compactLabel(chunk, `주장 ${index + 1}`),
+      role: '주장',
+      importance: index === 0 ? 'core' : 'support',
+      epistemicStatus: 'asserted',
+      polarity: inferClaimPolarity(chunk),
+      note: chunk,
+      sourceRefs: [chunkRef],
+      claimText: chunk,
+      subjectId: '',
+      predicate: '',
+      objectId: '',
+      value: '',
+      timeStart: '',
+      timeEnd: '',
+      timePrecision: '',
+      place: '',
+      createdBy: 'rule',
+    });
+    nodes.push({
+      clientId: premiseId,
+      kind: 'premise',
+      label: `기반명제 ${index + 1}`,
+      role: '기반명제',
+      importance: 'support',
+      epistemicStatus: 'inferred',
+      polarity: inferClaimPolarity(chunk),
+      note: premiseTextFromClaim(chunk),
+      sourceRefs: [chunkRef],
+      claimText: premiseTextFromClaim(chunk),
+      timeStart: '',
+      timeEnd: '',
+      timePrecision: '',
+      place: '',
+      createdBy: 'rule',
+    });
+    if (event) addLink(event.clientId, claimId, 'EXPLAINS', '주요사건에서 나온 주장', [chunkRef], { extractionConfidence: 'medium' });
+    addLink(evidenceClientId, claimId, 'SUPPORTS', '입력 근거가 주장을 뒷받침', [chunkRef], { extractionConfidence: 'high' });
+    addLink(premiseId, claimId, 'SUPPORTS', '기반명제가 주장을 뒷받침', [chunkRef], { verificationStatus: 'unverified' });
+    relatedPeople.forEach((person) => {
+      if (event) addLink(event.clientId, person.clientId, 'PARTICIPATES_AS', '주요사건 관련 인물', [chunkRef], { role: 'related_person' });
+      addLink(person.clientId, claimId, 'ASSERTS', '인물과 연결된 주장', [chunkRef], { verificationStatus: 'unverified', role: 'mentioned_actor' });
+    });
+    relatedEvidence.forEach((evidence) => {
+      addLink(evidence.clientId, claimId, 'SUPPORTS', '근거 자료가 주장을 뒷받침', [chunkRef], { verificationStatus: 'unverified' });
+    });
+  });
+
+  for (let index = 0; index < eventNodes.length - 1; index += 1) {
+    addLink(eventNodes[index].clientId, eventNodes[index + 1].clientId, 'PRECEDES', '시간순 선행', eventNodes[index].sourceRefs || [], {
+      verificationStatus: 'unverified',
+    });
+  }
 
   return {
-    summary: summary || '상황 기록을 기반으로 기본 수사지식그래프 패치를 생성했습니다.',
+    summary: summary || '입력된 사안을 주요사건 중심의 단방향 그래프로 정리했습니다.',
     nodes,
     links,
-    clusters,
+    relation_candidates: [],
+    clusters: [],
+    warnings: ['AI 의미 분석 없이 주요사건, 주장, 근거, 기반명제의 최소 연결 구조를 보존했습니다.'],
   };
 }
 
@@ -337,6 +546,8 @@ function hasGraphPatchContent(patch: any) {
       (Array.isArray(patch.nodes) && patch.nodes.length) ||
       (Array.isArray(patch.links) && patch.links.length) ||
       (Array.isArray(patch.relationships) && patch.relationships.length) ||
+      (Array.isArray(patch.relation_candidates) && patch.relation_candidates.length) ||
+      (Array.isArray(patch.relationCandidates) && patch.relationCandidates.length) ||
       (Array.isArray(patch.clusters) && patch.clusters.length)
     )
   );
@@ -371,7 +582,7 @@ function responseFormatForMode(mode: string) {
           graph_patch: {
             type: 'object',
             additionalProperties: false,
-            required: ['summary', 'nodes', 'links', 'clusters'],
+            required: ['summary', 'nodes', 'links', 'relation_candidates', 'clusters', 'warnings'],
             properties: {
               summary: { type: 'string' },
               nodes: {
@@ -379,15 +590,39 @@ function responseFormatForMode(mode: string) {
                 items: {
                   type: 'object',
                   additionalProperties: false,
-                  required: ['kind', 'label', 'role', 'layer', 'note', 'eventDate', 'eventTime'],
+                  required: ['clientId', 'kind', 'label', 'role', 'importance', 'epistemicStatus', 'polarity', 'note', 'sourceRefs', 'timeStart', 'timeEnd', 'timePrecision', 'place', 'createdBy'],
                   properties: {
-                    kind: { type: 'string', enum: ['person', 'event', 'evidence'] },
+                    clientId: { type: 'string' },
+                    id: { type: 'string' },
+                    kind: { type: 'string', enum: ['person', 'event', 'evidence', 'claim', 'premise'] },
                     label: { type: 'string' },
                     role: { type: 'string' },
-                    layer: { type: 'string', enum: ['core', 'support', 'uncertain'] },
+                    importance: { type: 'string', enum: ['core', 'support', 'uncertain'] },
+                    epistemicStatus: { type: 'string', enum: ['asserted', 'corroborated', 'disputed', 'inferred', 'unknown'] },
+                    polarity: { type: 'string', enum: ['positive', 'negative', 'neutral'] },
                     note: { type: 'string' },
+                    sourceRefs: {
+                      type: 'array',
+                      items: { type: 'object' },
+                    },
+                    timeStart: { type: 'string' },
+                    timeEnd: { type: 'string' },
+                    timePrecision: { type: 'string' },
+                    place: { type: 'string' },
+                    createdBy: { type: 'string', enum: ['user', 'ai', 'rule', 'migration'] },
                     eventDate: { type: 'string' },
                     eventTime: { type: 'string' },
+                    claimText: { type: 'string' },
+                    subjectId: { type: 'string' },
+                    predicate: { type: 'string' },
+                    objectId: { type: 'string' },
+                    value: { type: 'string' },
+                    templateId: { type: 'string' },
+                    elementKey: { type: 'string' },
+                    required: { type: 'boolean' },
+                    description: { type: 'string' },
+                    expectedEvidenceTypes: { type: 'array', items: { type: 'string' } },
+                    hypothesisStatus: { type: 'string', enum: ['active', 'alternative', 'weakened', 'unsupported'] },
                   },
                 },
               },
@@ -396,15 +631,52 @@ function responseFormatForMode(mode: string) {
                 items: {
                   type: 'object',
                   additionalProperties: false,
-                  required: ['source', 'target', 'sourceKind', 'targetKind', 'label', 'basis', 'strength'],
+                  required: ['source', 'target', 'type', 'directed', 'role', 'label', 'basis', 'sourceRefs', 'verificationStatus', 'assessment', 'createdBy'],
                   properties: {
                     source: { type: 'string' },
                     target: { type: 'string' },
-                    sourceKind: { type: 'string', enum: ['person', 'event', 'evidence'] },
-                    targetKind: { type: 'string', enum: ['person', 'event', 'evidence'] },
+                    type: { type: 'string', enum: ['CONTAINS', 'ASSERTS', 'DERIVED_FROM', 'PARTICIPATES_AS', 'SUPPORTS', 'ATTACKS', 'UNDERCUTS', 'SATISFIES', 'REQUIRED_FOR', 'PRECEDES', 'OVERLAPS', 'CONTRADICTS', 'EXPLAINS', 'ALTERNATIVE_TO', 'INCOMPATIBLE_WITH', 'LEGACY_RELATED_TO'] },
+                    directed: { type: 'boolean' },
+                    role: { type: 'string' },
                     label: { type: 'string' },
                     basis: { type: 'string' },
-                    strength: { type: 'string', enum: ['confirmed', 'likely', 'weak'] },
+                    sourceRefs: { type: 'array', items: { type: 'object' } },
+                    verificationStatus: { type: 'string', enum: ['unverified', 'asserted', 'corroborated', 'disputed', 'rejected'] },
+                    assessment: {
+                      type: 'object',
+                      additionalProperties: false,
+                      required: ['extractionConfidence', 'sourceReliability', 'supportStrength', 'legalSufficiency'],
+                      properties: {
+                        extractionConfidence: { type: 'string', enum: ['unknown', 'low', 'medium', 'high'] },
+                        sourceReliability: { type: 'string', enum: ['unknown', 'low', 'medium', 'high'] },
+                        supportStrength: { type: 'string', enum: ['unknown', 'weak', 'moderate', 'strong'] },
+                        legalSufficiency: { type: 'string', enum: ['not_applicable', 'unknown', 'insufficient', 'contested', 'potentially_sufficient'] },
+                      },
+                    },
+                    createdBy: { type: 'string', enum: ['user', 'ai', 'rule', 'migration'] },
+                  },
+                },
+              },
+              relation_candidates: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  additionalProperties: false,
+                  required: ['id', 'source', 'target', 'suggestedType', 'suggestedRole', 'reason', 'basis', 'sourceRefs', 'confidence', 'status', 'createdBy', 'createdAt', 'reviewedAt'],
+                  properties: {
+                    id: { type: 'string' },
+                    source: { type: 'string' },
+                    target: { type: 'string' },
+                    suggestedType: { type: 'string' },
+                    suggestedRole: { type: 'string' },
+                    reason: { type: 'string' },
+                    basis: { type: 'string' },
+                    sourceRefs: { type: 'array', items: { type: 'object' } },
+                    confidence: { type: 'string', enum: ['unknown', 'low', 'medium', 'high'] },
+                    status: { type: 'string', enum: ['pending', 'accepted', 'rejected'] },
+                    createdBy: { type: 'string', enum: ['user', 'ai', 'rule', 'migration'] },
+                    createdAt: { type: 'string' },
+                    reviewedAt: { type: 'string' },
                   },
                 },
               },
@@ -425,6 +697,7 @@ function responseFormatForMode(mode: string) {
                   },
                 },
               },
+              warnings: { type: 'array', items: { type: 'string' } },
             },
           },
         },
@@ -440,9 +713,29 @@ function responseFormatForMode(mode: string) {
       schema: {
         type: 'object',
         additionalProperties: false,
-        required: ['assistant_message'],
+        required: ['assistant_message', 'analysis_type', 'findings', 'citations', 'limitations'],
         properties: {
           assistant_message: { type: 'string' },
+          analysis_type: { type: 'string' },
+          findings: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              required: ['title', 'summary', 'status', 'node_ids', 'edge_ids', 'source_refs', 'limitations'],
+              properties: {
+                title: { type: 'string' },
+                summary: { type: 'string' },
+                status: { type: 'string' },
+                node_ids: { type: 'array', items: { type: 'string' } },
+                edge_ids: { type: 'array', items: { type: 'string' } },
+                source_refs: { type: 'array', items: { type: 'object' } },
+                limitations: { type: 'array', items: { type: 'string' } },
+              },
+            },
+          },
+          citations: { type: 'array', items: { type: 'object' } },
+          limitations: { type: 'array', items: { type: 'string' } },
         },
       },
     };
@@ -527,75 +820,70 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms = 45000) {
 function systemPrompt(mode: string, product: string) {
   if (mode === 'graph_extract') {
     return `
-너는 RoosyCozy의 수사지식그래프 변환 에이전트다.
-사용자의 줄글 사안을 인물 노드, 사건 노드, 증거 노드, 관계선, 클러스터 후보로 변환한다.
+너는 RoosyCozy의 사건 중심 지식그래프 변환 에이전트다.
+사용자의 줄글 사안을 인물, 주요사건, 주장, 근거(증거), 기반명제 다섯 블록으로만 분해한다.
 법률 판단, 유무죄, 책임 인정, 징계 판단은 단정하지 않는다.
-사용자가 말하지 않은 사실은 만들지 말고, 추론은 note 또는 basis에 "확인 필요"로 표시한다.
+사용자가 말하지 않은 고의, 공모, 인식, 인과관계, 신빙성, 법적 충족을 만들어내지 않는다.
+사용자에게 보이는 label, summary, warning, assistant_message에는 내부 ID나 영문 스키마명을 노출하지 않는다.
 
 반드시 JSON만 반환한다.
-형식:
-{
-  "assistant_message": "짧은 처리 요약",
-  "graph_patch": {
-    "summary": "그래프 변환 요약",
-    "nodes": [
-      {
-        "kind": "person | event | evidence",
-        "label": "짧은 노드명",
-        "role": "역할 또는 유형",
-        "layer": "core | support | uncertain",
-        "note": "확인된 내용, 주장, 추정, 확인 필요를 구분한 메모",
-        "eventDate": "YYYY-MM-DD 또는 빈 문자열",
-        "eventTime": "HH:MM 또는 빈 문자열"
-      }
-    ],
-    "links": [
-      {
-        "source": "노드명",
-        "target": "노드명",
-        "sourceKind": "person | event | evidence",
-        "targetKind": "person | event | evidence",
-        "label": "관계명",
-        "basis": "관계 근거와 한계",
-        "strength": "confirmed | likely | weak"
-      }
-    ],
-    "clusters": [
-      {
-        "label": "묶음명",
-        "focus": "분석 초점",
-        "nodeLabels": ["포함 노드명"],
-        "note": "왜 같은 묶음인지"
-      }
-    ]
-  }
-}
 
 노드 생성 규칙:
-- 사람, 학생, 교사, 학부모, 관리자, 기관은 person.
-- 날짜·시간이 있거나 장면·회의·통화·제출·조사·충돌은 event.
-- CCTV, 진술서, 메모, 통화기록, 카카오톡 캡처, PDF, 사진, 영상, 녹취 등은 evidence.
-- 같은 문장 또는 같은 장면에서 함께 언급된 노드는 관계선으로 연결한다.
-- 사건 노드는 날짜와 시간이 명시되면 반드시 eventDate/eventTime에 넣는다.
+- 허용 kind는 person, event, claim, evidence, premise뿐이다.
+- event는 주요사건이다. 시간순으로 1~5개만 추출한다.
+- person은 인물 또는 기관 관계자다. 게시글, 댓글, 캡처, 메모, 계좌내역, 문서, 자료는 person이 아니라 evidence다.
+- claim은 당사자 주장 또는 쟁점이 되는 진술이다.
+- evidence는 주장과 연결되는 근거 자료다.
+- premise는 주장을 이해하기 위한 전제 사실 또는 기반명제다.
+- 새 노드는 clientId를 반드시 갖는다. 링크 source/target은 clientId 또는 기존 id를 사용한다.
+- 알 수 없는 시각, 장소, 역할은 추측하지 말고 빈 문자열 또는 "확인 필요"로 둔다.
 
 관계선 생성 규칙:
-- evidence 노드는 단독으로 두지 말고 가능한 한 event 또는 person 중 최소 1개 이상과 연결한다.
-- person이 어떤 event에 관여하거나 등장하면 person -> event 관계를 만든다.
-- evidence가 특정 event를 뒷받침하면 evidence -> event 관계를 만든다.
-- evidence가 특정 person의 발언, 행위, 위치, 제출물, 통화, 메시지를 뒷받침하면 evidence -> person 관계를 만든다.
-- 관계가 확정되지 않았으면 strength는 weak로 두고 basis에 "확인 필요"를 적는다.
-- 하나의 장면에 person, event, evidence가 같이 나오면 person-event, evidence-event, evidence-person의 삼각 연결을 우선 생성한다.
+- 모든 링크는 단방향이다.
+- 주요 흐름은 event -> person, event -> claim, evidence -> claim, premise -> claim, event -> event(PRECEDES)다.
+- 모든 claim은 최소 하나의 event와 연결되어야 한다.
+- 모든 evidence와 premise는 최소 하나의 claim과 연결되어야 한다.
+- 모든 person은 최소 하나의 event 또는 claim과 연결되어야 한다.
+- 같은 문장에 등장했다는 이유만으로 법적 결론이나 책임을 만들지 말고, "어떤 사건/주장/근거에 붙는가"만 표현한다.
+- accepted link에는 type, directed=true, verificationStatus, assessment, sourceRefs를 넣는다.
+- sourceRefs.quote는 실제 입력에 존재하는 정확한 발췌문이어야 한다.
+- 직접 발췌가 애매하면 verificationStatus를 unverified로 낮추되, 그래프 이해에 필요한 기본 연결은 만든다.
+- relation_candidates는 확정하기 어려운 보조 관계에만 사용한다.
 `.trim();
   }
 
   if (mode === 'graph_command') {
     return `
-너는 RoosyCozy의 수사지식그래프 명령 실행 에이전트다.
-오른쪽 그래프의 노드, 관계선, 클러스터, 시간축을 바탕으로 사용자의 명령에만 답한다.
+너는 RoosyCozy의 증거-논증 그래프 명령 설명 에이전트다.
+프론트엔드가 먼저 실행한 로컬 결정론 분석 결과를 설명하는 역할만 한다.
+엔진 결과에 없는 경로, 증거, 법적 충족 사실을 새로 만들지 않는다.
 보고서 전체를 다시 쓰지 않는다.
 법률 판단, 수사 결론, 유무죄, 책임 인정은 단정하지 않는다.
+답변은 짧고 정곡을 찔러야 한다.
+내부 ID, 영문 스키마명, relationCandidates 같은 구현 용어를 사용자 문장에 노출하지 않는다.
+그래프의 인물, 주요사건, 주장, 근거, 기반명제 연결을 보고 "무엇이 약한지"와 "무엇을 바로 보강할지"만 말한다.
+assistant_message는 최대 5문장으로 쓴다.
+findings는 최대 3개만 반환한다.
+각 finding의 title은 20자 안팎의 한국어 제목으로 쓴다.
+summary는 한 문장으로 쓴다.
 반드시 JSON만 반환한다.
-형식: { "assistant_message": "명령 실행 결과" }
+형식: {
+  "assistant_message": "핵심 취약점과 바로 할 일",
+  "analysis_type": "vulnerability_analysis | legal_gap | provenance_trace | evidence_removal | single_source_dependency | contradiction_check | hypothesis_comparison | evidence_plan | freeform",
+  "findings": [
+    {
+      "title": "짧은 제목",
+      "summary": "엔진 결과 기반 요약",
+      "status": "검토 상태",
+      "node_ids": ["관련 노드 id"],
+      "edge_ids": ["관련 edge id"],
+      "source_refs": [],
+      "limitations": ["한계"]
+    }
+  ],
+  "citations": [],
+  "limitations": []
+}
 `.trim();
   }
 
@@ -797,13 +1085,30 @@ serve(async (req) => {
       await insertMessage(serviceClient, conversation, user.id, 'assistant', assistantMessage, {
         kind: 'graph_command_result',
         command: body.command ?? body.message ?? '',
+        analysis_type: ai.analysis_type || 'freeform',
+        findings: ai.findings || [],
+        citations: ai.citations || [],
+        limitations: ai.limitations || [],
       });
       return jsonResponse({
         conversation,
         assistantMessage,
         output: assistantMessage,
+        result: {
+          assistant_message: assistantMessage,
+          analysis_type: ai.analysis_type || 'freeform',
+          findings: Array.isArray(ai.findings) ? ai.findings : [],
+          citations: Array.isArray(ai.citations) ? ai.citations : [],
+          limitations: Array.isArray(ai.limitations) ? ai.limitations : [],
+        },
         usage,
-        meta: { mode },
+        meta: {
+          mode,
+          analysis_type: ai.analysis_type || 'freeform',
+          findings: Array.isArray(ai.findings) ? ai.findings : [],
+          citations: Array.isArray(ai.citations) ? ai.citations : [],
+          limitations: Array.isArray(ai.limitations) ? ai.limitations : [],
+        },
       });
     }
 

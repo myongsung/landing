@@ -405,8 +405,11 @@ body[data-workspace-access="true"] .case-chat-header button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
+.case-graph-actions select,
 .case-graph-actions button {
   min-height: 34px;
   padding: 0 10px;
@@ -416,6 +419,11 @@ body[data-workspace-access="true"] .case-chat-header button {
   color: #d8d8d8;
   font-size: 0.74rem;
   font-weight: 500;
+}
+
+.case-graph-actions select {
+  max-width: 178px;
+  color-scheme: dark;
 }
 
 .case-graph-actions button.is-active {
@@ -652,13 +660,43 @@ body[data-busy="true"][data-busy-mode="situation"] .case-graph-ai-loading {
 .case-graph-link-hit {
   stroke: transparent;
   stroke-width: 18;
+  fill: none;
   pointer-events: stroke;
 }
 
 .case-graph-link {
   stroke: rgba(155, 220, 255, 0.5);
   stroke-width: 1.6;
+  fill: none;
   pointer-events: stroke;
+}
+
+.case-graph-arrow {
+  fill: rgba(155, 220, 255, 0.72);
+}
+
+.case-graph-arrow.is-candidate {
+  fill: rgba(148, 163, 184, 0.7);
+}
+
+.case-graph-link-group.is-candidate .case-graph-link {
+  stroke: rgba(148, 163, 184, 0.48);
+  stroke-dasharray: 5 6;
+}
+
+.case-graph-link-group.is-type-supports .case-graph-link,
+.case-graph-link-group.is-type-satisfies .case-graph-link {
+  stroke: rgba(125, 211, 252, 0.74);
+}
+
+.case-graph-link-group.is-type-attacks .case-graph-link,
+.case-graph-link-group.is-type-contradicts .case-graph-link {
+  stroke: rgba(248, 113, 113, 0.78);
+}
+
+.case-graph-link-group.is-type-undercuts .case-graph-link {
+  stroke: rgba(251, 191, 36, 0.78);
+  stroke-dasharray: 8 5;
 }
 
 .case-graph-link-label {
@@ -793,6 +831,31 @@ body[data-busy="true"][data-busy-mode="situation"] .case-graph-ai-loading {
   white-space: nowrap;
 }
 
+.case-graph-node.is-kind-source_span {
+  border-color: rgba(148, 163, 184, 0.42);
+  background: #0b1220;
+}
+
+.case-graph-node.is-kind-claim {
+  border-color: rgba(125, 211, 252, 0.44);
+  background: #071621;
+}
+
+.case-graph-node.is-kind-inference {
+  border-color: rgba(251, 191, 36, 0.42);
+  background: #181409;
+}
+
+.case-graph-node.is-kind-legal_element {
+  border-color: rgba(56, 189, 248, 0.62);
+  background: #07111c;
+}
+
+.case-graph-node.is-kind-hypothesis {
+  border-color: rgba(167, 139, 250, 0.52);
+  background: #111021;
+}
+
 .case-graph-empty {
   position: absolute;
   top: 50%;
@@ -849,6 +912,13 @@ body[data-busy="true"][data-busy-mode="situation"] .case-graph-ai-loading {
   color: #78bde1;
   font-size: 0.68rem;
   font-weight: 640;
+}
+
+.case-graph-create-menu small {
+  padding: 6px 4px 0;
+  color: rgba(226, 232, 240, 0.55);
+  font-size: 0.62rem;
+  font-weight: 720;
 }
 
 .case-graph-create-menu button {
@@ -6301,6 +6371,13 @@ body[data-workspace-access="true"] .case-graph-actions button {
   color: #c7e7f7 !important;
 }
 
+body[data-workspace-access="true"] .case-graph-actions select {
+  border-color: rgba(45, 157, 204, 0.32) !important;
+  border-radius: 5px !important;
+  background: #061523 !important;
+  color: #c7e7f7 !important;
+}
+
 body[data-workspace-access="true"] .case-graph-actions button.is-active,
 body[data-workspace-access="true"] .case-graph-actions button:hover {
   border-color: rgba(85, 190, 240, 0.72) !important;
@@ -6326,6 +6403,26 @@ body[data-workspace-access="true"] .case-graph-link-group.is-likely .case-graph-
 body[data-workspace-access="true"] .case-graph-link-group.is-weak .case-graph-link {
   stroke: rgba(199, 168, 86, 0.74);
   stroke-dasharray: 4 5;
+}
+
+body[data-workspace-access="true"] .case-graph-link-group.is-candidate .case-graph-link {
+  stroke: rgba(148, 163, 184, 0.58);
+  stroke-dasharray: 5 6;
+}
+
+body[data-workspace-access="true"] .case-graph-link-group.is-type-supports .case-graph-link,
+body[data-workspace-access="true"] .case-graph-link-group.is-type-satisfies .case-graph-link {
+  stroke: rgba(125, 211, 252, 0.92);
+}
+
+body[data-workspace-access="true"] .case-graph-link-group.is-type-attacks .case-graph-link,
+body[data-workspace-access="true"] .case-graph-link-group.is-type-contradicts .case-graph-link {
+  stroke: rgba(248, 113, 113, 0.9);
+}
+
+body[data-workspace-access="true"] .case-graph-link-group.is-type-undercuts .case-graph-link {
+  stroke: rgba(251, 191, 36, 0.88);
+  stroke-dasharray: 8 5;
 }
 
 body[data-workspace-access="true"] .case-graph-link-group.is-selected .case-graph-link {
@@ -6415,6 +6512,38 @@ body[data-workspace-access="true"] .case-graph-node.is-kind-evidence {
   border-radius: 8px 8px 3px 3px;
   background: #120b1f;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.44), inset 0 0 0 1px rgba(192, 132, 252, 0.09);
+}
+
+body[data-workspace-access="true"] .case-graph-node.is-kind-source_span {
+  --node-accent: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.5);
+  background: #0b1220;
+}
+
+body[data-workspace-access="true"] .case-graph-node.is-kind-claim {
+  --node-accent: #7dd3fc;
+  border-color: rgba(125, 211, 252, 0.56);
+  background: #071621;
+}
+
+body[data-workspace-access="true"] .case-graph-node.is-kind-inference {
+  --node-accent: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.5);
+  background: #181409;
+}
+
+body[data-workspace-access="true"] .case-graph-node.is-kind-legal_element {
+  --node-accent: #38bdf8;
+  width: 188px;
+  border-color: rgba(56, 189, 248, 0.62);
+  background: #07111c;
+}
+
+body[data-workspace-access="true"] .case-graph-node.is-kind-hypothesis {
+  --node-accent: #a78bfa;
+  width: 188px;
+  border-color: rgba(167, 139, 250, 0.56);
+  background: #111021;
 }
 
 body[data-workspace-access="true"] .case-graph-node.is-cluster {
@@ -8040,6 +8169,7 @@ body:not([data-workspace-access="true"]) .case-topbar {
 
 .case-graph-memo-modal input,
 .case-graph-memo-modal textarea,
+.case-graph-relation-modal select,
 .case-graph-relation-modal input,
 .case-graph-relation-modal textarea {
   width: 100%;
@@ -8052,9 +8182,11 @@ body:not([data-workspace-access="true"]) .case-topbar {
 }
 
 .case-graph-memo-modal input,
+.case-graph-relation-modal select,
 .case-graph-relation-modal input {
   min-height: 42px;
   padding: 0 12px;
+  color-scheme: dark;
 }
 
 .case-graph-memo-modal textarea,
@@ -9875,6 +10007,26 @@ body[data-workspace-access="true"] .case-home-shell .case-command-list {
 .case-command-output b {
   color: #f8fcff;
   font-weight: 760;
+}
+
+.graph-inline-ref {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  margin: 0 2px;
+  padding: 0 6px;
+  border: 1px solid rgba(80, 185, 235, 0.42);
+  border-radius: 999px;
+  background: rgba(4, 22, 36, 0.92);
+  color: #9ee7ff;
+  font: inherit;
+  font-size: 0.82em;
+  cursor: pointer;
+}
+
+.graph-inline-ref:hover {
+  border-color: rgba(126, 218, 255, 0.82);
+  color: #ffffff;
 }
 
 .case-command-result-body p {
