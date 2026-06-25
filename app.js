@@ -45,6 +45,8 @@ const dom = {
   homeLink: document.querySelector('[data-home-link]'),
   backHome: document.querySelector('[data-back-home]'),
   newChat: document.querySelector('[data-new-chat]'),
+  chatHistoryToggle: document.querySelector('[data-chat-history-toggle]'),
+  chatHistoryCloseButtons: document.querySelectorAll('[data-chat-history-close]'),
   conversationList: document.querySelector('[data-conversation-list]'),
   messageList: document.querySelector('[data-message-list]'),
   chatTitle: document.querySelector('[data-chat-title]'),
@@ -62,6 +64,7 @@ let activeConversation = null;
 let messages = [];
 let authMode = 'login';
 let isSending = false;
+let isChatHistoryOpen = false;
 let toastTimer = null;
 let lastVerificationEmail = '';
 
@@ -251,9 +254,16 @@ function setView(view) {
   dom.body.dataset.view = nextView;
   if (dom.landingView) dom.landingView.hidden = nextView !== 'landing';
   if (dom.chatView) dom.chatView.hidden = nextView !== 'chat';
+  if (nextView !== 'chat') setChatHistoryOpen(false);
   if (nextView === 'landing') {
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
+}
+
+function setChatHistoryOpen(open) {
+  isChatHistoryOpen = Boolean(open);
+  dom.body.classList.toggle('is-chat-history-open', isChatHistoryOpen);
+  dom.chatHistoryToggle?.setAttribute('aria-expanded', isChatHistoryOpen ? 'true' : 'false');
 }
 
 function renderUsage() {
@@ -627,6 +637,7 @@ async function loadMessages({ silent = false } = {}) {
 }
 
 async function selectConversation(id) {
+  setChatHistoryOpen(false);
   activeConversation = conversations.find((conversation) => conversation.id === id) ?? null;
   messages = [];
   renderAll();
@@ -635,6 +646,7 @@ async function selectConversation(id) {
 }
 
 function newChat() {
+  setChatHistoryOpen(false);
   activeConversation = null;
   messages = [];
   renderAll();
@@ -922,6 +934,8 @@ dom.homeLink?.addEventListener('click', (event) => {
 
 dom.backHome?.addEventListener('click', () => setView('landing'));
 dom.newChat?.addEventListener('click', newChat);
+dom.chatHistoryToggle?.addEventListener('click', () => setChatHistoryOpen(!isChatHistoryOpen));
+dom.chatHistoryCloseButtons.forEach((button) => button.addEventListener('click', () => setChatHistoryOpen(false)));
 dom.signOut?.addEventListener('click', signOut);
 dom.authClose?.addEventListener('click', () => setAuthModal(false));
 dom.authBackdrop?.addEventListener('click', () => setAuthModal(false));
