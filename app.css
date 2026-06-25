@@ -714,7 +714,14 @@ body[data-view="landing"] .chat-view {
   padding-right: 2px;
 }
 
-.conversation-list button {
+.conversation-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px;
+  align-items: stretch;
+  gap: 5px;
+}
+
+.conversation-select {
   min-width: 0;
   width: 100%;
   padding: 9px;
@@ -725,9 +732,31 @@ body[data-view="landing"] .chat-view {
   text-align: left;
 }
 
-.conversation-list button.is-active {
+.conversation-item.is-active .conversation-select {
   border-color: rgba(22, 168, 255, 0.34);
   background: #eff8ff;
+}
+
+.conversation-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid rgba(239, 68, 68, 0.12);
+  border-radius: 11px;
+  background: #fff7f7;
+  color: #9f1d1d;
+  font-size: 1rem;
+  font-weight: 780;
+  line-height: 1;
+}
+
+.conversation-delete:hover,
+.conversation-delete:focus-visible {
+  border-color: rgba(239, 68, 68, 0.28);
+  background: #fee2e2;
+  outline: none;
 }
 
 .conversation-list strong {
@@ -2088,10 +2117,20 @@ body[data-view="chat"] .site-footer {
     padding: 0 2px 2px 0;
   }
 
-  .conversation-list button {
+  .conversation-item {
+    grid-template-columns: minmax(0, 1fr) 28px;
+    gap: 5px;
+  }
+
+  .conversation-select {
     min-width: 0;
     padding: 9px 10px;
     border-radius: 12px;
+  }
+
+  .conversation-delete {
+    border-radius: 10px;
+    font-size: 0.9rem;
   }
 
   .conversation-list strong {

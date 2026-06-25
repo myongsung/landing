@@ -310,15 +310,31 @@ function renderConversations() {
   }
 
   for (const conversation of conversations) {
+    const item = document.createElement('div');
+    item.className = `conversation-item${conversation.id === activeConversation?.id ? ' is-active' : ''}`;
+
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = conversation.id === activeConversation?.id ? 'is-active' : '';
+    button.className = 'conversation-select';
     button.innerHTML = `
       <strong>${escapeHtml(conversation.title || '새 사안')}</strong>
       <span>${formatDate(conversation.updated_at || conversation.created_at)}</span>
     `;
     button.addEventListener('click', () => selectConversation(conversation.id));
-    dom.conversationList.append(button);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'conversation-delete';
+    deleteButton.setAttribute('aria-label', `${conversation.title || '새 사안'} 삭제`);
+    deleteButton.title = '사안 삭제';
+    deleteButton.textContent = '×';
+    deleteButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      deleteConversation(conversation.id);
+    });
+
+    item.append(button, deleteButton);
+    dom.conversationList.append(item);
   }
 }
 
@@ -651,6 +667,68 @@ function newChat() {
   messages = [];
   renderAll();
   dom.chatInput?.focus();
+}
+
+async function deleteConversation(id) {
+  if (!id || !session?.user || !supabase) {
+    showToast('로그인 후 사안을 삭제할 수 있습니다.', 'error');
+    return;
+  }
+
+  const target = conversations.find((conversation) => conversation.id === id);
+  const title = target?.title || '새 사안';
+  const confirmed = window.confirm(`'${title}' 사안을 삭제할까요?\n대화 기록도 함께 삭제됩니다.`);
+  if (!confirmed) return;
+
+  const wasActive = activeConversation?.id === id;
+  showToast('사안을 삭제하는 중입니다.');
+
+  try {
+    const deleteConversationRecord = () =>
+      withTimeout(
+        supabase
+          .from('report_conversations')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', session.user.id),
+        12000,
+        '사안을 삭제하는 중 응답이 지연되고 있습니다.'
+      );
+
+    let { error } = await deleteConversationRecord();
+
+    if (error) {
+      const canRetryAfterMessages = /foreign key|constraint|violates|23503/i.test(String(error?.message || error || ''));
+      if (!canRetryAfterMessages) throw error;
+
+      const { error: messageError } = await withTimeout(
+        supabase
+          .from('report_messages')
+          .delete()
+          .eq('conversation_id', id)
+          .eq('user_id', session.user.id),
+        12000,
+        '대화 기록을 삭제하는 중 응답이 지연되고 있습니다.'
+      );
+      if (messageError) throw messageError;
+
+      ({ error } = await deleteConversationRecord());
+      if (error) throw error;
+    }
+
+    conversations = conversations.filter((conversation) => conversation.id !== id);
+
+    if (wasActive) {
+      activeConversation = conversations[0] ?? null;
+      messages = [];
+      if (activeConversation) await loadMessages({ silent: true });
+    }
+
+    renderAll();
+    showToast('사안을 삭제했습니다.', 'ready');
+  } catch (error) {
+    showToast(friendlyServiceError(error), 'error');
+  }
 }
 
 function currentProduct() {
