@@ -98,6 +98,14 @@ function isFatalOpenAiError(message: string) {
   return /authentication|unauthorized|forbidden|invalid api key|insufficient_quota/i.test(message);
 }
 
+function requiresAi(body: any) {
+  return Boolean(
+    body?.requireAi === true ||
+    body?.clientPolicy?.requireAi === true ||
+    body?.structuredInput?.requireAi === true
+  );
+}
+
 function fallbackAiObject(content: string, mode: string) {
   const assistantMessage = compactText(content || '요청을 처리했지만 구조화 응답을 만들지 못했습니다.', 5000);
 
@@ -564,6 +572,9 @@ function graphPatchFromAi(ai: any, body: any) {
     ai?.meta?.graphPatch;
 
   if (hasGraphPatchContent(patch)) return patch;
+  if (requiresAi(body)) {
+    throw new Error('AI가 사용할 수 있는 그래프 패치를 반환하지 않았습니다.');
+  }
   return deterministicGraphPatch(body, ai?.assistant_message || ai?.assistantMessage || '');
 }
 
@@ -820,7 +831,7 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms = 45000) {
 function systemPrompt(mode: string, product: string) {
   if (mode === 'graph_extract') {
     return `
-너는 RoosyCozy의 사건 중심 지식그래프 변환 에이전트다.
+너는 ROOSY-X의 사건 중심 지식그래프 변환 에이전트다.
 사용자의 줄글 사안을 인물, 주요사건, 주장, 근거(증거), 기반명제 다섯 블록으로만 분해한다.
 법률 판단, 유무죄, 책임 인정, 징계 판단은 단정하지 않는다.
 사용자가 말하지 않은 고의, 공모, 인식, 인과관계, 신빙성, 법적 충족을 만들어내지 않는다.
@@ -854,14 +865,17 @@ function systemPrompt(mode: string, product: string) {
 
   if (mode === 'graph_command') {
     return `
-너는 RoosyCozy의 증거-논증 그래프 명령 설명 에이전트다.
-프론트엔드가 먼저 실행한 로컬 결정론 분석 결과를 설명하는 역할만 한다.
-엔진 결과에 없는 경로, 증거, 법적 충족 사실을 새로 만들지 않는다.
+너는 ROOSY-X의 증거-논증 그래프 명령 설명 에이전트다.
+너는 매 요청마다 현재 그래프 스냅샷을 새로 읽고 취약점을 다시 계산한다.
+저장된 이전 명령 결과나 과거 답변을 재사용하지 않는다.
+프론트엔드 로컬 엔진 결과는 참고자료일 뿐이며, 너는 현재 그래프의 인물·주요사건·주장·근거·기반명제 연결을 독립적으로 재검토해야 한다.
+다만 입력 그래프와 엔진 결과에 없는 증거, 사건, 법적 충족 사실을 새로 만들지 않는다.
 보고서 전체를 다시 쓰지 않는다.
 법률 판단, 수사 결론, 유무죄, 책임 인정은 단정하지 않는다.
 답변은 짧고 정곡을 찔러야 한다.
 내부 ID, 영문 스키마명, relationCandidates 같은 구현 용어를 사용자 문장에 노출하지 않는다.
 그래프의 인물, 주요사건, 주장, 근거, 기반명제 연결을 보고 "무엇이 약한지"와 "무엇을 바로 보강할지"만 말한다.
+그래프 연결이 충분하면 억지로 취약점을 만들지 말고, 가장 약한 연결축만 고른다.
 assistant_message는 최대 5문장으로 쓴다.
 findings는 최대 3개만 반환한다.
 각 finding의 title은 20자 안팎의 한국어 제목으로 쓴다.
@@ -888,15 +902,27 @@ summary는 한 문장으로 쓴다.
   }
 
   return `
-너는 RoosyCozy의 사안 분석 보조 에이전트다.
-사용자 자료를 사실, 주장, 추정, 확인 필요로 나누어 정리한다.
-법률 판단이나 수사·행정 결론은 단정하지 않는다.
+너는 ROOSY-X의 분쟁대응 전략 에이전트다.
+대상 사용자는 교사, 공공기관 담당자, 분쟁 대응 실무자다.
+사용자가 긴 분쟁상황을 그대로 입력하면 사실관계, 상대 주장, 사용자 목표, 보유 기록, 기한, 위험 표현을 분리하고 바로 선택 가능한 3가지 대응 전략을 제시한다.
+법률 판단, 징계 판단, 행정 처분, 수사 결론, 위법 여부를 단정하지 않는다.
+규정과 법령 준수는 다음 원칙으로만 보조한다: 확인 가능한 사실 중심, 개인정보 최소화, 감정적·위협적 표현 배제, 공식 절차와 기록 보존, 기관 내부 지침 확인.
+각 전략은 반드시 다음 구조로 쓴다.
+1. 전략명
+2. 언제 선택할지
+3. 지금 할 일
+4. 보낼 문장 초안 또는 내부 기록 문장
+5. 장점과 리스크
+전체 답변은 간결해야 한다.
+사용자가 교사 사안을 말하면 학생 인권, 아동·청소년 개인정보, 생활지도 기록, 관리자 공유, 학부모 소통 문구를 조심스럽게 다룬다.
+사용자가 공공기관 사안을 말하면 개인 연락 최소화, 공식 채널 전환, 민원·정보공개 절차, 기록 보존을 우선한다.
+마지막에는 "먼저 하지 말 것" 2개와 "다음 확인 질문" 1개를 붙인다.
 반드시 JSON만 반환한다.
 형식: {
   "title": "짧은 제목",
-  "assistant_message": "답변",
-  "status": "draft 또는 ready",
-  "report_markdown": "# 정밀 사안 분석 보고서\\n..."
+  "assistant_message": "전략 3안 중심 답변",
+  "status": "draft",
+  "report_markdown": ""
 }
 `.trim();
 }
@@ -905,9 +931,13 @@ function buildInput(body: any, mode: string) {
   const message = compactText(body.message, 16000);
   const structuredInput = compactText(JSON.stringify(body.structuredInput ?? {}, null, 2), 18000);
   const clientGuidance = compactText(body.clientGuidance, 8000);
+  const requestNonce = compactText(body.requestNonce || body.clientPolicy?.requestNonce || body.structuredInput?.requestNonce || '', 200);
 
   return [
     `[mode]\n${mode}`,
+    `[server_time]\n${new Date().toISOString()}`,
+    `[fresh_request_nonce]\n${requestNonce || crypto.randomUUID()}`,
+    `[ai_required]\n${requiresAi(body) ? 'true' : 'false'}`,
     `[product]\n${body.product === 'teachers' ? 'teachers' : 'pro'}`,
     `[user_message]\n${message}`,
     `[structured_input]\n${structuredInput}`,
@@ -962,7 +992,7 @@ async function callOpenAI(body: any, mode: string) {
     }
   }
 
-  if (mode === 'graph_extract') {
+  if (mode === 'graph_extract' && !requiresAi(body)) {
     return {
       assistant_message: `AI 모델 응답이 지연되어 기본 그래프 패치를 생성했습니다. 원인: ${lastError}`,
       graph_patch: deterministicGraphPatch(body, 'AI 모델 응답 지연으로 기본 그래프 패치를 생성했습니다.'),
@@ -996,7 +1026,7 @@ async function findOrCreateConversation(serviceClient: ReturnType<typeof createC
     if (data) return data;
   }
 
-  const title = compactText(body.message, 48) || '수사지식그래프';
+  const title = compactText(body.message, 48) || '분쟁대응 전략';
   const { data, error } = await serviceClient
     .from('report_conversations')
     .insert({
@@ -1075,6 +1105,8 @@ serve(async (req) => {
         usage,
         meta: {
           mode,
+          aiGenerated: true,
+          requestNonce: body.requestNonce || body.clientPolicy?.requestNonce || body.structuredInput?.requestNonce || '',
           graphPatch,
         },
       });
@@ -1104,6 +1136,8 @@ serve(async (req) => {
         usage,
         meta: {
           mode,
+          aiGenerated: true,
+          requestNonce: body.requestNonce || body.clientPolicy?.requestNonce || body.structuredInput?.requestNonce || '',
           analysis_type: ai.analysis_type || 'freeform',
           findings: Array.isArray(ai.findings) ? ai.findings : [],
           citations: Array.isArray(ai.citations) ? ai.citations : [],

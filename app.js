@@ -27,33 +27,41 @@ const isSupabaseConfigured = Boolean(supabaseUrl && supabasePublishableKey);
 
 document.body.dataset.supabaseConfigured = isSupabaseConfigured ? 'true' : 'false';
 
+function detectAppRoute() {
+  const path = window.location.pathname.replace(/\/+$/, '');
+  const params = new URLSearchParams(window.location.search);
+  const hash = window.location.hash.replace(/^#/, '').toLowerCase();
+  if (path.endsWith('/chat') || params.get('view') === 'chat' || hash === 'chat') return 'chat';
+  return 'home';
+}
+
+const appRoute = detectAppRoute();
+document.body.dataset.appRoute = appRoute;
+
+function isStrategyChatRoute() {
+  return document.body.dataset.appRoute === 'chat';
+}
+
 const desktopOnlyMedia = window.matchMedia('(max-width: 900px), (pointer: coarse)');
 
 function syncDesktopOnlyMode() {
-  document.body.dataset.desktopOnlyBlocked = desktopOnlyMedia.matches ? 'true' : 'false';
+  const blocked = desktopOnlyMedia.matches && !isStrategyChatRoute();
+  document.body.dataset.desktopOnlyBlocked = blocked ? 'true' : 'false';
 }
 
 syncDesktopOnlyMode();
 desktopOnlyMedia.addEventListener?.('change', syncDesktopOnlyMode);
 
 const reportChatBehaviorGuide = `
-RoosyCozy 지능형 수사지원 에이전트 응답 원칙:
-1. 이 서비스는 AI가 최종 판단을 대신하는 도구가 아니라, 사용자가 입력한 자료와 관계 그래프를 확인 가능한 형태로 분해하고 재구성하는 전문 보조도구다.
-2. 보고서는 "상황 시각화보드", "사건 노드 기록", "인물 노드 기록"처럼 화면 요소를 나열하지 않는다.
-3. 사용자가 입력한 노드, 관계선, 클러스터, PDF 원자료는 모두 정밀 분석의 재료로만 사용한다.
-4. 보고서는 단순 요약이 아니라 관계 역학, 시간 관련성, 논리적 강점, 논리적 약점, 공략점, 보강 필요 자료를 입체적으로 보여주는 문서여야 한다.
-5. 사실, 주장, 추정, 해석, 리스크, 확인 필요를 섞지 않는다. 확인되지 않은 내용은 반드시 "확인 필요" 또는 "자료상 한계"로 남긴다.
-6. 사용자가 질문하면 먼저 직접 답하고, 그 다음 보고서에 반영할 분석 포인트를 구분한다.
-7. 관련 주체는 직접 행위자, 관여 가능 주체, 방조·방관으로 보일 수 있는 주체, 관리·감독 위치의 주체, 의사결정 주체, 기관/플랫폼, 역할 불명으로 분리한다.
-8. 관계는 "누가 누구와 연결되어 있다"가 아니라, 그 연결이 사건의 설명력·취약점·보강 지점에 어떤 의미를 갖는지 분석한다.
-9. 시간은 단순 경위가 아니라 선후관계, 반응 속도, 반복성, 공백 구간, 모순 가능성, 증거 확보 우선순위로 분석한다.
-10. "무엇이 강한가", "무엇이 약한가", "어디를 공략해야 하나", "무엇을 더 확보해야 하나"에는 근거와 한계를 함께 답한다.
-11. 시나리오는 예언처럼 단정하지 말고 조건부로 쓴다: 자료가 보강될 경우, 반박이 들어올 경우, 시간 공백이 남을 경우, 관계 근거가 확인될 경우.
-12. 보고서 기본 골격은 다음 흐름을 우선한다: 분석 개요, 시간 관련성, 관계 역학, 논리적 강점, 논리적 약점, 공략점 및 보강 전략, 시나리오별 전개, 확인 필요 질문, 제출 전 정리 문안.
-13. 노드 메모는 "확인된 내용", "메모 기반 추정", "분석상 의미", "취약점", "보강 질문"으로 재구성한다.
-14. 관계선 메모는 "연결 근거", "관계의 설명력", "반박 가능 지점", "보강할 자료"로 재구성한다.
-15. 클러스터 메모는 하나의 장면 또는 쟁점 묶음으로 다루고, 내부 주체·시간·증거가 어떻게 맞물리는지 분석한다.
-16. 법률·행정·형사책임 판단을 단정하지 않는다. 전문 판단이 필요한 대목은 "전문가 검토 필요" 또는 "사용자 최종 확인 필요"로 표시한다.
+ROOSY-X 분쟁대응 전략 에이전트 응답 원칙:
+1. 사용자가 입력한 분쟁상황을 사실관계, 상대 주장, 사용자 목표, 보유 기록, 위험 표현, 확인 필요로 나눈다.
+2. 법률·행정·징계·수사 결론을 단정하지 않는다. 규정과 법령 준수는 "확인 가능한 사실 중심", "개인정보 최소화", "감정적·위협적 표현 배제", "공식 절차 전환" 원칙으로 보조한다.
+3. 답변은 반드시 3가지 대응 전략으로 제시한다. 각 전략에는 목적, 바로 할 말 또는 행동, 장점, 리스크, 선택 조건을 포함한다.
+4. 교사 사안은 학생지도, 학부모 민원, 학교 관리자 공유, 생활지도 기록, 아동·학생 개인정보 보호를 우선한다.
+5. 공공기관 사안은 개인 연락 최소화, 공식 채널, 기록 보존, 정보공개·민원 절차 준수, 담당자 보호를 우선한다.
+6. 사용자가 보낼 문장이 필요한 경우 단정·사과 인정·위협·비난 표현을 피한 짧은 초안을 제공한다.
+7. "하면 안 되는 말"과 "먼저 남길 기록"을 짧게 분리한다.
+8. 마지막에는 다음 확인 질문 1개만 제시한다.
 `.trim();
 
 const dom = {
@@ -241,8 +249,8 @@ const tierConfig = {
     tone: 'teacher',
   },
   pro: {
-    label: '검찰/경찰 (수사기관) 전문 보조용',
-    license: 'PRO · 검찰/경찰 (수사기관) 전문 보조용',
+    label: '공공기관·전문 대응 조직',
+    license: 'PRO · 공공기관·전문 대응 조직',
     limit: 500,
     rank: 3,
     tone: 'pro',
@@ -735,7 +743,7 @@ function hasWorkspaceAccess(tier = usageState.tier) {
 function syncWorkspaceAccessUi() {
   const signedIn = Boolean(session?.user);
   const hasAccess = signedIn && hasWorkspaceAccess();
-  const accessLabel = normalizeTier(usageState.tier) === 'pro' ? 'PRO 검찰/경찰 (수사기관) 전문 보조용 라이선스' : 'Teacher 교원 권한 · 학폭·교권침해·악성민원 대응';
+  const accessLabel = normalizeTier(usageState.tier) === 'pro' ? 'PRO 공공기관·전문 보조용 라이선스' : 'Teacher 교원 권한 · 학폭·교권침해·악성민원 대응';
   document.body.dataset.workspaceAccess = hasAccess ? 'true' : 'false';
   document.body.dataset.authenticated = signedIn ? 'true' : 'false';
 
@@ -751,12 +759,12 @@ function syncWorkspaceAccessUi() {
     return;
   }
 
-  if (desktopOnlyMedia.matches) {
+  if (desktopOnlyMedia.matches && !isStrategyChatRoute()) {
     dom.accessNote.textContent = `${accessLabel}이 확인되었습니다. 실제 분석 워크스페이스는 PC 브라우저에서 열어 주세요.`;
     return;
   }
 
-  dom.accessNote.textContent = `${accessLabel}이 확인되었습니다. 분석 워크스페이스가 열렸습니다.`;
+  dom.accessNote.textContent = `${accessLabel}이 확인되었습니다. ROOSY-X 전략 에이전트를 사용할 수 있습니다.`;
 }
 
 function canChat(units = 1) {
@@ -805,7 +813,7 @@ function syncLicenseUi() {
 }
 
 function syncInteractionState() {
-  const desktopBlocked = desktopOnlyMedia.matches;
+  const desktopBlocked = desktopOnlyMedia.matches && !isStrategyChatRoute();
   const chatEnabled = canChat();
   const busy = isSending;
   dom.form.querySelector('button').disabled = desktopBlocked || !chatEnabled || busy;
@@ -843,8 +851,14 @@ function syncInteractionState() {
     return;
   }
 
-  dom.input.placeholder = '@인물 #사건 $증거를 섞어 쓰면 AI가 사건 평면을 구성합니다';
-  if (dom.composerNote) dom.composerNote.textContent = 'AI가 입력 내용을 분석한 뒤 인물·사건·증거 노드와 관계선을 한 번에 반영합니다.';
+  dom.input.placeholder = isStrategyChatRoute()
+    ? '분쟁상황을 그대로 입력하면 ROOSY-X가 3가지 대응 전략을 제시합니다'
+    : '@인물 #사건 $증거를 섞어 쓰면 AI가 사건 평면을 구성합니다';
+  if (dom.composerNote) {
+    dom.composerNote.textContent = isStrategyChatRoute()
+      ? '사실관계, 위험 표현, 기록 보존, 답변 초안을 분리해 전략 3안으로 제안합니다.'
+      : 'AI가 입력 내용을 분석한 뒤 인물·사건·증거 노드와 관계선을 한 번에 반영합니다.';
+  }
 }
 
 function applyUsageState(nextUsage = {}) {
@@ -1799,7 +1813,7 @@ function reportSectionKind(title = '') {
 }
 
 function productLabel(product) {
-  return product === 'pro' ? 'PRO 증거분석' : 'Teacher 기초 보고서';
+  return product === 'pro' ? 'PRO 전략 에이전트' : 'Teacher 전략 에이전트';
 }
 
 function currentProductKind() {
@@ -1918,18 +1932,18 @@ function renderMessages() {
   if (!activeConversation) {
     dom.messageList.innerHTML = `
       <article class="case-empty-state">
-        <h3>사안보고를 접수하세요</h3>
+        <h3>분쟁상황을 입력하세요</h3>
         <div class="case-intake-template" aria-label="사안보고 입력 항목">
-          <span>사안명</span>
-          <span>당사자/관계</span>
-          <span>발생 경위</span>
-          <span>보유 증거</span>
-          <span>요청 판단</span>
+          <span>상황</span>
+          <span>상대 주장</span>
+          <span>내 목표</span>
+          <span>보유 기록</span>
+          <span>기한</span>
         </div>
         <div class="case-prompt-chips" aria-label="입력 예시">
-          <button type="button" data-prompt-template="사안명:\n당사자/관계:\n발생 일시·장소:\n발생 경위:\n상대방 주장 또는 예상 반박:\n보유 증거:\n내가 원하는 판단 또는 조치:\n아직 불확실한 부분:">사안보고 양식</button>
-          <button type="button" data-prompt-template="사안명: 계약·외주 분쟁\n당사자/관계:\n계약 또는 합의 내용:\n문제가 된 행위:\n보유 증거:\n상대방 예상 주장:\n원하는 조치:">계약 분쟁</button>
-          <button type="button" data-prompt-template="사안명: 조직·기관 갈등\n당사자/관계:\n핵심 장면:\n직접 행위자:\n방관자 또는 감독자:\n보유 증거:\n사용자가 확인받고 싶은 부분:">관련 주체</button>
+          <button type="button" data-prompt-template="학부모님이 오늘 있었던 학생지도 사안에 대해 정서적 학대 아니냐는 문자를 보냈어. 학생이 친구를 밀어 넘어뜨려서 복도에서 분리 지도했고, 학부모님은 공개적으로 망신을 줬다고 주장해. 내일 오전까지 답장해야 해. 규정과 법령을 어기지 않는 대응 전략 3가지를 제시해줘.">교사 민원</button>
+          <button type="button" data-prompt-template="민원인이 담당자 개인에게 계속 문자를 보내고 오늘 안에 답변하지 않으면 책임을 묻겠다고 해. 기관 차원에서 개인 연락을 줄이고 공식 절차로 전환하고 싶어. 안전한 대응 전략 3가지를 알려줘.">공공기관</button>
+          <button type="button" data-prompt-template="상대가 일부 카톡만 캡처해서 계약 위반이라고 압박하고 있어. 우리는 메일과 결과물 기록은 있지만 구두 합의가 많아. 지금 답장, 자료 정리, 협상 전환 전략을 3가지로 나눠줘.">일반 분쟁</button>
         </div>
       </article>
     `;
@@ -1939,7 +1953,7 @@ function renderMessages() {
   messages.forEach((message) => {
     const article = document.createElement('article');
     article.className = `case-message ${message.role === 'user' ? 'user' : 'assistant'}`;
-    const role = message.role === 'user' ? '나' : 'RoosyCozy';
+    const role = message.role === 'user' ? '나' : 'ROOSY-X';
     article.innerHTML = `
       <span class="case-message-role">${role}</span>
       ${messageContentHtml(message.content, message.role)}
@@ -1951,10 +1965,10 @@ function renderMessages() {
     const loading = document.createElement('article');
     loading.className = 'case-message assistant is-loading';
     loading.innerHTML = `
-      <span class="case-message-role">RoosyCozy</span>
+      <span class="case-message-role">ROOSY-X</span>
       <div class="case-loading-line">
         <i></i><i></i><i></i>
-        <strong>증거를 분해하고 관련 구조를 재구성하고 있습니다</strong>
+        <strong>상황을 계산하고 대응 전략 3가지를 구성하고 있습니다</strong>
       </div>
     `;
     dom.messageList.append(loading);
@@ -2461,6 +2475,8 @@ function sanitizeCommandBlock(block) {
     remoteMessageId: String(payload.remoteMessageId || payload.remote_message_id || payload.messageId || payload.message_id || ''),
     graphSummary: String(payload.graphSummary || payload.graph_summary || '').slice(0, 500),
     usageUnits: Math.max(0, Math.min(10, Number(payload.usageUnits ?? payload.usage_units ?? 0) || 0)),
+    aiGenerated: Boolean(payload.aiGenerated ?? payload.ai_generated),
+    requestNonce: String(payload.requestNonce || payload.request_nonce || '').slice(0, 200),
   };
 }
 
@@ -6132,6 +6148,7 @@ function commandBlockTitle(block) {
 
 function commandBlockMetaText(block) {
   return [
+    block?.aiGenerated ? 'AI 실행' : 'AI 확인 필요',
     formatDate(block?.executedAt || block?.createdAt),
     block?.graphSummary || graphCommandSummary(),
     `${block?.usageUnits || 1}회`,
@@ -6218,6 +6235,7 @@ function buildCommandMessage(command) {
 }
 
 function buildCommandStructuredInput(command) {
+  const requestNonce = (globalThis.crypto?.randomUUID?.() || `cmd-${Date.now()}-${Math.random().toString(16).slice(2)}`);
   const graphSnapshot = graphSnapshotForAgent();
   const engineResult = runDeterministicGraphCommand(graphSnapshot, command, {
     templateId: graphSnapshot.activeLegalTemplateId || 'none',
@@ -6233,6 +6251,9 @@ function buildCommandStructuredInput(command) {
   return {
     kind: 'command_block',
     schemaVersion: GRAPH_SCHEMA_VERSION,
+    requestNonce,
+    generatedAt: new Date().toISOString(),
+    requireAi: true,
     command,
     graphSummary: graphCommandSummary(),
     graphSnapshot,
@@ -6495,7 +6516,18 @@ function graphCommandResponseMarkdown(data) {
   if (!message && !findings.length && !citations.length && !limitations.length) return '';
 
   const lines = [];
-  if (message) lines.push(message);
+  if (message) {
+    lines.push(message);
+    if (citations.length) {
+      lines.push('', '## 근거');
+      citations.slice(0, 5).forEach((citation) => {
+        const quote = citation?.quote || citation?.sourceRef?.quote || citation?.fileName || '';
+        if (quote) lines.push(`- ${quote}`);
+      });
+    }
+    return lines.join('\n').trim();
+  }
+
   if (findings.length) {
     lines.push('', '## 우선 보완할 취약점');
     findings.slice(0, 18).forEach((finding, index) => {
@@ -6563,8 +6595,8 @@ async function deleteCommandBlock(blockId) {
 async function invokeGraphCommand(command) {
   const normalizedCommand = String(command || '').trim();
 
-  if (desktopOnlyMedia.matches) {
-    const reason = 'RoosyCozy Intelligence는 PC 브라우저에서만 사용할 수 있습니다.';
+  if (desktopOnlyMedia.matches && !isStrategyChatRoute()) {
+    const reason = 'ROOSY-X 그래프 워크스페이스는 PC 브라우저에서 사용할 수 있습니다. 전략 채팅은 /chat 화면에서 이용해 주세요.';
     setServiceStatus(reason, 'error');
     return { ok: false, reason };
   }
@@ -6612,10 +6644,12 @@ async function invokeGraphCommand(command) {
   try {
     const usageBeforeRequest = { ...usageState };
     commandInput = buildCommandStructuredInput(normalizedCommand);
+    setServiceStatus('AI가 현재 그래프와 취약점을 새로 계산하고 있습니다.', 'ready');
     const { data, error } = await withTimeout(
       supabase.functions.invoke('report-chat', {
         body: {
           mode: 'graph_command',
+          requestNonce: commandInput.requestNonce,
           conversationId: activeConversation?.isLocal ? null : activeConversation?.id ?? null,
           product: currentProductKind(),
           message: normalizedCommand,
@@ -6624,9 +6658,11 @@ async function invokeGraphCommand(command) {
           clientPolicy: {
             shouldUpdateReport: false,
             mode: 'graph_command',
+            requireAi: true,
+            requestNonce: commandInput.requestNonce,
             usageUnits,
           },
-          clientGuidance: '명령 블록 모드입니다. 보고서 전체를 갱신하지 말고 수사지식그래프의 인물·사건·증거 노드, 관계선, 클러스터, 시간축에 대한 명령 실행 결과만 간결하게 반환하세요.',
+          clientGuidance: '명령 블록 모드입니다. AI가 매 요청마다 현재 수사지식그래프와 로컬 엔진 결과를 함께 검토해 새 취약점 브리프를 작성하세요. 저장된 이전 명령 결과를 재사용하지 마세요. 보고서 전체를 갱신하지 말고 핵심 취약점과 바로 할 일만 간결하게 반환하세요.',
           structuredInput: commandInput,
           command: normalizedCommand,
           graphSummary: commandInput.graphSummary,
@@ -6692,17 +6728,23 @@ async function invokeGraphCommand(command) {
       ok: true,
       output,
       usage: usageState,
-      meta: data?.meta ?? null,
+      meta: {
+        ...(data?.meta && typeof data.meta === 'object' ? data.meta : {}),
+        aiGenerated: data?.meta?.aiGenerated !== false,
+        requestNonce: data?.meta?.requestNonce || data?.meta?.request_nonce || commandInput.requestNonce,
+      },
     };
   } catch (error) {
     await loadUsage({ preserveOnError: true });
     if (commandInput?.engineResult) {
       return {
-        ok: true,
-        output: graphEngineResultMarkdown(commandInput),
+        ok: false,
+        reason: `${friendlyServiceError(error instanceof Error ? error : 'AI 명령 실행에 실패했습니다.')} 현재 설정은 AI 필수 모드라 로컬 분석 결과를 명령 블록으로 저장하지 않았습니다.`,
         usage: usageState,
         meta: {
-          localOnly: true,
+          aiRequired: true,
+          localFallbackSuppressed: true,
+          requestNonce: commandInput.requestNonce,
           engineResult: commandInput.engineResult,
         },
       };
@@ -6745,10 +6787,12 @@ async function invokeGraphExtraction(text) {
   try {
     const usageBeforeRequest = { ...usageState };
     const existingGraph = graphSnapshotForAgent();
+    const requestNonce = (globalThis.crypto?.randomUUID?.() || `extract-${Date.now()}-${Math.random().toString(16).slice(2)}`);
     const { data, error } = await withTimeout(
       supabase.functions.invoke('report-chat', {
         body: {
           mode: 'graph_extract',
+          requestNonce,
           conversationId: activeConversation?.isLocal ? null : activeConversation?.id ?? null,
           product: currentProductKind(),
           message: normalizedText,
@@ -6757,6 +6801,8 @@ async function invokeGraphExtraction(text) {
           clientPolicy: {
             shouldUpdateReport: false,
             mode: 'graph_extract',
+            requireAi: true,
+            requestNonce,
             usageUnits,
           },
           clientGuidance: [
@@ -6772,6 +6818,9 @@ async function invokeGraphExtraction(text) {
           structuredInput: {
             kind: 'graph_extraction_request',
             schemaVersion: GRAPH_SCHEMA_VERSION,
+            requestNonce,
+            generatedAt: new Date().toISOString(),
+            requireAi: true,
             sourceText: normalizedText,
             existingGraph,
             expectedOutput: {
@@ -6890,6 +6939,8 @@ async function runCommandBlock(command, options = {}) {
     sourceBlockId: options.sourceBlockId || '',
     graphSummary: graphCommandSummary(),
     usageUnits: 1,
+    aiGenerated: result.meta?.aiGenerated !== false,
+    requestNonce: String(result.meta?.requestNonce || result.meta?.request_nonce || result.requestNonce || ''),
   });
 
   if (!block) return;
@@ -6955,8 +7006,8 @@ async function runSituationGraphInput(text) {
     return;
   }
 
-  if (desktopOnlyMedia.matches) {
-    setServiceStatus('RoosyCozy Intelligence는 PC 브라우저에서만 사용할 수 있습니다.', 'error');
+  if (desktopOnlyMedia.matches && !isStrategyChatRoute()) {
+    setServiceStatus('그래프 상황추가는 PC 브라우저에서 사용할 수 있습니다. 모바일에서는 전략 채팅을 이용해 주세요.', 'error');
     return;
   }
 
@@ -6979,35 +7030,13 @@ async function runSituationGraphInput(text) {
   let result = null;
 
   if (!aiExtraction.ok) {
-    result = applySituationTextToGraph(normalizedText);
-    const graphSaved = result?.ok
-      ? await persistGraphStateRemote({ reason: 'situation_text_to_graph_ai_fallback' }).catch(() => false)
-      : false;
-    persistGraphStateLocal();
-    renderAll();
-    setServiceStatus(
-      result?.ok
-        ? `AI 그래프 구성은 지연됐지만 기본 그래프를 먼저 반영했습니다. ${situationResultSummary(result)} · 사유: ${aiExtraction.reason}`
-        : `AI 그래프 구성 실패: ${aiExtraction.reason}`,
-      result?.ok && graphSaved ? 'ready' : 'error'
-    );
+    setServiceStatus(`AI 그래프 구성 실패: ${aiExtraction.reason}`, 'error');
     return;
   }
 
   result = applyGraphExtractionPatch(aiExtraction.graphPatch, normalizedText);
   if (!result?.ok) {
-    const fallbackResult = applySituationTextToGraph(normalizedText);
-    const graphSaved = fallbackResult?.ok
-      ? await persistGraphStateRemote({ reason: 'situation_text_to_graph_empty_ai_patch' }).catch(() => false)
-      : false;
-    persistGraphStateLocal();
-    renderAll();
-    setServiceStatus(
-      fallbackResult?.ok
-        ? `AI 응답에 그래프 패치가 부족해 기본 그래프를 반영했습니다. ${situationResultSummary(fallbackResult)}`
-        : (result?.reason || 'AI가 그래프 패치를 반환했지만 사건 평면에 반영할 노드나 관계가 없습니다.'),
-      fallbackResult?.ok && graphSaved ? 'ready' : 'error'
-    );
+    setServiceStatus(result?.reason || 'AI가 그래프 패치를 반환했지만 사건 평면에 반영할 노드나 관계가 없습니다.', 'error');
     return;
   }
 
@@ -7024,8 +7053,13 @@ async function runSituationGraphInput(text) {
 }
 
 function renderCommandBlocks() {
-  dom.activeProduct.textContent = activeConversation ? productLabel(activeConversation.product) : '사안 입력';
-  dom.activeTitle.textContent = activeConversation?.title || '수사지식그래프를 구성하세요';
+  if (isStrategyChatRoute()) {
+    dom.activeProduct.textContent = activeConversation ? productLabel(activeConversation.product) : 'ROOSY-X';
+    dom.activeTitle.textContent = activeConversation?.title || '분쟁대응 전략 에이전트';
+  } else {
+    dom.activeProduct.textContent = activeConversation ? productLabel(activeConversation.product) : '사안 입력';
+    dom.activeTitle.textContent = activeConversation?.title || '수사지식그래프를 구성하세요';
+  }
 
   const target = dom.commandList || dom.reportPreview;
   if (!target) return;
@@ -7054,6 +7088,7 @@ function renderCommandBlocks() {
           <button type="button" data-command-view="${escapeHtml(block.id)}">결과 보기</button>
         </header>
         <div class="case-command-meta">
+          <span>${escapeHtml(block.aiGenerated ? 'AI 실행' : 'AI 확인 필요')}</span>
           <span>${escapeHtml(formatDate(block.executedAt || block.createdAt))}</span>
           <span>${escapeHtml(block.graphSummary || graphCommandSummary())}</span>
           <span>${escapeHtml(`${block.usageUnits || 1}회`)}</span>
@@ -7326,8 +7361,8 @@ async function invokeChat({
   timeoutMsOverride = null,
   reloadMessagesAfter = true,
 } = {}) {
-  if (desktopOnlyMedia.matches) {
-    const reason = 'RoosyCozy Intelligence는 PC 브라우저에서만 사용할 수 있습니다.';
+  if (desktopOnlyMedia.matches && !isStrategyChatRoute()) {
+    const reason = 'ROOSY-X 그래프 워크스페이스는 PC 브라우저에서 사용할 수 있습니다. 모바일에서는 전략 채팅을 이용해 주세요.';
     setServiceStatus(reason, 'error');
     return { ok: false, reason };
   }
@@ -7365,7 +7400,9 @@ async function invokeChat({
   const trimmedMessage = message.trim();
   const inferredIntent = classifyChatIntent(trimmedMessage, forceReport);
   const chatIntent = clientIntentOverride || inferredIntent;
-  const shouldUpdateReport = typeof shouldUpdateReportOverride === 'boolean'
+  const shouldUpdateReport = isStrategyChatRoute()
+    ? false
+    : typeof shouldUpdateReportOverride === 'boolean'
     ? shouldUpdateReportOverride
     : shouldUpdateReportFromMessage(chatIntent, forceReport);
   const forceFullReport = Boolean(forceReport && shouldUpdateReport);
@@ -7374,6 +7411,9 @@ async function invokeChat({
   const usageUnits = evidenceGuidance && shouldUpdateReport ? 2 : 1;
   const requestPolicy = {
     ...chatRequestPolicy(chatIntent, shouldUpdateReport),
+    mode: isStrategyChatRoute() ? 'strategy_simulation' : 'standard_chat',
+    expectedStrategies: isStrategyChatRoute() ? 3 : undefined,
+    requireActionOptions: isStrategyChatRoute(),
     inferredIntent,
     usageUnits,
     includesPdfEvidence: Boolean(evidenceGuidance),
@@ -7411,7 +7451,9 @@ async function invokeChat({
 
   try {
     const usageBeforeRequest = { ...usageState };
-    const behaviorGuide = shouldUpdateReport
+    const behaviorGuide = isStrategyChatRoute()
+      ? reportChatBehaviorGuide
+      : shouldUpdateReport
       ? reportChatBehaviorGuide
       : '일반 메시지 모드: 보고서 전문을 갱신하지 말고 사용자 질문에 짧게 답하세요. report_changed는 false입니다.';
     const clientGuidance = [behaviorGuide, clientGuidanceExtra, graphGuidance, evidenceGuidance]
@@ -7528,7 +7570,7 @@ async function invokeChat({
 async function signInWithGoogle() {
   if (isGoogleOAuthBlockedUserAgent()) {
     setAuthMode('signup');
-    setAuthMessage('RoosyCozy Intelligence는 PC 브라우저 전용입니다. 모바일 앱 안의 브라우저에서는 이용할 수 없으니 데스크톱 또는 노트북의 Chrome, Edge, Safari에서 다시 열어 주세요.', true);
+    setAuthMessage('모바일 앱 안의 브라우저에서는 Google 로그인이 제한될 수 있습니다. 이메일 로그인 또는 기기의 기본 브라우저를 이용해 주세요.', true);
     dom.authEmail?.focus();
     return;
   }
@@ -7845,7 +7887,7 @@ function setAuthOpen(isOpen) {
     setAuthMode('login');
     if (isGoogleOAuthBlockedUserAgent()) {
       setAuthMode('signup');
-      setAuthMessage('RoosyCozy Intelligence는 PC 브라우저 전용입니다. 모바일 앱 안의 브라우저에서는 이용할 수 없으니 데스크톱 또는 노트북 브라우저에서 접속해 주세요.');
+      setAuthMessage('모바일 앱 안의 브라우저에서는 Google 로그인이 제한될 수 있습니다. 이메일 로그인 또는 기기의 기본 브라우저를 이용해 주세요.');
     }
   } else {
     setAuthLegalOpen(false);
