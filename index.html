@@ -4,868 +4,274 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#ffffff">
-  <title>ROOSY-X | 분쟁대응전략 에이전트</title>
-  <meta name="description" content="교사와 공공기관을 위한 초소형 합성데이터 기반 분쟁대응 전략 에이전트. 분쟁상황을 입력하면 3가지 대응 전략을 시뮬레이션합니다." />
+  <title>ROOSY-X 루지코지 | 분쟁대응 전략 에이전트</title>
+  <meta name="description" content="교사와 공공기관을 위한 초소형 합성데이터 기반 분쟁대응 전략 에이전트. 분쟁상황을 입력하면 3가지 대응 전략을 제안합니다." />
   <link rel="stylesheet" href="app.css" />
   <script src="supabase-config.js"></script>
   <script type="module" src="app.js"></script>
 </head>
 
-<body class="chat-app chat-home">
-  <section class="desktop-only-gate" aria-label="PC 브라우저 전용 안내">
-    <img src="assets/brand/roosycozy-rc-logo.png" alt="" width="54" height="54">
-    <strong>ROOSY-X</strong>
-    <h1>전략 워크스페이스는 큰 화면에 최적화되어 있습니다</h1>
-    <p>관계 그래프 편집은 PC 브라우저를 권장합니다. 단순 전략 채팅은 모바일과 PC에서 모두 사용할 수 있습니다.</p>
-  </section>
+<body data-view="landing" data-authenticated="false">
+  <header class="site-header" data-site-header>
+    <a class="brand" href="#top" aria-label="ROOSY-X 홈" data-home-link>
+      <img src="assets/brand/roosycozy-rc-logo.png" alt="" width="34" height="34">
+      <strong>ROOSY-X</strong>
+    </a>
 
-  <main class="case-app-shell case-home-shell" aria-label="ROOSY-X 분쟁대응 전략">
-    <header class="case-topbar">
-      <a class="case-brand" href="index.html" aria-label="ROOSY-X 홈">
-        <img src="assets/brand/roosycozy-rc-logo.png" alt="" width="32" height="32">
-        <strong>ROOSY-X</strong>
-      </a>
+    <nav class="site-nav" aria-label="주요 섹션">
+      <a href="#research">연구 기반</a>
+      <a href="#example">사용 예시</a>
+      <a href="#workflow">작동 방식</a>
+    </nav>
 
-      <button class="case-license-mini" type="button" aria-label="라이선스 요약 열기" data-license-open data-license-line>비로그인 · 대화 불가 · 0%</button>
-
-      <button class="case-report-toggle" type="button" aria-expanded="false" aria-label="명령 블록 열기" data-report-toggle>
-        <span></span>
-      </button>
-
-      <button class="case-menu-toggle" type="button" aria-expanded="false" aria-label="메뉴 열기" data-menu-toggle>
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
-      <div class="case-top-actions" data-top-actions>
-        <button class="case-license-line" type="button" aria-label="라이선스와 사용량 열기" data-license-open data-license-line>비로그인 · 대화 불가 · 0%</button>
-
-        <button class="case-history-button" type="button" data-history-toggle>사안 파일</button>
-        <button class="case-new-button" type="button" data-new-conversation>새 사안</button>
-        <button class="case-save-button" type="button" data-save-case data-idle-label="저장">저장</button>
-
-        <section class="case-auth-card" data-auth-panel>
-          <button class="case-login-button" type="button" data-auth-open>사용해보기</button>
-        </section>
-
-        <section class="case-user-card is-hidden" data-user-panel>
-          <span data-user-email></span>
-          <button type="button" data-sign-out>로그아웃</button>
-        </section>
+    <div class="header-actions">
+      <button class="usage-pill" type="button" data-usage-pill hidden>로그인 필요</button>
+      <button class="ghost-button" type="button" data-auth-open>사용해보기</button>
+      <div class="user-menu" data-user-panel hidden>
+        <span data-user-email></span>
+        <button type="button" data-sign-out>로그아웃</button>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <p class="case-service-status" data-service-status hidden></p>
-
-    <div class="case-history-backdrop" data-history-backdrop hidden></div>
-    <aside class="case-history-drawer" data-history-drawer aria-hidden="true" hidden>
-      <header>
-        <div>
-          <span>기록</span>
-          <h2>저장된 사안</h2>
-        </div>
-        <button type="button" data-history-close>닫기</button>
-      </header>
-      <nav class="case-list case-history-list" data-conversation-list aria-label="저장된 사안"></nav>
-    </aside>
-
-    <div class="case-auth-backdrop" data-auth-backdrop hidden></div>
-    <section class="case-auth-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="auth-modal-title" data-auth-modal hidden>
-      <header>
-        <div>
-          <span>계정</span>
-          <h2 id="auth-modal-title">사용해보기</h2>
-        </div>
-        <button type="button" data-auth-close>닫기</button>
-      </header>
-
-      <div class="case-auth-google-row" data-google-auth-row>
-        <button class="case-google-button" type="button" data-sign-in-google>
-          <span>G</span>
-          Google로 시작하기
-        </button>
-      </div>
-
-      <p class="case-auth-embedded-note">ROOSY-X 전략 채팅은 모바일과 PC에서 사용할 수 있습니다. Google 로그인이 제한되면 이메일 로그인을 이용해 주세요.</p>
-
-      <div class="case-auth-divider">또는 이메일로 시작하기</div>
-
-      <div class="case-auth-tabs" role="tablist" aria-label="이메일 인증 방식">
-        <button type="button" class="is-active" data-auth-mode="login">로그인</button>
-        <button type="button" data-auth-mode="signup">회원가입</button>
-      </div>
-
-      <form class="case-email-auth-form" data-email-auth-form>
-        <input type="email" inputmode="email" autocomplete="email" placeholder="이메일 주소" data-auth-email>
-        <input type="password" autocomplete="current-password" placeholder="비밀번호" data-auth-password>
-        <input class="case-signup-only" type="password" autocomplete="new-password" placeholder="비밀번호 확인" data-auth-password-confirm>
-        <p class="case-password-hint case-signup-only" data-password-match-message aria-live="polite"></p>
-        <div class="case-terms-wrap case-signup-only">
-          <label class="case-terms-check">
-            <input type="checkbox" data-auth-terms>
-            <span>개인정보처리방침 및 이용약관에 동의합니다.</span>
-          </label>
-          <div class="case-auth-legal-actions" aria-label="약관 확인">
-            <button type="button" data-auth-legal-open="privacy">개인정보처리방침 보기</button>
-            <button type="button" data-auth-legal-open="terms">이용약관 보기</button>
+  <main id="top">
+    <section class="landing-view" data-landing-view>
+      <section class="hero-section">
+        <div class="hero-copy">
+          <span class="eyebrow">Tiny synthetic-data intelligence</span>
+          <h1>초소형 최적화 AI 기반<br>분쟁대응 전략 에이전트</h1>
+          <p>복잡한 민원, 학생지도, 내부 갈등 상황을 그대로 입력하면 ROOSY-X가 사실관계와 위험 표현을 분리하고, 바로 선택 가능한 3가지 대응 전략으로 압축합니다.</p>
+          <div class="hero-actions">
+            <button class="primary-button" type="button" data-start-chat>사용해보기</button>
+            <a class="text-button" href="#example">예시 보기</a>
+          </div>
+          <div class="trust-row" aria-label="연구 기반 요약">
+            <span>ICLR 2024 Tiny Paper</span>
+            <span>R2FM Workshop Accept</span>
+            <span>합성데이터 기반 AI 평가 연구</span>
           </div>
         </div>
-        <button type="submit" data-auth-submit>이메일로 로그인</button>
-      </form>
 
-      <p class="case-auth-message" data-auth-message></p>
-      <button class="case-auth-resend" type="button" data-auth-resend hidden>인증 메일 다시 보내기</button>
-      <small>회원가입 후 받은 메일의 인증 링크를 누른 뒤 권한 안내를 확인해 주세요. Teacher는 인디스쿨 쪽지로, PRO는 별도 이메일 문의 후 승인됩니다.</small>
-    </section>
-
-    <div class="case-auth-legal-backdrop" data-auth-legal-backdrop hidden></div>
-    <section class="case-auth-legal-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="auth-legal-title" data-auth-legal-modal hidden>
-      <header>
-        <h2 id="auth-legal-title" data-auth-legal-title>약관</h2>
-        <button type="button" data-auth-legal-close>닫기</button>
-      </header>
-      <div class="case-auth-legal-content" data-auth-legal-content></div>
-    </section>
-
-    <div class="case-guide-backdrop" data-guide-backdrop hidden></div>
-    <section class="case-guide-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="guide-modal-title" data-guide-modal hidden>
-      <header>
-        <div>
-          <span>사용 가이드라인</span>
-          <h2 id="guide-modal-title">권한별 사용 범위</h2>
+        <div class="hero-visual" aria-label="ROOSY-X 전략 예시">
+          <div class="visual-glow"></div>
+          <article class="strategy-card main-card">
+            <span>Live scenario</span>
+            <strong>“학부모님이 오늘 학생지도 사안에 대해 정서적 학대 아니냐는 문자를 보냈어.”</strong>
+            <p>지도 경위, 위험 표현, 기록 포인트를 분리해 3가지 선택지로 정리합니다.</p>
+          </article>
+          <div class="strategy-stack">
+            <article>
+              <b>01</b>
+              <strong>차분한 사실확인형</strong>
+              <p>감정 표현을 줄이고 지도 경위와 안전조치만 답변</p>
+            </article>
+            <article>
+              <b>02</b>
+              <strong>학교 공유형</strong>
+              <p>관리자 공유와 생활지도 기록을 먼저 확보</p>
+            </article>
+            <article>
+              <b>03</b>
+              <strong>확대 대비형</strong>
+              <p>문자 보존, 목격자 확인, 공식 상담 전환</p>
+            </article>
+          </div>
         </div>
-        <button type="button" data-guide-close>닫기</button>
-      </header>
-
-      <p class="case-guide-summary">ROOSY-X는 분쟁상황을 입력받아 사실관계, 위험 표현, 기록 보존, 대응 선택지를 정리하는 전략 보조 시스템입니다. 법률 판단이나 행정 결론을 대신하지 않습니다.</p>
-
-      <div class="case-guide-grid">
-        <article>
-          <span>권한 필요</span>
-          <h3>일반 계정</h3>
-          <p>Google 또는 이메일 로그인만 완료된 계정은 전략 에이전트를 사용할 수 없습니다. 권한 승인 전에는 서비스 안내와 약관 확인만 가능합니다.</p>
-        </article>
-        <article>
-          <span>Teacher</span>
-          <h3>교원 권한</h3>
-          <p>교원 고객을 위한 분쟁대응 전략 기능입니다. 학교폭력, 교권침해 사안, 악성민원 대응, 학생지도 경위를 입력하면 답변 전략, 기록 보존, 관리자 공유 방향을 제안합니다.</p>
-          <small>권한 요청: 인디스쿨에서 루지코지by노명성에게 가입 이메일을 쪽지로 보내주세요.</small>
-        </article>
-        <article>
-          <span>PRO</span>
-          <h3>공공기관·전문 대응 조직</h3>
-          <p>PRO는 공공기관과 전문 대응 조직에 별도 승인되는 전문 보조용 라이선스입니다. 민원, 공문, 내부 갈등, 자료 요청 상황을 더 세밀한 전략 브리프로 재구성합니다.</p>
-          <small>별도 이메일 문의: myongsungcs@gmail.com</small>
-        </article>
-      </div>
-    </section>
-
-    <div class="case-license-backdrop" data-license-backdrop hidden></div>
-    <section class="case-license-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="license-modal-title" data-license-modal hidden>
-      <header>
-        <div>
-          <span>라이선스</span>
-          <h2 id="license-modal-title">라이선스와 사용량</h2>
-        </div>
-        <button type="button" data-license-close>닫기</button>
-      </header>
-
-      <p class="case-license-summary">권한 필요: ROOSY-X 전략 에이전트는 Teacher 또는 PRO 승인 계정만 사용할 수 있습니다. 일반 로그인 계정은 승인 전까지 분석 기능이 제한됩니다.</p>
-
-      <div class="case-license-table-wrap">
-        <table class="case-license-table">
-          <thead>
-            <tr>
-              <th scope="col">구분</th>
-              <th scope="col">일반</th>
-              <th scope="col">Teacher 교원 권한</th>
-              <th scope="col">PRO 공공기관·전문 대응 조직</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row">대상</th>
-              <td>Google 또는 이메일 로그인 사용자</td>
-              <td>학폭·교권침해·악성민원 대응 교원</td>
-              <td>공공기관·전문 대응 조직 사용자</td>
-            </tr>
-            <tr>
-              <th scope="row">월 사용량</th>
-              <td>권한 필요</td>
-              <td>150회</td>
-              <td>500회 또는 별도 협의</td>
-            </tr>
-            <tr>
-              <th scope="row">증거 분석</th>
-              <td>권한 필요</td>
-              <td>학폭·교권침해·악성민원 대응 전략 중심</td>
-              <td>민원·분쟁 대응 전략 전문 보조용</td>
-            </tr>
-            <tr>
-              <th scope="row">전략 기록 저장</th>
-              <td>권한 필요</td>
-              <td>가능</td>
-              <td>가능</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <section class="case-upgrade-form" aria-label="교원 권한 안내">
-        <strong>권한 안내</strong>
-        <p>Teacher 권한은 인디스쿨에서 루지코지by노명성에게 ROOSY-X 가입 이메일 주소를 쪽지로 보내 요청할 수 있습니다. PRO는 공공기관·전문 대응 조직의 전문 보조용 라이선스로, 별도 이메일 문의 후 승인됩니다.</p>
       </section>
 
-      <div class="case-legal-block">
-        <details>
-          <summary>개인정보처리방침</summary>
-          <div class="case-legal-content">
-            <p class="case-legal-date">시행일: 2026. 6. 2.</p>
+      <section class="audience-section" aria-label="사용 대상">
+        <article>
+          <span>Teachers</span>
+          <h2>교원 분쟁대응</h2>
+          <p>학폭, 교권침해, 악성민원, 학부모 문자 대응에서 안전한 문장과 기록 포인트를 분리합니다.</p>
+        </article>
+        <article>
+          <span>Public teams</span>
+          <h2>공공기관 민원 대응</h2>
+          <p>개인 대응이 아닌 공식 채널, 절차, 기록 보존 중심의 대응 선택지를 제안합니다.</p>
+        </article>
+        <article>
+          <span>3 Options</span>
+          <h2>전략 3안 시뮬레이션</h2>
+          <p>빠른 진정, 공식 절차 전환, 확대 대비처럼 선택 가능한 대응안을 장단점과 함께 제공합니다.</p>
+        </article>
+      </section>
 
-            <h3>제1조 목적</h3>
-            <p>RoosyCozy(이하 "회사"라 합니다)는 「개인정보 보호법」 등 관계 법령에 따라 정보주체의 개인정보를 보호하고, 개인정보와 관련한 고충을 신속하고 원활하게 처리하기 위하여 본 개인정보처리방침을 수립·공개합니다.</p>
-
-            <h3>제2조 개인정보처리자 및 문의처</h3>
-            <p>본 서비스의 개인정보 처리에 관한 책임과 문의 접수는 아래 연락처를 통하여 처리합니다.</p>
-            <ul>
-              <li>서비스명: ROOSY-X</li>
-              <li>개인정보 문의: myongsungcs@gmail.com</li>
-              <li>처리 범위: 회원 인증, 전략 문답 저장, 사안 대응 기록 생성, 라이선스 및 사용량 관리, 보안·오남용 방지</li>
-            </ul>
-
-            <h3>제3조 개인정보의 처리 목적</h3>
-            <p>회사는 다음 목적을 위하여 필요한 최소한의 개인정보를 처리하며, 다음 목적 이외의 용도로 이용하지 않습니다. 처리 목적이 변경되는 경우에는 관계 법령에 따라 별도 동의를 받거나 필요한 조치를 이행합니다.</p>
-            <ol>
-              <li>회원 인증 및 계정 관리: Google OAuth 또는 이메일 로그인, 이용자 식별, 세션 유지, 로그아웃 처리</li>
-              <li>분쟁대응 전략 생성: 이용자가 입력한 사안 기록, 상대 주장, 목표, 보유 기록을 바탕으로 대응 선택지와 확인 질문 정리</li>
-              <li>대화 및 전략 기록 저장: 이용자가 저장하거나 서비스 이용 과정에서 생성된 분석 기록, 제목, 상태값의 조회·삭제 지원</li>
-              <li>라이선스 및 사용량 관리: 일반·Teacher·PRO 공공기관·전문 대응 조직 계정 구분, 월 사용량 산정, 권한 부여 여부 확인, 오남용 방지</li>
-              <li>서비스 안정성 확보: 장애 대응, 비정상 접근 탐지, 보안 점검, 분쟁 대응을 위한 접속·이용 기록 확인</li>
-              <li>고객 문의 처리: 문의 사실 확인, 처리 결과 안내, 동일 문의의 재발 방지</li>
-            </ol>
-
-            <h3>제4조 처리하는 개인정보 항목</h3>
-            <p>회사는 서비스 제공에 필요한 범위에서 아래 항목을 처리할 수 있습니다.</p>
-            <ul>
-              <li>로그인 정보: 이메일 주소, Google 계정 식별자, 프로필 이름 또는 프로필 이미지가 제공되는 경우 해당 정보, 이메일 가입 시 인증 및 비밀번호 기반 로그인에 필요한 인증 정보</li>
-              <li>계정·라이선스 정보: 내부 사용자 식별자, 회원 등급, Teacher 권한 또는 PRO 공공기관·전문 대응 조직 문의 처리 여부, 사용량, 생성·수정 시각</li>
-              <li>분석 정보: 이용자가 입력한 문답과 사안 기록, AI가 생성한 질문과 답변, 전략 브리프, 사안 제목, 분석 상태, 저장 여부, 삭제 여부</li>
-              <li>서비스 이용 정보: 접속 일시, 브라우저 및 기기 정보, IP 주소, 오류 기록, 인증 토큰 및 세션 유지에 필요한 로컬 저장 정보</li>
-              <li>문의 정보: 이용자가 이메일 등으로 문의하는 경우 이름, 이메일 주소, 문의 내용, 처리 결과</li>
-            </ul>
-            <p>이용자는 제3자의 개인정보, 민감정보, 고유식별정보, 아동·청소년 관련 정보 등을 입력하지 않는 것이 원칙입니다. 다만 사안 분석에 반드시 필요한 경우에는 관련 법령과 제3자의 권리를 침해하지 않는 범위에서 최소한으로 입력해야 하며, 가능하면 이름·연락처 등은 익명화 또는 가명화하여 입력해야 합니다.</p>
-
-            <h3>제5조 개인정보의 처리 및 보유 기간</h3>
-            <p>회사는 개인정보의 처리 목적이 달성되거나 이용자가 삭제·탈퇴를 요청한 때에는 지체 없이 해당 개인정보를 파기합니다. 다만 관계 법령에 따라 보존할 필요가 있거나 분쟁 대응을 위하여 필요한 경우에는 아래 기간 동안 보관할 수 있습니다.</p>
-            <ul>
-              <li>계정 정보: 회원 탈퇴, Google 로그인 연결 해제 또는 이메일 계정 삭제 요청 시까지</li>
-              <li>분석 문답 및 전략 기록: 이용자가 직접 삭제하거나 계정 삭제를 요청할 때까지</li>
-              <li>라이선스·등급 처리 이력: 부정 사용 방지 및 중복 등급 처리 제한을 위하여 계정 유지 기간 동안, 탈퇴 후에는 분쟁 대응에 필요한 범위에서 최대 1년</li>
-              <li>접속·보안 로그: 보안 점검 및 장애 대응을 위하여 원칙적으로 3개월, 사고 조사 또는 법령상 보존 필요가 있는 경우 해당 기간</li>
-              <li>고객 문의 기록: 문의 처리 및 분쟁 대응을 위하여 처리 완료 후 최대 3년</li>
-            </ul>
-
-            <h3>제6조 개인정보의 제3자 제공</h3>
-            <p>회사는 정보주체의 사전 동의가 있거나 법령에 특별한 규정이 있는 경우를 제외하고 개인정보를 외부에 제3자 제공하지 않습니다. 수사기관, 법원, 행정기관 등이 법령상 절차에 따라 자료 제출을 요구하는 경우에는 필요한 범위에서 제공될 수 있습니다.</p>
-
-            <h3>제7조 개인정보 처리의 위탁 및 국외 이전</h3>
-            <p>회사는 원활한 서비스 제공을 위하여 다음과 같이 개인정보 처리 업무를 위탁하거나 국외 사업자가 제공하는 클라우드·인증·AI API를 이용할 수 있습니다.</p>
-            <ul>
-              <li>Supabase: 회원 인증, 데이터베이스 저장, 서버리스 함수, 보안 로그 관리</li>
-              <li>Google: Google OAuth 로그인 및 계정 인증</li>
-              <li>생성형 AI API 제공업체: 사안 기록 분석, 추가 질문 생성, 대응 전략 생성</li>
-            </ul>
-            <p>국외 사업자를 이용하는 경우 이전되는 정보는 서비스 제공에 필요한 항목으로 한정되며, 보유·이용 기간은 위탁 업무 수행 또는 계약 종료 시까지입니다. 회사는 수탁자가 개인정보를 안전하게 처리하도록 계약 또는 서비스 설정을 통하여 관리·감독합니다.</p>
-
-            <h3>제8조 AI 처리 및 모델 학습 관련 고지</h3>
-            <p>ROOSY-X는 이용자가 입력한 사안 기록과 대화 맥락을 AI 응답 및 대응 전략 생성 목적으로 처리합니다. AI는 사실관계, 위험 표현, 기록 보존, 대응 선택지를 정리하는 보조 도구이며, 최종 법률·행정·형사책임 판단을 대체하지 않습니다. 회사는 이용자 분석 데이터를 자체 범용 AI 모델 학습 목적으로 사용하지 않는 것을 원칙으로 합니다. 외부 AI API 제공업체를 이용하는 경우 해당 업체의 API 약관·보안 설정에 따라 입력 데이터가 처리될 수 있으며, 회사는 가능한 범위에서 모델 학습에 이용되지 않는 API 설정 또는 계약 조건을 우선 적용합니다.</p>
-
-            <h3>제9조 개인정보의 파기 절차 및 방법</h3>
-            <p>회사는 보유 기간 경과, 처리 목적 달성, 이용자의 삭제 요청 등 파기 사유가 발생하면 해당 개인정보를 복구 또는 재생할 수 없는 방법으로 파기합니다. 전자적 파일은 안전한 삭제 또는 접근 불가능한 상태로 처리하며, 백업 데이터는 백업 주기와 보관 정책에 따라 순차적으로 삭제됩니다.</p>
-
-            <h3>제10조 정보주체의 권리와 행사 방법</h3>
-            <p>이용자는 언제든지 본인의 개인정보에 대하여 열람, 정정, 삭제, 처리정지, 동의 철회, 회원 탈퇴를 요청할 수 있습니다. 서비스 화면의 기록 삭제 기능 또는 개인정보 문의 이메일을 통하여 권리를 행사할 수 있으며, 회사는 본인 확인 후 관계 법령에서 정한 기간 내에 조치합니다.</p>
-
-            <h3>제11조 개인정보의 안전성 확보 조치</h3>
-            <p>회사는 개인정보의 안전한 처리를 위하여 접근 권한 최소화, 인증 기반 접근 통제, 전송 구간 암호화, 보안 로그 확인, 데이터베이스 접근 제한, 공개 저장소 내 비밀키 비공개, 정기적인 설정 점검 등 기술적·관리적 보호조치를 시행합니다.</p>
-
-            <h3>제12조 쿠키 및 로컬 저장소</h3>
-            <p>회사는 로그인 세션 유지, 인증 상태 확인, 서비스 안정성 확보를 위하여 브라우저의 로컬 저장소 또는 유사 기술을 사용할 수 있습니다. 이용자는 브라우저 설정을 통하여 저장 정보를 삭제할 수 있으나, 이 경우 로그인이 해제되거나 일부 기능 이용이 제한될 수 있습니다.</p>
-
-            <h3>제13조 권익침해 구제 방법</h3>
-            <p>이용자는 개인정보 침해에 대한 상담이나 구제를 위하여 개인정보침해신고센터, 개인정보분쟁조정위원회 등 관계 기관에 문의할 수 있습니다. 회사에 대한 문의는 myongsungcs@gmail.com으로 접수할 수 있습니다.</p>
-
-            <h3>제14조 개인정보처리방침의 변경</h3>
-            <p>본 개인정보처리방침은 법령, 서비스 기능, 수탁자, 처리 항목의 변경에 따라 개정될 수 있습니다. 중요한 변경이 있는 경우 시행 전 서비스 화면 또는 적절한 방법으로 공지합니다.</p>
-          </div>
-        </details>
-        <details>
-          <summary>이용약관</summary>
-          <div class="case-legal-content">
-            <p class="case-legal-date">시행일: 2026. 6. 2.</p>
-
-            <h3>제1조 목적</h3>
-            <p>본 약관은 RoosyCozy(이하 "회사"라 합니다)가 제공하는 ROOSY-X 분쟁대응 전략 서비스(이하 "서비스"라 합니다)의 이용 조건, 회사와 이용자의 권리·의무 및 책임 사항, 서비스 이용 절차와 제한 사항을 정함을 목적으로 합니다.</p>
-
-            <h3>제2조 정의</h3>
-            <ol>
-              <li>"서비스"란 이용자가 AI와 문답하면서 분쟁·갈등·민원·계약·조직 내 문제 등 다양한 사안의 사실관계, 위험 표현, 보유 기록, 대응 선택지, 사용자 확인 지점을 분석하고 전략 브리프를 생성·저장할 수 있는 기능을 말합니다.</li>
-              <li>"이용자"란 본 약관에 따라 서비스를 이용하는 자를 말하며, 비로그인 이용자와 Google 또는 이메일 로그인 이용자를 포함합니다.</li>
-              <li>"회원"이란 Google 또는 이메일 로그인을 통하여 회사가 이용자를 식별할 수 있는 상태의 이용자를 말합니다.</li>
-              <li>"분석 문답"이란 이용자가 입력한 사안 기록과 AI가 생성한 질문·답변을 말합니다.</li>
-              <li>"전략 브리프"란 분석 문답을 바탕으로 AI가 사실관계, 위험 표현, 기록 보존, 대응 선택지, 사용자 확인 지점, 리스크, 시뮬레이션 등을 구조화하여 생성한 정리본을 말합니다.</li>
-              <li>"라이선스"란 이용 가능한 기능과 월 사용량을 정하는 계정 등급을 말하며, 일반, Teacher, PRO 공공기관·전문 대응 조직 등으로 구분될 수 있습니다.</li>
-              <li>"교원 권한"이란 회사가 학폭, 교권침해 사안, 악성민원 대응 등 교원 고객의 이용 목적과 계정 상태를 확인한 뒤 분석 워크스페이스 접속을 허용하는 절차를 말합니다.</li>
-            </ol>
-
-            <h3>제3조 약관의 효력 및 변경</h3>
-            <p>본 약관은 서비스 화면에 게시하거나 기타 합리적인 방법으로 공지함으로써 효력이 발생합니다. 회사는 관계 법령을 위반하지 않는 범위에서 약관을 변경할 수 있으며, 중요한 변경이 있는 경우 적용일자와 변경 사유를 명시하여 사전에 공지합니다. 이용자가 변경 약관의 적용일 이후에도 서비스를 계속 이용하는 경우 변경 약관에 동의한 것으로 봅니다.</p>
-
-            <h3>제4조 서비스의 내용</h3>
-            <p>회사는 다음 기능을 제공합니다.</p>
-            <ul>
-              <li>분쟁대응 전략 문답 기능</li>
-              <li>분석 문답 기반 전략 브리프 생성 및 갱신 기능</li>
-              <li>대화 및 전략 기록 저장, 조회, 삭제 기능</li>
-              <li>라이선스 등급 및 월 사용량 표시 기능</li>
-              <li>Teacher 권한 및 PRO 공공기관·전문 대응 조직 문의 안내 기능</li>
-            </ul>
-            <p>회사는 서비스 개선, 보안, 운영상 필요에 따라 기능의 전부 또는 일부를 변경·중단할 수 있습니다.</p>
-
-            <h3>제5조 회원가입 및 로그인</h3>
-            <p>서비스의 전략 채팅은 Google 또는 이메일 로그인을 완료하고 Teacher 권한 또는 PRO 공공기관·전문 대응 조직 라이선스를 부여받은 회원에게 제공됩니다. 이메일로 가입하는 회원은 회사가 발송하는 인증 링크를 통하여 이메일 소유 여부를 확인해야 하며, 인증이 완료되지 않은 경우 로그인이 제한될 수 있습니다. 비로그인 이용자와 권한이 없는 일반 회원은 서비스 소개, 약관 확인, 권한 요청 안내 등 제한된 기능만 이용할 수 있으며, AI 분석 입력 및 전략 기록 저장은 이용할 수 없습니다. 회원은 본인 계정을 안전하게 관리하여야 하며, 계정의 제3자 사용으로 발생한 손해에 대하여 회사에 고의 또는 중대한 과실이 없는 한 회원이 책임을 부담합니다.</p>
-
-            <h3>제6조 라이선스 및 사용량</h3>
-            <ol>
-              <li>일반 계정은 Google 또는 이메일 로그인 후 기본 제공되는 등급이며, 전략 에이전트 이용을 위해서는 Teacher 권한 또는 PRO 공공기관·전문 대응 조직 라이선스 승인이 필요합니다.</li>
-              <li>교원 권한은 학폭, 교권침해 사안, 악성민원 대응 등 교원 고객에게 제공되는 등급이며, 인디스쿨에서 루지코지by노명성에게 가입 이메일을 쪽지로 보내는 수동 절차를 통하여 부여될 수 있습니다.</li>
-              <li>PRO는 공공기관 또는 전문 대응 조직을 위한 별도 협의 대상이며, myongsungcs@gmail.com을 통해 문의할 수 있습니다.</li>
-              <li>교원 권한 요청은 본인 계정에 대해서만 할 수 있으며, 타인의 이메일을 이용한 허위 요청, 자격 사칭, 자동화 요청 또는 우회 사용을 금지합니다.</li>
-              <li>회사는 부정 사용, 시스템 남용, 보안 위험이 의심되는 경우 사용량을 제한하거나 등급을 조정·취소할 수 있습니다.</li>
-            </ol>
-
-            <h3>제7조 이용자의 의무</h3>
-            <p>이용자는 다음 행위를 하여서는 안 됩니다.</p>
-            <ul>
-              <li>타인의 계정, 이메일, 승급 자격 또는 개인정보를 무단으로 사용하는 행위</li>
-              <li>허위 사실, 조작된 자료, 불법 촬영물, 명예훼손성 내용, 차별·혐오 표현을 입력하는 행위</li>
-              <li>제3자의 민감정보, 고유식별정보, 아동·청소년 개인정보를 정당한 권한 없이 입력하는 행위</li>
-              <li>AI 응답을 위법행위, 협박, 괴롭힘, 부정 청구, 증거 조작, 허위 신고 목적으로 사용하는 행위</li>
-              <li>서비스의 보안, 사용량 제한, 인증 절차, 데이터베이스 정책을 우회하거나 침해하는 행위</li>
-              <li>크롤링, 자동화 요청, 과도한 트래픽 발생 등 서비스 운영을 방해하는 행위</li>
-            </ul>
-
-            <h3>제8조 AI 생성물 및 전략 브리프의 성격</h3>
-            <p>서비스가 생성하는 질문, 답변, 전략 브리프, 정리근거, 대응 선택지, 시뮬레이션은 이용자가 입력한 자료를 바탕으로 한 자동 분석 결과입니다. 이는 법률 자문, 행정 판단, 형사책임 판단, 노무·세무·의료 등 전문 자문을 대체하지 않습니다. 이용자는 전략 브리프를 제출, 공유, 민원 대응, 학교 또는 기관 내부 검토 자료로 사용하기 전에 사실관계, 날짜, 당사자, 표현, 증빙자료, AI가 추론한 부분과 사용자가 직접 확인한 부분의 구분을 직접 확인하여야 합니다.</p>
-
-            <h3>제9조 저장 자료의 관리 및 삭제</h3>
-            <p>회원은 서비스 화면에서 저장된 분석 기록 및 전략 브리프를 조회하거나 삭제할 수 있습니다. 삭제된 자료는 서비스 화면에서 복구할 수 없으며, 백업 데이터는 회사의 백업 주기 및 보안 정책에 따라 순차적으로 삭제됩니다. 법령상 보존 의무가 있거나 분쟁 대응에 필요한 경우 회사는 필요한 범위에서 일부 기록을 보관할 수 있습니다.</p>
-
-            <h3>제10조 지식재산권 및 이용 허락</h3>
-            <p>이용자가 입력한 사안 기록에 대한 권리는 원칙적으로 이용자에게 있습니다. 이용자는 서비스 제공, AI 응답 생성, 전략 브리프 작성, 저장, 보안 점검, 오류 개선을 위하여 필요한 범위에서 회사가 해당 입력 내용과 생성물을 처리할 수 있도록 허락합니다. 서비스의 화면, 소프트웨어, 로고, 디자인, 데이터베이스 구조, 운영 방식 등에 관한 권리는 회사 또는 정당한 권리자에게 귀속됩니다.</p>
-
-            <h3>제11조 개인정보 보호</h3>
-            <p>회사는 개인정보를 본 약관과 별도로 게시한 개인정보처리방침에 따라 처리합니다. 이용자는 타인의 개인정보를 입력하는 경우 그 입력이 적법하고 필요한 범위 내에서 이루어졌는지 스스로 확인하여야 합니다.</p>
-
-            <h3>제12조 서비스 중단 및 제한</h3>
-            <p>회사는 시스템 점검, 장애, 보안 사고, 외부 API 장애, 클라우드 장애, 법령상 제한, 천재지변 또는 이에 준하는 사유가 있는 경우 서비스의 전부 또는 일부를 일시 중단할 수 있습니다. 또한 이용자가 본 약관을 위반하거나 서비스 운영에 중대한 위험을 발생시키는 경우 사전 통지 없이 이용을 제한할 수 있습니다.</p>
-
-            <h3>제13조 면책 및 책임 제한</h3>
-            <p>회사는 AI 생성 결과의 완전성, 정확성, 특정 목적 적합성, 법적 효력, 기관 제출 시 수리 여부를 보증하지 않습니다. 회사의 고의 또는 중대한 과실이 없는 한, 이용자가 AI 생성물을 검토 없이 사용하여 발생한 불이익, 제3자와의 분쟁, 기관 제출 결과, 법적 판단의 차이, 이용자 입력 오류로 인한 손해에 대하여 책임을 부담하지 않습니다.</p>
-
-            <h3>제14조 손해배상 및 금지행위에 대한 조치</h3>
-            <p>이용자가 본 약관 또는 관계 법령을 위반하여 회사 또는 제3자에게 손해를 발생시킨 경우 이용자는 그 손해를 배상하여야 합니다. 회사는 위반 행위가 확인되거나 합리적으로 의심되는 경우 계정 이용 제한, 기록 삭제 요청, 교원 권한 취소, 관계 기관 신고 등 필요한 조치를 할 수 있습니다.</p>
-
-            <h3>제15조 준거법 및 분쟁 해결</h3>
-            <p>본 약관은 대한민국 법령에 따라 해석됩니다. 서비스 이용과 관련하여 분쟁이 발생한 경우 회사와 이용자는 성실히 협의하여 해결하며, 협의로 해결되지 않는 경우 관계 법령에서 정한 관할 법원 또는 절차에 따릅니다.</p>
-
-            <h3>제16조 문의</h3>
-            <p>서비스 이용, 라이선스, Teacher 권한, PRO 공공기관·전문 대응 조직 문의, 개인정보, 삭제 요청에 관한 문의는 myongsungcs@gmail.com으로 접수할 수 있습니다. Teacher 권한은 인디스쿨에서 루지코지by노명성에게 ROOSY-X 가입 이메일 주소를 쪽지로 전달하는 방식으로 요청할 수 있습니다.</p>
-          </div>
-        </details>
-      </div>
-    </section>
-
-    <section class="case-landing-shell roosyx-landing" aria-label="ROOSY-X 분쟁대응전략 에이전트 랜딩">
-      <section class="case-landing-hero roosyx-hero">
-        <div class="case-landing-copy roosyx-hero-copy">
-          <span class="case-landing-eyebrow">교사와 공공기관을 위한</span>
-          <h1>ROOSY-X</h1>
-          <p class="roosyx-hero-lead">초소형 합성데이터 기반 분쟁대응 전략 에이전트. 복잡한 민원, 학생지도, 내부 갈등, 공문 대응 상황을 입력하면 AI가 사실과 리스크를 분해하고 3가지 대응 전략으로 시뮬레이션합니다.</p>
-          <div class="case-hero-points roosyx-hero-points" aria-label="핵심 기능">
-            <span>상황 입력</span>
-            <span>리스크 계산</span>
-            <span>전략 3안</span>
-            <span>문장 초안</span>
-          </div>
-          <div class="case-landing-actions">
-            <a href="chat/" data-start-chat>사용해보기</a>
-            <button type="button" data-guide-open>사용 가이드라인</button>
-          </div>
-          <p class="case-access-note" data-access-note>권한 필요: Teacher 또는 PRO 승인 계정만 전략 에이전트를 사용할 수 있습니다.</p>
+      <section class="example-section" id="example">
+        <div>
+          <span class="section-kicker">Example</span>
+          <h2>긴 상황을 그대로 넣어도 됩니다</h2>
+          <p>ROOSY-X는 법률 판단을 대신하지 않습니다. 대신 사실 중심 기록, 위험 문장 제거, 다음 확인 질문을 한 번에 정리합니다.</p>
         </div>
-
-        <article class="roosyx-demo-card" aria-label="ROOSY-X 예시">
-          <span>Example</span>
-          <h2>“학부모님이 오늘 있었던 학생지도 사안에 대해 정서적 학대 아니냐는 문자를 보냈어.”</h2>
-          <div class="roosyx-demo-input">
-            <b>입력</b>
+        <article class="example-panel">
+          <div class="example-input">
+            <span>입력</span>
             <p>오늘 3교시 후 학생이 친구를 밀어 넘어뜨렸고, 제가 복도에서 즉시 분리 지도했습니다. 그런데 학부모님이 “아이를 공개적으로 망신 줬다”고 문자를 보내셨습니다. 내일 답변해야 합니다.</p>
           </div>
-          <div class="roosyx-demo-output">
-            <b>ROOSY-X 출력</b>
+          <div class="example-output">
+            <span>ROOSY-X 출력</span>
             <ol>
-              <li><strong>차분한 사실확인형</strong><small>감정적 표현 없이 지도 경위와 안전조치만 답변</small></li>
-              <li><strong>학교 공유형</strong><small>관리자·생활지도 기록을 남기고 공식 상담으로 전환</small></li>
-              <li><strong>분쟁확대 대비형</strong><small>문자 보존, 목격자 확인, 답변 문구를 짧게 제한</small></li>
+              <li><strong>사실확인형</strong><br>지도 경위와 안전조치만 차분히 안내</li>
+              <li><strong>학교 공유형</strong><br>관리자 공유 후 공식 상담으로 전환</li>
+              <li><strong>확대 대비형</strong><br>문자 보존, 목격자 확인, 기록 문안 정리</li>
             </ol>
           </div>
         </article>
       </section>
 
-      <section class="case-landing-segments roosyx-segments" aria-label="대상 고객">
-        <article>
-          <span class="case-card-icon node" aria-hidden="true"></span>
-          <h2>교사</h2>
-          <p>학생지도, 학폭, 교권침해, 악성민원 상황에서 바로 보낼 문장과 기록으로 남길 내용을 분리합니다.</p>
-          <ul>
-            <li>학부모 문자 대응</li>
-            <li>생활지도 경위 정리</li>
-            <li>관리자 공유 문안</li>
-          </ul>
-        </article>
-        <article>
-          <span class="case-card-icon evidence" aria-hidden="true"></span>
-          <h2>공공기관</h2>
-          <p>민원, 내부 갈등, 공문 요청, 감사 대비 상황을 규정 위반 리스크 없이 대응 가능한 선택지로 정리합니다.</p>
-          <ul>
-            <li>민원 답변 방향</li>
-            <li>기록 보존 기준</li>
-            <li>공식 절차 전환</li>
-          </ul>
-        </article>
-        <article>
-          <span class="case-card-icon report" aria-hidden="true"></span>
-          <h2>분쟁대응팀</h2>
-          <p>상황을 길게 설명해도 에이전트가 핵심 사실, 위험 표현, 대응 시나리오를 나누어 브리프합니다.</p>
-          <ul>
-            <li>선택지 비교</li>
-            <li>취약 문장 제거</li>
-            <li>다음 확인 질문</li>
-          </ul>
-        </article>
-      </section>
-
-      <section class="case-landing-method roosyx-method" aria-label="작동 방식">
-        <header>
-          <h2>심플하게 입력하고, 강하게 결정합니다</h2>
-          <p>ROOSY-X는 판정을 대신하지 않습니다. 사용자가 규정과 법령을 어기지 않도록 사실, 위험, 선택지를 분리해 의사결정을 돕습니다.</p>
-        </header>
-        <div>
-          <article>
-            <span class="case-step-index">01</span>
-            <strong>상황 입력</strong>
-            <p>문자, 민원, 학생지도 경위, 공문 요청을 그대로 붙여넣습니다.</p>
-          </article>
-          <article>
-            <span class="case-step-index">02</span>
-            <strong>AI 계산</strong>
-            <p>사실관계, 불확실한 부분, 금지해야 할 표현, 필요한 기록을 나눕니다.</p>
-          </article>
-          <article>
-            <span class="case-step-index">03</span>
-            <strong>전략 3안</strong>
-            <p>차분한 답변, 공식 절차 전환, 분쟁 확대 대비 중 선택 가능한 대응안을 제시합니다.</p>
-          </article>
+      <section class="research-section" id="research">
+        <div class="section-heading">
+          <span class="section-kicker">Research foundation</span>
+          <h2>세계 학회에서 검토된 AI 평가 연구를 제품 언어로 압축했습니다</h2>
+          <p>ROOSY-X는 거대한 시스템보다 빠르게 판단 보조에 필요한 구조를 뽑아내는 초소형 전략 에이전트를 지향합니다.</p>
         </div>
-      </section>
-
-      <footer class="case-landing-footer" aria-label="ROOSY-X 푸터">
-        <div class="case-footer-brand">
-          <img src="assets/brand/roosycozy-rc-logo.png" alt="" width="40" height="40">
-          <div>
-            <strong>ROOSY-X</strong>
-            <p>Dispute Response Strategy Agent.</p>
-          </div>
-        </div>
-        <div class="case-footer-links" aria-label="서비스 안내">
-          <button type="button" data-guide-open>사용 가이드라인</button>
-          <button type="button" data-license-open>권한 안내</button>
-          <button type="button" data-license-open>개인정보처리방침 · 이용약관</button>
-        </div>
-        <p class="case-footer-disclaimer">AI 응답은 법률·행정 판단을 대체하지 않습니다. 최종 발송 전 사실관계, 개인정보, 기관 내부 절차는 사용자가 직접 확인해야 합니다.</p>
-        <small>© 2026 ROOSY-X. All rights reserved.</small>
-      </footer>
-    </section>
-
-    <section class="case-strategy-overview" aria-label="증거 관리">
-      <header>
-        <span>증거</span>
-        <h2>증거 입력</h2>
-        <p>PDF 원자료를 읽어 시간 관련성, 관계 역학, 논리적 강점과 약점 분석에 반영합니다.</p>
-      </header>
-
-      <div class="case-evidence-axes" aria-label="분석 축">
-        <span>
-          <b>자료 일관성</b>
-          <small>일관성, 시간순, 누락 맥락</small>
-        </span>
-        <span>
-          <b>원본·형식 확인</b>
-          <small>원본성, 작성 시점, 보관 경로</small>
-        </span>
-        <span>
-          <b>행위 맥락 연결</b>
-          <small>어떤 행위와 맥락을 가리키는가</small>
-        </span>
-      </div>
-
-      <section class="case-evidence-vault" aria-label="PDF 증거 보관함" data-evidence-dropzone>
-        <div class="case-evidence-head">
-          <div>
-            <span>추가</span>
-            <strong>PDF 증거 파일</strong>
-          </div>
-          <label class="case-evidence-upload">
-            <input type="file" accept="application/pdf,.pdf" multiple data-evidence-input>
-            PDF 추가
-          </label>
-        </div>
-        <p data-evidence-status>PDF 파일을 추가하면 본문을 읽어 다음 사안보고 분석에 반영합니다. PDF 분석 반영은 2회 차감됩니다.</p>
-        <div class="case-evidence-list" data-evidence-list>
-          <p class="case-evidence-empty">아직 추가된 PDF 증거가 없습니다.</p>
-        </div>
-        <button class="case-evidence-analyze" type="button" data-evidence-analyze>분석에 반영 · 2회</button>
-      </section>
-    </section>
-
-    <section class="case-chat-main" aria-label="ROOSY-X 전략 채팅">
-      <header class="case-chat-header">
-        <div>
-          <span data-active-product>ROOSY-X</span>
-          <h1 data-active-title>분쟁대응 전략 에이전트</h1>
-        </div>
-      </header>
-
-      <section class="case-graph-workbench" aria-label="형사사건 증거 논증 그래프 작업 평면">
-        <div class="case-graph-toolbar">
-          <div>
-            <span>사건 평면</span>
-            <strong>좌클릭: 노드 생성 · 좌클릭 드래그: 클러스터 · 우클릭 드래그: 평면 이동 · 더블클릭: 편집</strong>
-          </div>
-          <div class="case-graph-actions">
-            <button type="button" data-situation-add>상황 추가</button>
-            <button type="button" data-graph-command-preset="현재 그래프에서 주장의 약한 연결, 근거 의존, 대체 해석, 충돌 가능성을 종합해 이 사안의 취약점과 보완 우선순위를 분석해줘.">취약점분석</button>
-            <button type="button" data-graph-link-mode>관계선 모드</button>
-            <button type="button" data-graph-clear>그래프 초기화</button>
-          </div>
-        </div>
-
-        <div class="case-graph-canvas" data-graph-canvas role="application" aria-label="형사사건 증거 논증 그래프 평면" tabindex="0">
-          <svg class="case-graph-links" data-graph-links aria-hidden="true"></svg>
-          <div class="case-graph-time-axis" data-graph-time-axis aria-hidden="true" hidden></div>
-          <div class="case-graph-nodes" data-graph-nodes></div>
-          <div class="case-graph-ai-loading" aria-live="polite">
-            <div class="case-graph-ai-orbit" aria-hidden="true">
-              <i></i>
-              <i></i>
-              <i></i>
+        <div class="paper-grid">
+          <article class="paper-card">
+            <img src="assets/landing/research-ai-gen-assessment.png" alt="AI Gen Assessment 논문 첫 페이지" loading="lazy">
+            <div>
+              <span>ICLR 2024 Tiny Paper</span>
+              <h3>AI Gen Assessment</h3>
+              <p>생성형 AI 데이터가 학습·평가 환경에서 어떻게 활용될 수 있는지 탐구한 연구 흐름을 서비스 설계에 반영했습니다.</p>
             </div>
-            <span>AI 지식그래프 구성 중</span>
-            <strong>사안을 인물, 주요사건, 주장, 근거, 기반명제로 분해하고 있습니다</strong>
-            <p>주요사건을 시간순으로 잡고 인물·주장·근거·기반명제를 단방향 그래프로 연결합니다.</p>
-          </div>
-          <div class="case-graph-empty" data-graph-empty>
-            <strong>왼쪽 클릭: 노드 생성</strong>
-            <span>인물, 주요사건, 주장, 근거, 기반명제를 선택해 생성합니다. 여러 노드를 좌클릭 드래그로 감싸면 클러스터 영역을 만들 수 있습니다.</span>
-          </div>
-          <div class="case-graph-create-menu" data-graph-create-menu hidden>
-            <span>노드 생성</span>
-            <button type="button" data-graph-create-kind="person">인물 생성</button>
-            <button type="button" data-graph-create-kind="event">주요 사건 생성</button>
-            <button type="button" data-graph-create-kind="claim">주장 생성</button>
-            <button type="button" data-graph-create-kind="evidence">근거 생성</button>
-            <button type="button" data-graph-create-kind="premise">기반명제 생성</button>
-          </div>
-          <div class="case-graph-node-menu" data-graph-node-menu hidden>
-            <span data-graph-node-menu-title>노드 작업</span>
-            <button type="button" data-graph-node-delete>노드 삭제</button>
-          </div>
-          <div class="case-graph-marquee" data-graph-marquee hidden></div>
+          </article>
+          <article class="paper-card">
+            <img src="assets/landing/research-mksl-dataset.png" alt="MKSL Dataset 논문 첫 페이지" loading="lazy">
+            <div>
+              <span>ICLR 2024 R2FM Workshop</span>
+              <h3>MKSL Dataset</h3>
+              <p>지식 수준에 맞춘 응답 평가와 초소형 데이터셋 설계 철학을 분쟁대응 전략 생성에 연결했습니다.</p>
+            </div>
+          </article>
         </div>
       </section>
 
-      <div class="case-graph-memo-backdrop" data-graph-memo-backdrop hidden></div>
-      <section class="case-graph-memo-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="graph-memo-title" data-graph-memo-modal hidden>
-        <header>
+      <section class="workflow-section" id="workflow">
+        <div class="section-heading">
+          <span class="section-kicker">Workflow</span>
+          <h2>단순하지만 강하게 작동합니다</h2>
+        </div>
+        <div class="workflow-grid">
+          <article>
+            <b>1</b>
+            <h3>상황 입력</h3>
+            <p>사실, 상대 문장, 목표, 기한을 자연어로 입력합니다.</p>
+          </article>
+          <article>
+            <b>2</b>
+            <h3>위험 표현 분리</h3>
+            <p>감정적 표현, 추정, 확인된 사실을 나누어 안전한 응답 구조를 만듭니다.</p>
+          </article>
+          <article>
+            <b>3</b>
+            <h3>전략 3안 제시</h3>
+            <p>바로 보낼 문장, 내부 기록 문장, 다음 확인 질문을 함께 제공합니다.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="product-section">
+        <div class="product-copy">
+          <span class="section-kicker">Operational memory</span>
+          <h2>필요한 순간에는 대화 기록으로 이어집니다</h2>
+          <p>로그인 후 작성한 전략 대화는 사안별 기록으로 남길 수 있습니다. 새로운 그래프 화면 없이도, 대화가 곧 대응 브리프가 됩니다.</p>
+        </div>
+        <figure class="product-frame">
+          <img src="assets/landing/investigation-graph-hero.png" alt="ROOSY-X 초기 분석 워크스페이스 화면" loading="lazy">
+        </figure>
+      </section>
+    </section>
+
+    <section class="chat-view" data-chat-view hidden aria-label="ROOSY-X 전략 채팅">
+      <aside class="chat-sidebar">
+        <div>
+          <span class="section-kicker">Strategy chat</span>
+          <h2>ROOSY-X</h2>
+          <p data-usage-copy>사용량을 불러오는 중입니다.</p>
+        </div>
+        <button class="primary-button small" type="button" data-new-chat>새 사안</button>
+        <nav class="conversation-list" data-conversation-list aria-label="저장된 사안"></nav>
+      </aside>
+
+      <section class="chat-panel">
+        <header class="chat-panel-header">
           <div>
-            <span data-graph-memo-kicker>노드 편집</span>
-            <h2 id="graph-memo-title" data-graph-memo-title>인물 노드 정리</h2>
+            <span>분쟁대응 전략 에이전트</span>
+            <h1 data-chat-title>새 사안</h1>
           </div>
-          <button type="button" data-graph-memo-close>닫기</button>
+          <button class="ghost-button" type="button" data-back-home>랜딩 보기</button>
         </header>
 
-        <div class="case-graph-memo-grid">
-          <label>
-            <span data-graph-memo-name-label>인물·주체명</span>
-            <input type="text" maxlength="26" placeholder="예: 인물 1, 기관명, 담당자" data-graph-memo-label>
-          </label>
-          <label>
-            <span data-graph-memo-role-label>역할·관계</span>
-            <input type="text" maxlength="30" placeholder="예: 직접 행위자, 목격자, 관리자" data-graph-memo-role>
-          </label>
-        </div>
+        <div class="message-list" data-message-list aria-live="polite"></div>
 
-        <div class="case-graph-memo-time" data-graph-memo-time-fields hidden>
-          <label>
-            <span data-graph-memo-date-label>사건 일자</span>
-            <input type="date" data-graph-memo-date>
-          </label>
-          <label>
-            <span data-graph-memo-time-label>사건 시간</span>
-            <input type="time" data-graph-memo-time>
-          </label>
-        </div>
-
-        <div class="case-graph-memo-layer" aria-label="노드 분류">
-          <button type="button" data-graph-memo-layer="core">핵심</button>
-          <button type="button" data-graph-memo-layer="support">주변</button>
-          <button type="button" data-graph-memo-layer="uncertain">확인 필요</button>
-        </div>
-
-        <label class="case-graph-memo-text">
-          <span data-graph-memo-note-label>사안 메모</span>
-          <textarea rows="8" placeholder="행위, 발언, 증거, 시점, 장소, 관계 근거를 적어주세요. @인물 #사건 $증거를 입력하면 기존 노드를 참조하고 자동 관계를 만들 수 있습니다." data-graph-memo-note></textarea>
-          <div class="case-graph-mention-menu" data-graph-mention-menu hidden></div>
-        </label>
-
-        <p class="case-graph-memo-hint" data-graph-memo-hint>편집 내용은 현재 사안 그래프에 저장됩니다. @는 인물, #은 사건, $는 증거 노드를 참조합니다.</p>
-
-        <footer>
-          <button type="button" data-graph-memo-save>그래프에 저장</button>
-        </footer>
+        <form class="composer" data-chat-form>
+          <textarea data-chat-input rows="1" placeholder="예: 학부모님이 오늘 있었던 학생지도 사안에 대해 항의 문자를 보냈어. 답변 전략을 3가지로 정리해줘."></textarea>
+          <button type="submit" aria-label="전송" data-send-button>전송</button>
+        </form>
       </section>
-
-      <div class="case-graph-relation-backdrop" data-graph-relation-backdrop hidden></div>
-      <section class="case-graph-relation-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="graph-relation-title" data-graph-relation-modal hidden>
-        <header>
-          <div>
-            <span>관계선 편집</span>
-            <h2 id="graph-relation-title">노드 사이 근거 정리</h2>
-          </div>
-          <button type="button" data-graph-relation-close>닫기</button>
-        </header>
-
-        <label>
-          <span>관계명</span>
-          <input type="text" maxlength="34" placeholder="예: 진술 대립, 목격, 증거 연결, 지시 관계" data-graph-relation-label>
-        </label>
-
-        <div class="case-graph-memo-grid">
-          <label>
-            <span>관계 유형</span>
-            <select data-graph-relation-type>
-              <option value="LEGACY_RELATED_TO">검토 후보/기존 관계</option>
-              <option value="CONTAINS">CONTAINS</option>
-              <option value="ASSERTS">ASSERTS</option>
-              <option value="DERIVED_FROM">DERIVED_FROM</option>
-              <option value="PARTICIPATES_AS">PARTICIPATES_AS</option>
-              <option value="SUPPORTS">SUPPORTS</option>
-              <option value="ATTACKS">ATTACKS</option>
-              <option value="UNDERCUTS">UNDERCUTS</option>
-              <option value="SATISFIES">SATISFIES</option>
-              <option value="REQUIRED_FOR">REQUIRED_FOR</option>
-              <option value="PRECEDES">PRECEDES</option>
-              <option value="OVERLAPS">OVERLAPS</option>
-              <option value="CONTRADICTS">CONTRADICTS</option>
-              <option value="EXPLAINS">EXPLAINS</option>
-              <option value="ALTERNATIVE_TO">ALTERNATIVE_TO</option>
-              <option value="INCOMPATIBLE_WITH">INCOMPATIBLE_WITH</option>
-            </select>
-          </label>
-          <label>
-            <span>역할</span>
-            <input type="text" maxlength="34" placeholder="예: agent, speaker, witness" data-graph-relation-role>
-          </label>
-        </div>
-
-        <div class="case-graph-memo-grid">
-          <label>
-            <span>검증 상태</span>
-            <select data-graph-relation-verification>
-              <option value="unverified">unverified</option>
-              <option value="asserted">asserted</option>
-              <option value="corroborated">corroborated</option>
-              <option value="disputed">disputed</option>
-              <option value="rejected">rejected</option>
-            </select>
-          </label>
-          <label>
-            <span>검토 상태(법적 결론 아님)</span>
-            <select data-graph-relation-legal-sufficiency>
-              <option value="not_applicable">not_applicable</option>
-              <option value="unknown">unknown</option>
-              <option value="insufficient">insufficient</option>
-              <option value="contested">contested</option>
-              <option value="potentially_sufficient">potentially_sufficient</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="case-graph-memo-grid">
-          <label>
-            <span>추출 정확도</span>
-            <select data-graph-relation-extraction-confidence>
-              <option value="unknown">unknown</option>
-              <option value="low">low</option>
-              <option value="medium">medium</option>
-              <option value="high">high</option>
-            </select>
-          </label>
-          <label>
-            <span>출처 신뢰성</span>
-            <select data-graph-relation-source-reliability>
-              <option value="unknown">unknown</option>
-              <option value="low">low</option>
-              <option value="medium">medium</option>
-              <option value="high">high</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="case-graph-relation-strength" aria-label="관계 신뢰도">
-          <button type="button" data-graph-relation-strength="confirmed">확인됨</button>
-          <button type="button" data-graph-relation-strength="likely">개연성</button>
-          <button type="button" data-graph-relation-strength="weak">확인 필요</button>
-        </div>
-
-        <label>
-          <span>출처 발췌</span>
-          <textarea rows="3" placeholder="관계의 직접 근거가 되는 정확한 발췌를 입력하세요. 없으면 후보 관계로 유지하는 것이 안전합니다." data-graph-relation-source-quote></textarea>
-        </label>
-
-        <label>
-          <span>관계 근거</span>
-          <textarea rows="6" placeholder="이 관계가 어떤 진술, 문서, PDF 원자료, 시간·장소 기록으로 뒷받침되는지 적어주세요." data-graph-relation-basis></textarea>
-        </label>
-
-        <footer>
-          <button type="button" data-graph-relation-delete>관계선 삭제</button>
-          <button type="button" data-graph-relation-save>관계선 저장</button>
-        </footer>
-      </section>
-
-      <div class="case-graph-confirm-backdrop" data-graph-confirm-backdrop hidden></div>
-      <section class="case-graph-confirm-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="graph-confirm-title" data-graph-confirm-modal hidden>
-        <header>
-          <span>확인</span>
-          <h2 id="graph-confirm-title" data-graph-confirm-title>작업을 진행할까요?</h2>
-        </header>
-        <p data-graph-confirm-message></p>
-        <small data-graph-confirm-detail></small>
-        <footer>
-          <button type="button" data-graph-confirm-cancel>취소</button>
-          <button type="button" data-graph-confirm-ok>진행</button>
-        </footer>
-      </section>
-
-      <div class="case-chat-body case-conversation-log" data-message-list>
-        <article class="case-empty-state">
-          <h2>분쟁상황을 그대로 입력하세요</h2>
-          <div class="case-intake-template" aria-label="사안보고 입력 항목">
-            <span>무슨 일이 있었는지</span>
-            <span>상대가 뭐라고 했는지</span>
-            <span>내가 원하는 목표</span>
-            <span>보유 기록</span>
-            <span>답변 기한</span>
-          </div>
-          <div class="case-prompt-chips" aria-label="입력 예시">
-            <button type="button" data-prompt-template="학부모님이 오늘 있었던 학생지도 사안에 대해 정서적 학대 아니냐는 문자를 보냈어. 오늘 3교시 후 학생이 친구를 밀어 넘어뜨려서 제가 복도에서 즉시 분리 지도했고, 학부모님은 아이가 공개적으로 망신을 당했다고 주장해. 내일 오전까지 답장을 해야 해. 어떻게 답변하고 기록해야 할까?">교사 민원 대응</button>
-            <button type="button" data-prompt-template="민원인이 정보공개 청구와 동시에 담당자 개인 책임을 묻겠다는 문자를 보냈어. 부서 내부에서는 공식 답변 전까지 개인 연락을 줄이라고 했고, 민원인은 오늘 안에 답을 달라고 해. 기관 입장에서 안전한 대응 전략 3가지를 제시해줘.">공공기관 민원</button>
-            <button type="button" data-prompt-template="상대방이 계약 범위를 넘는 요구를 계속하면서 이전 대화 일부만 캡처해 압박하고 있어. 우리는 산출물 일부와 메일 기록은 보유하고 있지만 구두 합의가 많아. 지금 답장, 자료 정리, 협상 전환 전략을 나눠줘.">일반 분쟁</button>
-          </div>
-        </article>
-      </div>
-
-      <form class="case-composer" data-chat-form>
-        <textarea rows="1" placeholder="예: 학부모님이 오늘 학생지도 사안에 대해 항의 문자를 보냈어. 안전하게 답변할 3가지 전략을 알려줘." data-chat-input></textarea>
-        <button type="submit" aria-label="전송">↑</button>
-      </form>
-      <p class="case-composer-note" data-composer-note>ROOSY-X는 사실관계, 리스크, 대응 문장을 분리해 3가지 전략으로 제안합니다.</p>
-    </section>
-
-    <div class="case-report-backdrop" data-report-backdrop hidden></div>
-    <aside class="case-report-panel case-command-panel" aria-label="명령 블록">
-      <div class="case-report-toolbar case-command-toolbar">
-        <div>
-          <span>Command Blocks</span>
-          <h2>명령 블록</h2>
-        </div>
-        <button type="button" data-command-add>명령 추가</button>
-        <button class="case-report-close" type="button" data-report-close>닫기</button>
-      </div>
-      <article class="case-report-preview case-command-list" data-report-preview data-command-list>
-        <section class="case-command-empty">
-          <span>아직 실행된 명령이 없습니다</span>
-          <h2>그래프를 기반으로 명령을 실행하세요</h2>
-          <p>오른쪽 수사지식그래프를 구성한 뒤 취약한 관계, 보강할 증거, 시간 공백 등을 명령으로 분석할 수 있습니다.</p>
-        </section>
-      </article>
-    </aside>
-
-    <div class="case-command-backdrop" data-command-backdrop hidden></div>
-    <section class="case-command-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="command-modal-title" data-command-modal hidden>
-      <header>
-        <div>
-          <span>명령 블록</span>
-          <h2 id="command-modal-title">수사지식그래프에 명령 실행</h2>
-        </div>
-        <button type="button" data-command-close>닫기</button>
-      </header>
-      <label>
-        <span>명령</span>
-        <textarea rows="8" placeholder="예: 현재 그래프에서 가장 취약한 관계선을 우선순위로 분석하고, 보강할 증거를 제안해줘." data-command-input></textarea>
-      </label>
-      <p>명령은 오른쪽 그래프의 노드, 관계선, 클러스터, 시간축 정보를 함께 전달해 실행됩니다. 결과는 하나의 명령 블록으로 저장됩니다.</p>
-      <footer>
-        <button type="button" data-command-close>취소</button>
-        <button type="button" data-command-run>실행하기</button>
-      </footer>
-    </section>
-
-    <div class="case-situation-backdrop" data-situation-backdrop hidden></div>
-    <section class="case-situation-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="situation-modal-title" data-situation-modal hidden>
-      <header>
-        <div>
-          <span>상황 추가</span>
-          <h2 id="situation-modal-title">AI로 사건 평면 구성</h2>
-        </div>
-        <button type="button" data-situation-close>닫기</button>
-      </header>
-      <label>
-        <span>상황 기록</span>
-        <textarea rows="8" placeholder="예: 2026년 6월 2일 14시 #교실폭행에서 @김학생이 @박학생을 밀었고, $CCTV와 $담임메모가 남아 있습니다. @이교사는 직후 상황을 확인했습니다." data-situation-input></textarea>
-      </label>
-      <p>AI가 @인물, #사건, $증거 표기를 우선 참고해 노드, 관계선, 클러스터를 정리합니다. 분석이 끝나면 사건 평면에 한 번에 반영됩니다.</p>
-      <footer>
-        <button type="button" data-situation-close>취소</button>
-        <button type="button" data-situation-run>그래프에 반영</button>
-      </footer>
-    </section>
-
-    <div class="case-command-result-backdrop" data-command-result-backdrop hidden></div>
-    <section class="case-command-result-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="command-result-title" data-command-result-modal hidden>
-      <header>
-        <div>
-          <span>명령 결과</span>
-          <h2 id="command-result-title" data-command-result-title>명령 실행 결과</h2>
-          <p data-command-result-meta></p>
-        </div>
-        <button type="button" data-command-result-close>닫기</button>
-      </header>
-      <article class="case-command-result-body" data-command-result-output></article>
     </section>
   </main>
+
+  <p class="service-toast" data-service-status hidden></p>
+
+  <div class="modal-backdrop" data-auth-backdrop hidden></div>
+  <section class="modal auth-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="auth-title" data-auth-modal hidden>
+    <header>
+      <div>
+        <span class="section-kicker">Account</span>
+        <h2 id="auth-title">사용해보기</h2>
+      </div>
+      <button type="button" data-auth-close>닫기</button>
+    </header>
+
+    <button class="google-button" type="button" data-sign-in-google>Google로 시작하기</button>
+
+    <div class="auth-divider">또는 이메일로 시작하기</div>
+    <div class="auth-tabs" role="tablist">
+      <button type="button" class="is-active" data-auth-mode="login">로그인</button>
+      <button type="button" data-auth-mode="signup">회원가입</button>
+    </div>
+
+    <form class="auth-form" data-email-auth-form>
+      <input type="email" autocomplete="email" placeholder="이메일 주소" data-auth-email>
+      <input type="password" autocomplete="current-password" placeholder="비밀번호" data-auth-password>
+      <input class="signup-only" type="password" autocomplete="new-password" placeholder="비밀번호 확인" data-auth-password-confirm>
+      <label class="terms-check signup-only">
+        <input type="checkbox" data-auth-terms>
+        <span>개인정보처리방침 및 이용약관에 동의합니다.</span>
+      </label>
+      <button type="submit" data-auth-submit>이메일로 로그인</button>
+    </form>
+
+    <p class="auth-message" data-auth-message></p>
+    <button class="link-button" type="button" data-auth-resend hidden>인증 메일 다시 보내기</button>
+  </section>
+
+  <div class="modal-backdrop" data-guide-backdrop hidden></div>
+  <section class="modal guide-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="guide-title" data-guide-modal hidden>
+    <header>
+      <div>
+        <span class="section-kicker">Guideline</span>
+        <h2 id="guide-title">사용 안내</h2>
+      </div>
+      <button type="button" data-guide-close>닫기</button>
+    </header>
+    <p>ROOSY-X는 분쟁상황을 정리하고 대응 선택지를 제안하는 전략 보조 시스템입니다. 법률 판단, 징계 판단, 행정 처분 결론을 대신하지 않습니다.</p>
+    <ul>
+      <li>확인된 사실과 추정을 분리해 입력해 주세요.</li>
+      <li>학생, 민원인 등 개인정보는 필요한 범위로 최소화해 주세요.</li>
+      <li>최종 발송 전에는 기관 내부 지침과 관리자 검토를 확인해 주세요.</li>
+    </ul>
+  </section>
+
+  <footer class="site-footer">
+    <div>
+      <strong>ROOSY-X</strong>
+      <p>RoosyCozy · 초소형 최적화 AI 기반 분쟁대응 전략 에이전트</p>
+    </div>
+    <div>
+      <button type="button" data-guide-open>사용 안내</button>
+      <a href="mailto:myongsungcs@gmail.com">문의하기</a>
+    </div>
+  </footer>
 </body>
 </html>
