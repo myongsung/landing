@@ -1,0 +1,10 @@
+.DS_Store
+.env
+.env.*
+*.log
+*.zip
+*.mp4
+codex-recovery*.patch
+node_modules/
+dist/
+supabase/
