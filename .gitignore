@@ -8,3 +8,5 @@ codex-recovery*.patch
 node_modules/
 dist/
 supabase/
+report-chat*.ts
+supabase-report-usage-fix.sql
