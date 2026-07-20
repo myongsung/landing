@@ -10,6 +10,7 @@ const tierConfig = {
   general: { label: '교사 기본', license: '기본', limit: 20 },
   teacher: { label: '교사 이용권', license: '교사', limit: 150 },
   pro: { label: '교사 PRO', license: 'PRO', limit: 500 },
+  admin: { label: '관리자 연구 계정', license: 'ADMIN', limit: 1000 },
 };
 
 const conversationSelect = 'id, user_id, product, title, status, report_markdown, saved_at, created_at, updated_at';
@@ -75,7 +76,9 @@ const dom = {
   recordTitle: document.querySelector('[data-record-title]'),
   runSimulation: document.querySelector('[data-run-simulation]'),
   policyAssessment: document.querySelector('[data-policy-assessment]'),
+  personaAssessment: document.querySelector('[data-persona-assessment]'),
   simulationHud: document.querySelector('[data-simulation-hud]'),
+  calculationBasis: document.querySelector('[data-calculation-basis]'),
   formFeedback: document.querySelector('[data-form-feedback]'),
   workspaceTabs: document.querySelectorAll('[data-workspace-tab]'),
   workspaceCalendar: document.querySelector('[data-workspace-calendar]'),
@@ -95,6 +98,7 @@ const dom = {
   resultsCalendar: document.querySelector('[data-results-calendar]'),
   editPolicy: document.querySelector('[data-edit-policy]'),
   resultStatus: document.querySelector('[data-result-status]'),
+  analysisResultTitle: document.querySelector('#analysis-result-title'),
   analysisLoading: document.querySelector('[data-analysis-loading]'),
   analysisContent: document.querySelector('[data-analysis-content]'),
   promptSuggestions: document.querySelectorAll('[data-prompt-suggestion]'),
@@ -103,6 +107,7 @@ const dom = {
 let supabase = null;
 let session = null;
 let usageState = { tier: 'unauth', used: 0, limit: 0, period: '' };
+let researchAccessState = { verified: false, allowed: false, userId: '' };
 let conversations = [];
 let activeConversation = null;
 let messages = [];
@@ -127,6 +132,17 @@ const MAX_POLICY_ANALYSIS_CHARS = 9000;
 const MAX_ANALYSIS_CYCLES = 5;
 const FINAL_REPORT_COST = 3;
 const compatStateKey = ['game', 'State'].join('');
+const ADMIN_CALCULATION_LOG_GUIDANCE = [
+  '관리자 연구 계정의 최상위 calculation_log에 내부 사고 독백이 아닌 재현 가능한 계산 장부를 반환한다.',
+  'calculation_log.run에는 run_id, engine_version, score_version, weights_version, seed, precision, rounding, status를 넣는다.',
+  '1단계 input.features에는 key, label, source, 마스킹한 source_excerpt, raw_value, encoded_value, encoding, missing을 실제 사용값 그대로 넣는다.',
+  '2단계 persona.candidates에는 5개 유형 각각의 모델 raw_probability와 서버 normalized probability를 넣고 selected_type, confidence, hold_margin, raw_probability_total, normalization_factor를 넣는다. 서버에 실제 투명 분류식이 없으면 base·기여항·logit을 꾸며 만들지 않는다.',
+  '2단계 qre.actions에는 분모에 들어간 모든 행동의 utility_terms(name/value/weight/contribution), utility, lambda_utility, exp_value, probability, selected를 넣고 lambda, normalizer_z, seed, sample_value를 넣는다.',
+  '3단계 risk.metrics에는 6개 위험 각각의 key, label, formula_id, formula, base, terms(feature/value/weight/contribution), raw_score, final_score, rounding을 넣는다.',
+  '3단계 risk.overall에는 method, formula, terms(metric/score/weight/contribution), raw_score, final_score, rounding을 넣어 실제 합산을 재현할 수 있게 한다.',
+  '숫자는 꾸민 문자열이 아닌 number로 반환하고 0, false, null, 음수 효용을 구분한다. 실제 계산하지 않은 항목은 만들지 말고 status를 partial로, 누락 사유를 limitations에 적는다.',
+  'source_excerpt에는 학생·학부모 개인정보를 넣지 말고 필요한 짧은 문구만 마스킹하여 반환한다.',
+].join('\n');
 
 let simulationState = createDefaultSimulationState();
 
@@ -140,6 +156,31 @@ function createDefaultSimulationState() {
     recordTitle: '',
     policyDocument: '',
     incidentConditions: '',
+    actorType: '',
+    actorConfidence: null,
+    actorProbabilities: {},
+    personaSummary: '',
+    qreLambda: null,
+    claimType: '',
+    evidenceState: '',
+    pressureState: '',
+    ruleConstraint: '',
+    scoreVersion: '',
+    weightsVersion: '',
+    riskWeights: {},
+    overallRiskSource: '',
+    decisionTrace: null,
+    calculationLog: null,
+    overallRisk: null,
+    hasOverallRiskData: false,
+    riskAvailability: {
+      factCheckNeed: false,
+      manipulationRisk: false,
+      handoffNeed: false,
+      overConcessionRisk: false,
+      underResponseRisk: false,
+      policyViolationRisk: false,
+    },
     policyBalanceScore: 0,
     claimValidity: 0,
     manipulationRisk: 0,
@@ -204,8 +245,19 @@ function withTimeout(promise, ms, message) {
 function normalizeTier(tier) {
   if (tier === 'teacher' || tier === 'lawyer') return 'teacher';
   if (tier === 'pro') return 'pro';
+  if (tier === 'admin') return 'admin';
   if (tier === 'general') return 'general';
   return session?.user ? 'general' : 'unauth';
+}
+
+function hasAdminResearchAccess() {
+  return Boolean(
+    session?.user &&
+    researchAccessState.verified &&
+    researchAccessState.allowed &&
+    researchAccessState.userId === session.user.id &&
+    normalizeTier(usageState.tier) === 'admin'
+  );
 }
 
 function tierInfo(tier = usageState.tier) {
@@ -227,11 +279,22 @@ function remainingUsage() {
   return Math.max(0, usageState.limit - usageState.used);
 }
 
+function finalReportRequestCost() {
+  return hasAdminResearchAccess() ? 1 : FINAL_REPORT_COST;
+}
+
 function analysisRequestCount(source = messages) {
   return source.filter((message) =>
     message.role === 'assistant' &&
     message.metadata?.mode !== 'final_report' &&
-    (message.metadata?.simulation_state || message.metadata?.game_state || message.metadata?.analysis_state)
+    (
+      message.metadata?.simulation_state ||
+      message.metadata?.simulationState ||
+      message.metadata?.game_state ||
+      message.metadata?.gameState ||
+      message.metadata?.analysis_state ||
+      message.metadata?.analysisState
+    )
   ).length;
 }
 
@@ -254,6 +317,8 @@ function calculatePolicyBalanceScore(state = simulationState) {
 }
 
 function criticalRiskScore() {
+  const directRisk = numberOrNull(simulationState.overallRisk);
+  if (directRisk !== null) return clampMetric(directRisk);
   return clampMetric(100 - simulationState.policyBalanceScore);
 }
 
@@ -284,9 +349,17 @@ function metricStatusLabel(value, invert = false) {
 
 function policyDecisionSummary() {
   const priority = riskMetricRows()
-    .filter((item) => !item.invert)
+    .filter((item) => !item.invert && item.available)
     .sort((a, b) => b.value - a.value)[0];
-  const risk = priority?.value ?? criticalRiskScore();
+  const risk = priority?.value ?? (simulationState.hasOverallRiskData ? criticalRiskScore() : null);
+  if (risk === null) {
+    return {
+      title: '확인된 위험 점수만 표시합니다',
+      detail: '이번 응답에서 일부 위험 점수를 확인하지 못했습니다.',
+      tone: 'neutral',
+      priority: null,
+    };
+  }
   const title = risk >= 70
     ? '현재 정책에는 위험을 막기 위한 기준이 더 필요합니다'
     : risk >= 45
@@ -312,7 +385,7 @@ function renderInputGuidance() {
   if (dom.formFeedback) {
     dom.formFeedback.textContent = status.missing.length
       ? `${status.missing.map((item) => item.label).join(', ')}을 입력해 주세요.`
-      : '준비되었습니다. 현재 정책의 빈틈과 6가지 위험을 계산합니다.';
+      : '준비되었습니다. 학부모 유형·QRE와 6가지 위험을 함께 계산합니다.';
     dom.formFeedback.dataset.ready = status.missing.length ? 'false' : 'true';
   }
 }
@@ -381,15 +454,12 @@ function sanitizeProductLanguage(value) {
     [/상대가/g, '학부모가'],
     [/상대의/g, '학부모의'],
     [/상대를/g, '학부모를'],
-    [/학부모 유형/g, '내부 위험 모델'],
-    [/QRE\s*λ\s*([0-9.]+)/gi, '정책 위험 예측값'],
-    [/QRE\s*행동\s*일관성/gi, '정책 위험 일관성'],
-    [/QRE\s*값/gi, '정책 위험 예측값'],
-    [/QRE\s*기반/gi, '정책 위험 모델을 바탕으로'],
-    [/Logit-QRE/gi, '정책 위험 예측 모델'],
-    [/lambda_QRE/gi, '정책 위험 일관성'],
-    [/QRE\s*페르소나/gi, '내부 위험 모델'],
-    [/QRE\s*Engine/gi, '정책 위험 예측 모델'],
+    [/QRE\s*행동\s*일관성/gi, 'QRE 요구 일관성'],
+    [/QRE\s*기반/gi, 'QRE 분석을 바탕으로'],
+    [/Logit-QRE/gi, 'QRE'],
+    [/lambda_QRE/gi, 'QRE λ'],
+    [/QRE\s*페르소나/gi, '학부모 반응 유형'],
+    [/QRE\s*Engine/gi, 'QRE 분석'],
     [new RegExp(['ROOSY', '-X ', 'Surv', 'ival'].join(''), 'g'), '루지코지 정책 위험 예측 모델'],
     [new RegExp(['ROOSY', '-X'].join(''), 'g'), '정책 위험 예측 모델'],
     [new RegExp(['AI 민원 ', '생존', '모드'].join(''), 'g'), '민원 대응 미리보기'],
@@ -453,9 +523,6 @@ function sanitizeProductLanguage(value) {
     [/학교·기관 기준/g, '학교 규정'],
     [/기관 기준/g, '학교 규정'],
     [/정책/g, '학교 규정'],
-    [/정당형|오해형|감정형|기회주의형|적대형/g, '내부 위험 패턴'],
-    [/\bQRE\b/gi, '내부 위험 계산'],
-    [/λ/g, '위험 반복 가능성'],
   ];
   return replacements.reduce((text, [pattern, replacement]) => text.replace(pattern, replacement), String(value ?? ''));
 }
@@ -528,8 +595,38 @@ function showToast(message, tone = 'info') {
 function hasAnalysisResult(source = messages) {
   return source.some((message) =>
     message.role === 'assistant' &&
-    (message.metadata?.simulation_state || message.metadata?.game_state || message.metadata?.analysis_state)
+    (
+      message.metadata?.simulation_state ||
+      message.metadata?.simulationState ||
+      message.metadata?.game_state ||
+      message.metadata?.gameState ||
+      message.metadata?.analysis_state ||
+      message.metadata?.analysisState
+    )
   );
+}
+
+function hasDecisionTraceResult(source = messages) {
+  return source.some((message) => Boolean(
+    message.metadata?.decision_trace ||
+    message.metadata?.decisionTrace ||
+    message.metadata?.simulation_state?.decision_trace ||
+    message.metadata?.simulation_state?.decisionTrace ||
+    message.metadata?.simulationState?.decisionTrace ||
+    message.metadata?.game_state?.decision_trace ||
+    message.metadata?.game_state?.decisionTrace ||
+    message.metadata?.analysis_state?.decision_trace ||
+    message.metadata?.analysis_state?.decisionTrace ||
+    message.metadata?.analysis_result?.decision_trace ||
+    message.metadata?.analysis_result?.decisionTrace ||
+    message.metadata?.calculation_basis?.decision_trace ||
+    message.metadata?.calculation_basis?.decisionTrace ||
+    message.metadata?.calculation_basis?.trace ||
+    message.metadata?.calculationBasis?.decisionTrace ||
+    message.metadata?.calculationBasis?.trace ||
+    message.metadata?.calculation_log ||
+    message.metadata?.calculationLog
+  ));
 }
 
 function renderWorkspaceState() {
@@ -562,10 +659,10 @@ function renderWorkspaceState() {
   });
   if (dom.resultStatus) {
     dom.resultStatus.textContent = analysisPhase === 'loading'
-      ? '현재 정책과 위험도를 분석하는 중'
+      ? '정책·학부모 유형·위험도를 분석하는 중'
       : analysisPhase === 'refreshing'
-        ? '정책 변경을 반영하는 중'
-        : '정책 위험 분석';
+        ? '추가 질문을 반영하는 중'
+        : 'AI 추정 결과';
   }
 }
 
@@ -784,6 +881,23 @@ function usageUsedFromPayload(nextUsage = {}, limit = null) {
   return remaining !== null && limit !== null ? limit - remaining : null;
 }
 
+function clearAdminResearchState() {
+  messages = messages.map(stripEmbeddedCalculationLogs);
+  if (simulationState) simulationState.calculationLog = null;
+}
+
+function setResearchAccessVerification(tier, userId = session?.user?.id ?? '') {
+  const normalizedTier = normalizeTier(tier);
+  const allowed = Boolean(userId) && normalizedTier === 'admin';
+  researchAccessState = { verified: true, allowed, userId: String(userId || '') };
+  if (!allowed) clearAdminResearchState();
+}
+
+function invalidateResearchAccess({ clearData = false } = {}) {
+  researchAccessState = { verified: false, allowed: false, userId: session?.user?.id ?? '' };
+  if (clearData) clearAdminResearchState();
+}
+
 function applyUsageState(payload = {}, { minimumUsed = null } = {}) {
   const nextUsage = normalizeUsagePayload(payload);
   const tier = normalizeTier(nextUsage.tier ?? nextUsage.membership_tier ?? usageState.tier);
@@ -810,6 +924,15 @@ function commitUsageAfterRequest(responseData, usageBefore, fallbackUnits) {
   const responseUsage = normalizeUsagePayload(
     responseData?.usage ?? responseData?.usage_state ?? responseData?.usageState ?? {}
   );
+  const verifiedTier = firstMeaningfulValue(
+    responseData?.meta?.access_tier,
+    responseData?.meta?.accessTier,
+    responseUsage?.tier,
+    responseUsage?.membership_tier
+  );
+  if (verifiedTier !== undefined && session?.user) {
+    setResearchAccessVerification(verifiedTier, session.user.id);
+  }
   const responsePeriod = usagePeriodFromPayload(responseUsage);
   const responseLimit = usageLimitFromPayload(responseUsage) ?? usageBefore.limit;
   const reportedUsed = usageUsedFromPayload(responseUsage, responseLimit);
@@ -852,8 +975,11 @@ function renderUsage() {
   const info = tierInfo();
   const percent = usagePercent();
   const used = Math.min(usageState.used, usageState.limit);
+  const adminResearch = signedIn && hasAdminResearchAccess();
   const text = signedIn
-    ? `${info.license} · 이번 달 사용 ${used}/${usageState.limit} · ${percent}%`
+    ? adminResearch
+      ? `${info.license} · 이번 달 분석 요청 ${used}/${usageState.limit} · ${percent}%`
+      : `${info.license} · 이번 달 사용 ${used}/${usageState.limit} · ${percent}%`
     : '로그인 필요';
 
   if (dom.usagePill) {
@@ -863,7 +989,9 @@ function renderUsage() {
 
   if (dom.usageCopy) {
     dom.usageCopy.textContent = signedIn
-      ? `${info.label} · AI 이용 포인트 ${remainingUsage()} 남음`
+      ? adminResearch
+        ? `${info.label} · 연구용 분석 요청 ${remainingUsage()}회 남음`
+        : `${info.label} · AI 이용 포인트 ${remainingUsage()} 남음`
       : '로그인하면 메모와 결과를 달력에 저장할 수 있습니다.';
   }
 }
@@ -871,6 +999,7 @@ function renderUsage() {
 function renderAuth() {
   const signedIn = Boolean(session?.user);
   dom.body.dataset.authenticated = signedIn ? 'true' : 'false';
+  dom.body.dataset.researchAccess = hasAdminResearchAccess() ? 'true' : 'false';
 
   if (dom.authPanel) dom.authPanel.hidden = signedIn;
   if (dom.userPanel) dom.userPanel.hidden = !signedIn;
@@ -893,6 +1022,31 @@ function prepareBlankRecord(dateKey = selectedCalendarDate) {
   simulationState.recordTitle = '';
   simulationState.policyDocument = '';
   simulationState.incidentConditions = '';
+  simulationState.actorType = '';
+  simulationState.actorConfidence = null;
+  simulationState.actorProbabilities = {};
+  simulationState.personaSummary = '';
+  simulationState.qreLambda = null;
+  simulationState.claimType = '';
+  simulationState.evidenceState = '';
+  simulationState.pressureState = '';
+  simulationState.ruleConstraint = '';
+  simulationState.scoreVersion = '';
+  simulationState.weightsVersion = '';
+  simulationState.riskWeights = {};
+  simulationState.overallRiskSource = '';
+  simulationState.decisionTrace = null;
+  simulationState.calculationLog = null;
+  simulationState.overallRisk = null;
+  simulationState.hasOverallRiskData = false;
+  simulationState.riskAvailability = {
+    factCheckNeed: false,
+    manipulationRisk: false,
+    handoffNeed: false,
+    overConcessionRisk: false,
+    underResponseRisk: false,
+    policyViolationRisk: false,
+  };
   simulationState.policyBalanceScore = 0;
   simulationState.claimValidity = 0;
   simulationState.manipulationRisk = 0;
@@ -928,6 +1082,434 @@ function normalizeStringList(value) {
   return null;
 }
 
+const ACTOR_TYPES = ['정당형', '오해형', '감정형', '기회주의형', '적대형'];
+const ACTOR_HOLD_MARGIN = 0.015;
+const ACTOR_TYPE_ALIASES = {
+  정당형: '정당형',
+  legitimate: '정당형',
+  justified: '정당형',
+  오해형: '오해형',
+  misunderstood: '오해형',
+  감정형: '감정형',
+  emotional: '감정형',
+  기회주의형: '기회주의형',
+  opportunistic: '기회주의형',
+  적대형: '적대형',
+  adversarial: '적대형',
+  hostile: '적대형',
+};
+
+function normalizeActorType(value) {
+  const key = String(value ?? '').trim();
+  return ACTOR_TYPE_ALIASES[key] ?? ACTOR_TYPE_ALIASES[key.toLowerCase()] ?? '';
+}
+
+function asObject(value) {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+}
+
+function normalizeActorProbabilities(value) {
+  const source = asObject(value);
+  const totals = Object.entries(source).reduce((result, [rawType, rawProbability]) => {
+    const type = normalizeActorType(rawType);
+    if (type) result[type] += Math.max(0, Number(rawProbability) || 0);
+    return result;
+  }, Object.fromEntries(ACTOR_TYPES.map((type) => [type, 0])));
+  const entries = ACTOR_TYPES.map((type) => [type, totals[type]]);
+  const total = entries.reduce((sum, [, probability]) => sum + probability, 0);
+  if (!total) return {};
+  return Object.fromEntries(entries.map(([type, probability]) => [type, probability / total]));
+}
+
+function normalizeQreLambda(value) {
+  const number = numberOrNull(value);
+  if (number === null) return null;
+  return [0.5, 1.5, 3].find((option) => Math.abs(number - option) < 0.01) ?? null;
+}
+
+function firstMeaningfulValue(...values) {
+  return values.find((value) => {
+    if (value === null || value === undefined || value === '') return false;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'object') return Object.keys(value).length > 0;
+    return true;
+  });
+}
+
+function compactTraceText(value, max = 180) {
+  return compactText(value, max).replace(/\s+/g, ' ').trim();
+}
+
+function normalizeDecisionTrace(value) {
+  if (value === null || value === undefined) return null;
+  const root = Array.isArray(value) ? { steps: value } : asObject(value);
+  const directSteps = firstMeaningfulValue(root.steps, root.items, root.trace);
+  let candidates = Array.isArray(directSteps) ? directSteps : [];
+
+  if (!candidates.length && Array.isArray(root.phases)) {
+    candidates = root.phases.flatMap((phase) => {
+      const phaseKey = compactTraceText(firstMeaningfulValue(phase?.key, phase?.phase), 30);
+      const phaseOrder = Number(phase?.phase);
+      const phaseSignals = Array.isArray(phase?.signals) ? phase.signals : [];
+      return (Array.isArray(phase?.evidence) ? phase.evidence : []).map((evidence) => {
+        const evidenceId = String(evidence?.id ?? '').trim();
+        const signal = phaseSignals.find((item) =>
+          Array.isArray(item?.evidence_ids) && item.evidence_ids.map(String).includes(evidenceId)
+        );
+        const normalizedPhase = phaseOrder === 2 || /persona|qre|actor|반응|유형/i.test(phaseKey)
+          ? 'persona_qre'
+          : phaseOrder === 3 || /risk|score|위험/i.test(phaseKey)
+            ? 'risk'
+            : 'input';
+        const effect = normalizedPhase === 'persona_qre'
+          ? '학부모 유형·QRE 산출에 사용'
+          : normalizedPhase === 'risk'
+            ? '6가지 위험도와 종합 위험 산출에 사용'
+            : '학부모 유형·QRE 판단의 입력으로 전달';
+        return {
+          phase: normalizedPhase,
+          source: evidence?.source ?? evidence?.field ?? phaseKey,
+          evidence: evidence?.summary ?? evidence?.evidence,
+          interpretation: signal?.label ?? signal?.key ?? phase?.interpretation ?? phase?.summary ?? '입력 단계에서 확인된 단서',
+          effect,
+          target: signal?.target ?? normalizedPhase,
+        };
+      });
+    });
+  }
+
+  if (!candidates.length && Array.isArray(root.signals)) {
+    const evidenceById = Object.fromEntries(
+      (Array.isArray(root.evidence) ? root.evidence : [])
+        .map((item) => [String(item?.id ?? '').trim(), item])
+        .filter(([id]) => id)
+    );
+    const persona = asObject(root.persona);
+    const qre = asObject(root.qre);
+    const risks = Array.isArray(root.risks) ? root.risks : [];
+    const personaFactors = Array.isArray(persona.factors) ? persona.factors : [];
+    const qreCandidates = Array.isArray(qre.candidates) ? qre.candidates : [];
+
+    candidates = root.signals.map((signal) => {
+      const signalId = String(signal?.id ?? '').trim();
+      const citedEvidence = (Array.isArray(signal?.evidence_ids) ? signal.evidence_ids : [])
+        .map((id) => evidenceById[String(id)])
+        .find(Boolean);
+      const relatedRisk = risks.find((risk) =>
+        (Array.isArray(risk?.signal_ids) && risk.signal_ids.map(String).includes(signalId)) ||
+        (Array.isArray(risk?.evidence_ids) && citedEvidence?.id && risk.evidence_ids.map(String).includes(String(citedEvidence.id)))
+      );
+      const personaFactor = personaFactors.find((factor) => String(factor?.signal_id ?? '') === signalId);
+      const qreCandidate = qreCandidates.find((candidate) =>
+        Array.isArray(candidate?.factor_ids) && candidate.factor_ids.map(String).includes(signalId)
+      );
+      let effect = '';
+      if (relatedRisk) {
+        const metric = riskMetricLabel(relatedRisk.key);
+        const score = numberOrNull(relatedRisk.score);
+        effect = `${metric}${score === null ? '' : ` ${clampMetric(score)}점`} 산출에 반영`;
+      } else if (personaFactor && persona.selected_type) {
+        const direction = String(personaFactor.direction ?? '').toLowerCase();
+        effect = `${persona.selected_type} 가능성을 ${/against|decrease|oppose/.test(direction) ? '낮추는' : '높이는'} 방향`;
+      } else if (qreCandidate?.action) {
+        const probability = numberOrNull(qreCandidate.probability);
+        const probabilityPercent = probability === null ? null : probability <= 1 ? probability * 100 : probability;
+        effect = `QRE 행동 ‘${qreCandidate.action}’${probabilityPercent === null ? '' : ` ${formatBasisPercent(probabilityPercent)}%`}에 연결`;
+      } else {
+        effect = '유형·QRE·위험 산출 입력에 연결';
+      }
+      return {
+        phase: signal?.phase ?? (relatedRisk ? 'risk' : personaFactor || qreCandidate ? 'persona_qre' : 'input'),
+        source: citedEvidence?.source ?? signal?.source ?? '서버 근거',
+        evidence: citedEvidence?.summary ?? signal?.evidence ?? signal?.summary,
+        interpretation: signal?.label ?? signal?.interpretation ?? signal?.key,
+        effect,
+        target: relatedRisk?.key ?? (personaFactor ? 'persona' : qreCandidate ? 'qre' : signal?.target),
+      };
+    });
+  }
+
+  const steps = candidates.slice(0, 6).map((item) => {
+    const phase = compactTraceText(firstMeaningfulValue(item?.phase, item?.stage, item?.phase_key, item?.phaseKey), 30);
+    const source = compactTraceText(firstMeaningfulValue(item?.source_label, item?.sourceLabel, item?.source, item?.category), 40);
+    const evidence = compactTraceText(firstMeaningfulValue(item?.evidence, item?.cue, item?.summary, item?.source_excerpt, item?.sourceExcerpt), 180);
+    const interpretation = compactTraceText(firstMeaningfulValue(item?.interpretation, item?.meaning, item?.signal, item?.label), 180);
+    const effect = compactTraceText(firstMeaningfulValue(item?.effect, item?.impact, item?.result, item?.output), 180);
+    const target = compactTraceText(firstMeaningfulValue(item?.target, item?.risk_key, item?.riskKey, item?.output_type, item?.outputType), 50);
+    return { phase, source: source || '분석 근거', evidence, interpretation, effect, target };
+  }).filter((item) => item.evidence && item.interpretation && item.effect);
+
+  return {
+    traceVersion: compactTraceText(firstMeaningfulValue(root.trace_version, root.traceVersion, root.version), 60),
+    status: compactTraceText(root.status, 30) || (steps.length ? 'complete' : 'partial'),
+    source: compactTraceText(root.source, 40),
+    steps,
+    limitations: (normalizeStringList(root.limitations) ?? []).slice(0, 4).map((item) => compactTraceText(item, 180)),
+  };
+}
+
+function riskMetricLabel(key) {
+  const labels = {
+    fact_check_need: '사실을 더 확인할 필요',
+    factCheckNeed: '사실을 더 확인할 필요',
+    manipulation_risk: '민원 압박에 흔들릴 위험',
+    manipulationRisk: '민원 압박에 흔들릴 위험',
+    over_concession_risk: '확인 전에 약속할 위험',
+    overConcessionRisk: '확인 전에 약속할 위험',
+    under_response_risk: '필요한 대응을 놓칠 위험',
+    underResponseRisk: '필요한 대응을 놓칠 위험',
+    policy_violation_risk: '학교 기준을 벗어날 위험',
+    policyViolationRisk: '학교 기준을 벗어날 위험',
+    escalation_need: '관리자에게 공유할 필요',
+    escalationNeed: '관리자에게 공유할 필요',
+    handoff_need: '관리자에게 공유할 필요',
+    handoffNeed: '관리자에게 공유할 필요',
+  };
+  return labels[key] || compactTraceText(key, 60) || '위험 점수';
+}
+
+function riskReasonsFromMetrics(...sources) {
+  const reasons = {};
+  for (const source of sources) {
+    for (const [key, value] of Object.entries(asObject(source))) {
+      const reason = typeof value === 'string'
+        ? value
+        : firstMeaningfulValue(value?.reason, value?.summary, value?.explanation);
+      if (reason && !reasons[key]) reasons[key] = String(reason);
+    }
+  }
+  return reasons;
+}
+
+function composeSimulationPayload(primaryState, analysisState, analysisResult, explicitCalculationBasis, explicitDecisionTrace, explicitCalculationLog) {
+  const primary = asObject(primaryState);
+  const analysis = asObject(analysisState);
+  const result = asObject(analysisResult);
+  const comparison = asObject(result.risk_comparison ?? result.riskComparison);
+  const riskSummary = asObject(result.risk_summary ?? result.riskSummary);
+  const parent = asObject(result.parent_profile ?? result.parentProfile ?? result.parent_response ?? result.parentResponse);
+  const persona = asObject(analysis.persona);
+  const qre = asObject(analysis.qre);
+  const risk = asObject(analysis.risk);
+  const calculationBasis = asObject(firstMeaningfulValue(
+    explicitCalculationBasis,
+    primary.calculation_basis,
+    primary.calculationBasis,
+    analysis.calculation_basis,
+    analysis.calculationBasis,
+    result.calculation_basis,
+    result.calculationBasis
+  ));
+  const basisPersona = asObject(calculationBasis.persona);
+  const basisRisk = asObject(calculationBasis.risk);
+  const basisEngine = asObject(calculationBasis.engine);
+  const decisionTrace = firstMeaningfulValue(
+    explicitDecisionTrace,
+    result.decision_trace,
+    result.decisionTrace,
+    analysis.decision_trace,
+    analysis.decisionTrace,
+    primary.decision_trace,
+    primary.decisionTrace,
+    calculationBasis.decision_trace,
+    calculationBasis.decisionTrace,
+    calculationBasis.trace
+  );
+  const traceRoot = asObject(decisionTrace);
+  const calculationLog = firstMeaningfulValue(
+    explicitCalculationLog,
+    result.calculation_log,
+    result.calculationLog,
+    analysis.calculation_log,
+    analysis.calculationLog,
+    primary.calculation_log,
+    primary.calculationLog,
+    calculationBasis.calculation_log,
+    calculationBasis.calculationLog,
+    Array.isArray(traceRoot.phases) ? traceRoot : null
+  );
+  const tracePhases = Array.isArray(asObject(decisionTrace).phases) ? asObject(decisionTrace).phases : [];
+  const phaseByPattern = (pattern, order) => tracePhases.find((phase) => {
+    const key = `${phase?.key ?? ''} ${phase?.phase ?? ''}`.toLowerCase();
+    return pattern.test(key) || Number(phase?.phase) === order;
+  }) ?? {};
+  const personaQrePhase = phaseByPattern(/persona|qre|actor|반응|유형/, 2);
+  const riskScoringPhase = phaseByPattern(/risk|score|위험/, 3);
+  const phasePersona = asObject(personaQrePhase.persona);
+  const phaseQre = asObject(personaQrePhase.qre);
+  const phaseRisks = Array.isArray(riskScoringPhase.risks) ? riskScoringPhase.risks : [];
+  const phaseOverallRisk = asObject(riskScoringPhase.overall);
+  const phaseRiskReasons = Object.fromEntries(phaseRisks
+    .map((item) => [String(item?.key ?? '').trim(), compactTraceText(item?.reason, 240)])
+    .filter(([key, reason]) => key && reason));
+  const metricReasons = riskReasonsFromMetrics(
+    comparison.metrics,
+    asObject(comparison.current).metrics,
+    riskSummary.metrics,
+    basisRisk.metrics
+  );
+  const payload = {
+    ...asObject(comparison.current),
+    ...risk,
+    ...parent,
+    ...persona,
+    ...qre,
+    ...primary,
+  };
+  payload.actor_type = firstMeaningfulValue(
+    primary.actor_type,
+    primary.actorType,
+    persona.actor_type,
+    persona.actorType,
+    parent.actor_type,
+    parent.actorType,
+    phasePersona.selected_type,
+    phasePersona.selectedType,
+    phasePersona.actor_type,
+    phasePersona.actorType
+  );
+  payload.actor_probabilities = firstMeaningfulValue(
+    primary.actor_probabilities,
+    primary.actorProbabilities,
+    persona.actor_probabilities,
+    persona.actorProbabilities,
+    phasePersona.probabilities,
+    phasePersona.actor_probabilities,
+    phasePersona.actorProbabilities
+  );
+  payload.actor_confidence = firstMeaningfulValue(
+    primary.actor_confidence,
+    primary.actorConfidence,
+    persona.actor_confidence,
+    persona.actorConfidence,
+    parent.confidence,
+    phasePersona.confidence
+  );
+  payload.persona_summary = firstMeaningfulValue(
+    primary.persona_summary,
+    primary.personaSummary,
+    persona.persona_summary,
+    persona.personaSummary,
+    parent.summary
+  );
+  payload.lambda_qre = firstMeaningfulValue(
+    primary.lambda_qre,
+    primary.lambdaQre,
+    primary.qre_lambda,
+    primary.qreLambda,
+    qre.lambda_qre,
+    qre.lambdaQre,
+    qre.lambda,
+    persona.lambda_qre,
+    persona.lambdaQre,
+    phaseQre.lambda_qre,
+    phaseQre.lambdaQre,
+    phaseQre.lambda
+  );
+  payload.claim_type = firstMeaningfulValue(
+    primary.claim_type,
+    primary.claimType,
+    persona.claim_type,
+    persona.claimType,
+    basisPersona.claim_type,
+    basisPersona.claimType
+  );
+  payload.evidence_state = firstMeaningfulValue(
+    primary.evidence_state,
+    primary.evidenceState,
+    persona.evidence_state,
+    persona.evidenceState,
+    basisPersona.evidence_state,
+    basisPersona.evidenceState
+  );
+  payload.pressure_state = firstMeaningfulValue(
+    primary.pressure_state,
+    primary.pressureState,
+    persona.pressure_state,
+    persona.pressureState,
+    basisPersona.pressure_state,
+    basisPersona.pressureState
+  );
+  payload.rule_constraint = firstMeaningfulValue(
+    primary.rule_constraint,
+    primary.ruleConstraint,
+    persona.rule_constraint,
+    persona.ruleConstraint,
+    basisPersona.rule_constraint,
+    basisPersona.ruleConstraint
+  );
+  payload.risk_reasons = firstMeaningfulValue(
+    primary.risk_reasons,
+    primary.riskReasons,
+    risk.risk_reasons,
+    risk.riskReasons,
+    risk.reasons,
+    metricReasons,
+    phaseRiskReasons
+  );
+  payload.flags = firstMeaningfulValue(primary.flags, risk.flags, basisRisk.flags);
+  payload.risk_weights = firstMeaningfulValue(
+    primary.risk_weights,
+    primary.riskWeights,
+    basisRisk.overall_weights,
+    basisRisk.overallWeights
+  );
+  payload.score_version = firstMeaningfulValue(
+    primary.score_version,
+    primary.scoreVersion,
+    risk.score_version,
+    risk.scoreVersion,
+    asObject(comparison.current).score_version,
+    asObject(comparison.current).scoreVersion,
+    basisRisk.score_version,
+    basisRisk.scoreVersion,
+    result.score_version,
+    result.scoreVersion,
+    basisEngine.score_version,
+    basisEngine.scoreVersion,
+    phaseOverallRisk.score_version,
+    phaseOverallRisk.scoreVersion
+  );
+  payload.weights_version = firstMeaningfulValue(
+    primary.weights_version,
+    primary.weightsVersion,
+    basisRisk.weights_version,
+    basisRisk.weightsVersion
+  );
+  payload.calculation_source = firstMeaningfulValue(
+    primary.calculation_source,
+    primary.calculationSource,
+    basisRisk.calculation_source,
+    basisRisk.calculationSource
+  );
+  const phaseRiskKeyMap = {
+    fact_check_need: 'fact_check_need',
+    factCheckNeed: 'fact_check_need',
+    claim_validity: 'claim_validity',
+    claimValidity: 'claim_validity',
+    manipulation_risk: 'manipulation_risk',
+    manipulationRisk: 'manipulation_risk',
+    over_concession_risk: 'over_concession_risk',
+    overConcessionRisk: 'over_concession_risk',
+    under_response_risk: 'under_response_risk',
+    underResponseRisk: 'under_response_risk',
+    policy_violation_risk: 'policy_violation_risk',
+    policyViolationRisk: 'policy_violation_risk',
+    escalation_need: 'escalation_need',
+    escalationNeed: 'escalation_need',
+    handoff_need: 'escalation_need',
+    handoffNeed: 'escalation_need',
+  };
+  for (const item of phaseRisks) {
+    const key = phaseRiskKeyMap[item?.key];
+    if (key) payload[key] = firstMeaningfulValue(payload[key], item?.score);
+  }
+  payload.overall_risk = firstMeaningfulValue(payload.overall_risk, payload.overallRisk, phaseOverallRisk.score);
+  payload.decision_trace = decisionTrace;
+  payload.calculation_log = calculationLog && typeof calculationLog === 'object' ? calculationLog : null;
+  return payload;
+}
+
 function remapApiSimulationState(nextState = {}, isComplete = false) {
   const api = nextState && typeof nextState === 'object' ? nextState : {};
   const cycle = Number(api.cycle ?? api.step ?? api.turn ?? simulationState.cycle ?? 0);
@@ -947,6 +1529,59 @@ function remapApiSimulationState(nextState = {}, isComplete = false) {
   const comparisonValid = comparisonFlag == null
     ? Boolean(api.verified_policy_document ?? api.verifiedPolicyDocument ?? api.policy_document ?? api.policyDocument ?? simulationState.policyDocument)
     : Boolean(comparisonFlag);
+  const actorProbabilities = normalizeActorProbabilities(
+    api.actor_probabilities ?? api.actorProbabilities ?? simulationState.actorProbabilities
+  );
+  const rankedActorTypes = Object.entries(actorProbabilities).sort((a, b) => Number(b[1]) - Number(a[1]));
+  const explicitActorType = normalizeActorType(api.actor_type ?? api.actorType);
+  const actorType = explicitActorType || rankedActorTypes[0]?.[0] || simulationState.actorType;
+  const actorConfidenceValue = numberOrNull(api.actor_confidence ?? api.actorConfidence ?? api.confidence);
+  const actorConfidence = actorConfidenceValue === null
+    ? simulationState.actorConfidence
+    : Math.max(0, Math.min(1, actorConfidenceValue > 1 ? actorConfidenceValue / 100 : actorConfidenceValue));
+  const qreLambda = normalizeQreLambda(api.lambda_qre ?? api.lambdaQre ?? api.qre_lambda ?? api.qreLambda ?? api.lambda)
+    ?? simulationState.qreLambda;
+  const directOverallRisk = numberOrNull(api.overall_risk ?? api.overallRisk);
+  const factCheckNeed = numberOrNull(api.fact_check_need ?? api.factCheckNeed);
+  const claimValidity = numberOrNull(api.claim_validity ?? api.claimValidity);
+  const manipulationRisk = numberOrNull(api.manipulation_risk ?? api.manipulationRisk ?? api.pressure);
+  const handoffNeed = numberOrNull(api.handoff_need ?? api.handoffNeed ?? api.escalation_need ?? api.escalationNeed ?? api.escalation_risk ?? api.escalationRisk);
+  const overConcessionRisk = numberOrNull(api.over_concession_risk ?? api.overConcessionRisk ?? api.liability_risk ?? api.liabilityRisk);
+  const underResponseRisk = numberOrNull(api.under_response_risk ?? api.underResponseRisk);
+  const policyViolationRisk = numberOrNull(
+    api.policy_violation_risk ??
+      api.policyViolationRisk ??
+      (legacyProceduralSafety == null ? undefined : 100 - Number(legacyProceduralSafety))
+  );
+  const incomingRiskAvailability = {
+    factCheckNeed: factCheckNeed !== null || claimValidity !== null,
+    manipulationRisk: manipulationRisk !== null,
+    handoffNeed: handoffNeed !== null,
+    overConcessionRisk: overConcessionRisk !== null,
+    underResponseRisk: underResponseRisk !== null,
+    policyViolationRisk: policyViolationRisk !== null,
+  };
+  const riskAvailability = Object.fromEntries(
+    Object.keys(incomingRiskAvailability).map((key) => [
+      key,
+      incomingRiskAvailability[key] || Boolean(simulationState.riskAvailability?.[key]),
+    ])
+  );
+  const hasAllCurrentRisks = Object.values(riskAvailability).every(Boolean);
+  const providedCalculationSource = String(api.calculation_source ?? api.calculationSource ?? '').trim();
+  const overallRiskSource = providedCalculationSource || (
+    directOverallRisk !== null
+      ? 'server_overall'
+      : providedBalanceScore !== null
+        ? 'policy_balance'
+        : hasAllCurrentRisks
+          ? 'weighted_fallback'
+          : simulationState.overallRiskSource
+  );
+  const incomingRiskWeights = asObject(api.risk_weights ?? api.riskWeights);
+  const incomingDecisionTrace = normalizeDecisionTrace(api.decision_trace ?? api.decisionTrace);
+  const rawCalculationLog = api.calculation_log ?? api.calculationLog;
+  const incomingCalculationLog = rawCalculationLog && typeof rawCalculationLog === 'object' ? rawCalculationLog : null;
   const hasRevisedRiskData = [
     revisedOverallRisk,
     revisedClaimValidity,
@@ -962,18 +1597,35 @@ function remapApiSimulationState(nextState = {}, isComplete = false) {
     mode: 'policy_simulation',
     cycle: Math.max(0, Math.min(maxCycles, Math.round(Number.isFinite(cycle) ? cycle : 0))),
     maxCycles: Math.max(1, Math.round(Number.isFinite(maxCycles) ? maxCycles : MAX_ANALYSIS_CYCLES)),
-    policyBalanceScore: clampMetric(providedBalanceScore, simulationState.policyBalanceScore),
-    claimValidity: clampMetric(api.claim_validity ?? api.claimValidity, simulationState.claimValidity),
-    manipulationRisk: clampMetric(api.manipulation_risk ?? api.manipulationRisk ?? api.pressure, simulationState.manipulationRisk),
-    handoffNeed: clampMetric(api.handoff_need ?? api.handoffNeed ?? api.escalation_need ?? api.escalationNeed ?? api.escalation_risk ?? api.escalationRisk, simulationState.handoffNeed),
-    overConcessionRisk: clampMetric(api.over_concession_risk ?? api.overConcessionRisk ?? api.liability_risk ?? api.liabilityRisk, simulationState.overConcessionRisk),
-    underResponseRisk: clampMetric(api.under_response_risk ?? api.underResponseRisk, simulationState.underResponseRisk),
-    policyViolationRisk: clampMetric(
-      api.policy_violation_risk ??
-        api.policyViolationRisk ??
-        (legacyProceduralSafety == null ? undefined : 100 - Number(legacyProceduralSafety)),
-      simulationState.policyViolationRisk
-    ),
+    actorType,
+    actorConfidence,
+    actorProbabilities,
+    personaSummary: api.persona_summary ?? api.personaSummary ?? api.summary ?? simulationState.personaSummary,
+    qreLambda,
+    claimType: api.claim_type ?? api.claimType ?? simulationState.claimType,
+    evidenceState: api.evidence_state ?? api.evidenceState ?? api.information_state ?? api.informationState ?? simulationState.evidenceState,
+    pressureState: api.pressure_state ?? api.pressureState ?? api.pressure_level ?? api.pressureLevel ?? simulationState.pressureState,
+    ruleConstraint: api.rule_constraint ?? api.ruleConstraint ?? simulationState.ruleConstraint,
+    scoreVersion: api.score_version ?? api.scoreVersion ?? simulationState.scoreVersion,
+    weightsVersion: api.weights_version ?? api.weightsVersion ?? simulationState.weightsVersion,
+    riskWeights: Object.keys(incomingRiskWeights).length ? incomingRiskWeights : simulationState.riskWeights,
+    overallRiskSource,
+    decisionTrace: incomingDecisionTrace,
+    calculationLog: incomingCalculationLog,
+    overallRisk: directOverallRisk === null ? null : clampMetric(directOverallRisk),
+    hasOverallRiskData: directOverallRisk !== null || providedBalanceScore !== null || hasAllCurrentRisks,
+    riskAvailability,
+    policyBalanceScore: providedBalanceScore === null
+      ? simulationState.policyBalanceScore
+      : clampMetric(providedBalanceScore),
+    claimValidity: factCheckNeed === null
+      ? (claimValidity === null ? simulationState.claimValidity : clampMetric(claimValidity))
+      : clampMetric(100 - factCheckNeed),
+    manipulationRisk: manipulationRisk === null ? simulationState.manipulationRisk : clampMetric(manipulationRisk),
+    handoffNeed: handoffNeed === null ? simulationState.handoffNeed : clampMetric(handoffNeed),
+    overConcessionRisk: overConcessionRisk === null ? simulationState.overConcessionRisk : clampMetric(overConcessionRisk),
+    underResponseRisk: underResponseRisk === null ? simulationState.underResponseRisk : clampMetric(underResponseRisk),
+    policyViolationRisk: policyViolationRisk === null ? simulationState.policyViolationRisk : clampMetric(policyViolationRisk),
     scenarioTitle: api.policy_title ?? api.policyTitle ?? api.scenario_title ?? api.scenarioTitle ?? simulationState.scenarioTitle,
     recordDate: api.record_date ?? api.recordDate ?? simulationState.recordDate,
     recordTitle: api.record_title ?? api.recordTitle ?? simulationState.recordTitle,
@@ -982,14 +1634,26 @@ function remapApiSimulationState(nextState = {}, isComplete = false) {
     vulnerabilities: normalizeStringList(api.policy_gaps ?? api.policyGaps ?? api.vulnerabilities ?? api.weak_clauses ?? api.weakClauses) ?? simulationState.vulnerabilities,
     alternativePolicy: api.revised_policy ?? api.revisedPolicy ?? api.alternative_policy ?? api.alternativePolicy ?? simulationState.alternativePolicy,
     recommendation: api.revised_policy_rationale ?? api.revisedPolicyRationale ?? api.recommendation ?? api.policy_recommendation ?? api.policyRecommendation ?? simulationState.recommendation,
-    verifiedPolicyText: api.verified_policy_document ?? api.verifiedPolicyDocument ?? api.policy_document ?? api.policyDocument ?? simulationState.verifiedPolicyText,
+    verifiedPolicyText: (
+      api.verified_policy_document ??
+      api.verifiedPolicyDocument ??
+      api.policy_document ??
+      api.policyDocument ??
+      simulationState.verifiedPolicyText
+    ) || simulationState.policyDocument,
     policySummary: api.policy_diagnosis ?? api.policyDiagnosis ?? simulationState.policySummary,
     policyStrengths: normalizeStringList(api.policy_strengths ?? api.policyStrengths) ?? simulationState.policyStrengths,
-    policySafeguards: api.current_policy_safeguards ?? api.currentPolicySafeguards ?? simulationState.policySafeguards,
+    policySafeguards: firstMeaningfulValue(
+      api.current_policy_safeguards,
+      api.currentPolicySafeguards,
+      api.flags
+    ) ?? simulationState.policySafeguards,
     analysisHeadline: api.analysis_headline ?? api.analysisHeadline ?? api.headline ?? simulationState.analysisHeadline,
     riskReasons: api.risk_reasons ?? api.riskReasons ?? simulationState.riskReasons,
     isComplete: Boolean(isComplete || api.is_complete || api.isComplete),
   };
+
+  if (providedBalanceScore == null) simulationState.policyBalanceScore = calculatePolicyBalanceScore(simulationState);
 
   simulationState.currentPolicyRisks = {
     overallRisk: criticalRiskScore(),
@@ -1013,17 +1677,50 @@ function remapApiSimulationState(nextState = {}, isComplete = false) {
   simulationState.hasAlternativeRiskData = hasRevisedRiskData;
 
   if (simulationState.cycle >= simulationState.maxCycles) simulationState.isComplete = true;
-  if (providedBalanceScore == null) simulationState.policyBalanceScore = calculatePolicyBalanceScore(simulationState);
 }
 
 function syncSimulationStateFromMessages() {
   const reversed = [...messages].reverse();
   const latestAssistant = reversed.find((message) =>
-    message.role === 'assistant' && (message.metadata?.simulation_state || message.metadata?.game_state)
+    message.role === 'assistant' && (
+      message.metadata?.simulation_state ||
+      message.metadata?.simulationState ||
+      message.metadata?.game_state ||
+      message.metadata?.gameState ||
+      message.metadata?.analysis_state ||
+      message.metadata?.analysisState ||
+      message.metadata?.analysis_result ||
+      message.metadata?.analysisResult ||
+      message.metadata?.decision_trace ||
+      message.metadata?.decisionTrace ||
+      message.metadata?.calculation_log ||
+      message.metadata?.calculationLog
+    )
   );
-  const latest = latestAssistant ?? reversed.find((message) => message.metadata?.simulation_state || message.metadata?.game_state);
+  const latest = latestAssistant ?? reversed.find((message) =>
+    message.metadata?.simulation_state ||
+    message.metadata?.simulationState ||
+    message.metadata?.game_state ||
+    message.metadata?.gameState ||
+    message.metadata?.analysis_state ||
+    message.metadata?.analysisState ||
+    message.metadata?.analysis_result ||
+    message.metadata?.analysisResult ||
+    message.metadata?.decision_trace ||
+    message.metadata?.decisionTrace ||
+    message.metadata?.calculation_log ||
+    message.metadata?.calculationLog
+  );
   if (latest) {
-    remapApiSimulationState(latest.metadata?.simulation_state ?? latest.metadata?.game_state, Boolean(latest.metadata?.is_complete ?? latest.metadata?.is_game_over));
+    const payload = composeSimulationPayload(
+      latest.metadata?.simulation_state ?? latest.metadata?.simulationState ?? latest.metadata?.game_state ?? latest.metadata?.gameState,
+      latest.metadata?.analysis_state ?? latest.metadata?.analysisState,
+      latest.metadata?.analysis_result ?? latest.metadata?.analysisResult,
+      latest.metadata?.calculation_basis ?? latest.metadata?.calculationBasis,
+      latest.metadata?.decision_trace ?? latest.metadata?.decisionTrace,
+      latest.metadata?.calculation_log ?? latest.metadata?.calculationLog
+    );
+    remapApiSimulationState(payload, Boolean(latest.metadata?.is_complete ?? latest.metadata?.is_game_over));
     return;
   }
   const count = analysisRequestCount();
@@ -1032,14 +1729,31 @@ function syncSimulationStateFromMessages() {
 }
 
 function buildApiCompatibleState() {
+  const calculationRun = asObject(asObject(simulationState.calculationLog).run);
   return {
     mode: 'policy_simulation',
     cycle: simulationState.cycle,
     max_cycles: simulationState.maxCycles,
     turn: simulationState.cycle,
     max_turns: simulationState.maxCycles,
-    policy_balance_score: simulationState.policyBalanceScore,
-    survival_score: simulationState.policyBalanceScore,
+    overall_risk: simulationState.hasOverallRiskData ? criticalRiskScore() : null,
+    policy_balance_score: simulationState.hasOverallRiskData ? simulationState.policyBalanceScore : null,
+    survival_score: simulationState.hasOverallRiskData ? simulationState.policyBalanceScore : null,
+    actor_type: simulationState.actorType,
+    actor_confidence: simulationState.actorConfidence,
+    actor_probabilities: simulationState.actorProbabilities,
+    persona_summary: simulationState.personaSummary,
+    lambda_qre: simulationState.qreLambda,
+    claim_type: simulationState.claimType,
+    evidence_state: simulationState.evidenceState,
+    pressure_state: simulationState.pressureState,
+    rule_constraint: simulationState.ruleConstraint,
+    score_version: simulationState.scoreVersion,
+    weights_version: simulationState.weightsVersion,
+    risk_weights: simulationState.riskWeights,
+    calculation_source: simulationState.overallRiskSource,
+    decision_trace: simulationState.decisionTrace,
+    previous_calculation_run_id: calculationRun.run_id ?? calculationRun.runId ?? null,
     claim_validity: simulationState.claimValidity,
     manipulation_risk: simulationState.manipulationRisk,
     handoff_need: simulationState.handoffNeed,
@@ -1083,168 +1797,1083 @@ function syncSimulationStateFromInputs() {
   if (dom.recordTitle) simulationState.recordTitle = dom.recordTitle.value.trim();
 }
 
+function riskReasonText(...values) {
+  const value = firstMeaningfulValue(...values);
+  if (typeof value === 'string') return value.trim();
+  if (Array.isArray(value)) return value.map((item) => String(item ?? '').trim()).filter(Boolean).slice(0, 3).join(' · ');
+  if (value && typeof value === 'object') {
+    return String(firstMeaningfulValue(value.reason, value.summary, value.explanation) ?? '').trim();
+  }
+  return '';
+}
+
 
 function riskMetricRows() {
   const reasons = simulationState.riskReasons && typeof simulationState.riskReasons === 'object'
     ? simulationState.riskReasons
     : {};
+  const factCheckReason = riskReasonText(reasons.fact_check_need, reasons.factCheckNeed, reasons.claim_validity, reasons.claimValidity);
+  const manipulationReason = riskReasonText(reasons.manipulation_risk, reasons.manipulationRisk);
+  const overConcessionReason = riskReasonText(reasons.over_concession_risk, reasons.overConcessionRisk);
+  const underResponseReason = riskReasonText(reasons.under_response_risk, reasons.underResponseRisk);
+  const policyViolationReason = riskReasonText(reasons.policy_violation_risk, reasons.policyViolationRisk);
+  const handoffReason = riskReasonText(reasons.escalation_need, reasons.escalationNeed, reasons.handoff_need, reasons.handoffNeed);
   const rows = [
     {
       key: 'factCheckNeed',
       label: '사실을 더 확인할 필요',
       technicalLabel: '사실 확인',
       value: clampMetric(100 - simulationState.claimValidity),
-      help: reasons.fact_check_need || '정책에 학생 진술, 교사 관찰, 상담·연락 기록을 확인하는 기준이 필요한 정도입니다.',
+      help: factCheckReason || '정책에 학생 진술, 교사 관찰, 상담·연락 기록을 확인하는 기준이 필요한 정도입니다.',
+      reasonSource: factCheckReason ? 'analysis' : 'definition',
     },
     {
       key: 'manipulationRisk',
       label: '민원 압박에 흔들릴 위험',
       technicalLabel: '압박 영향',
       value: simulationState.manipulationRisk,
-      help: reasons.manipulation_risk || '정책이 반복 항의·공개 언급과 사실 판단을 분리하지 못할 위험입니다.',
+      help: manipulationReason || '정책이 반복 항의·공개 언급과 사실 판단을 분리하지 못할 위험입니다.',
+      reasonSource: manipulationReason ? 'analysis' : 'definition',
     },
     {
       key: 'overConcessionRisk',
       label: '확인 전에 약속할 위험',
       technicalLabel: '성급한 약속',
       value: simulationState.overConcessionRisk,
-      help: reasons.over_concession_risk || '정책에 사실 확인 전 사과·지도 철회·담임 교체를 제한하는 기준이 부족한 정도입니다.',
+      help: overConcessionReason || '정책에 사실 확인 전 사과·지도 철회·담임 교체를 제한하는 기준이 부족한 정도입니다.',
+      reasonSource: overConcessionReason ? 'analysis' : 'definition',
     },
     {
       key: 'underResponseRisk',
       label: '필요한 대응을 놓칠 위험',
       technicalLabel: '대응 누락',
       value: simulationState.underResponseRisk,
-      help: reasons.under_response_risk || '정책에 근거 있는 문제 제기와 학생 보호 필요를 검토하는 기준이 부족한 정도입니다.',
+      help: underResponseReason || '정책에 근거 있는 문제 제기와 학생 보호 필요를 검토하는 기준이 부족한 정도입니다.',
+      reasonSource: underResponseReason ? 'analysis' : 'definition',
     },
     {
       key: 'policyViolationRisk',
       label: '학교 기준을 벗어날 위험',
       technicalLabel: '학교 기준',
       value: simulationState.policyViolationRisk,
-      help: reasons.policy_violation_risk || '사실 확인, 개인정보 보호, 생활지도 기록과 학교 절차가 충분히 정해지지 않은 정도입니다.',
+      help: policyViolationReason || '사실 확인, 개인정보 보호, 생활지도 기록과 학교 절차가 충분히 정해지지 않은 정도입니다.',
+      reasonSource: policyViolationReason ? 'analysis' : 'definition',
     },
     {
       key: 'handoffNeed',
       label: '관리자에게 공유할 필요',
       technicalLabel: '관리자 공유',
       value: simulationState.handoffNeed,
-      help: reasons.escalation_need || '정책에 교장·교감·부장교사와 공유할 조건을 구체적으로 둘 필요가 있는 정도입니다.',
+      help: handoffReason || '정책에 교장·교감·부장교사와 공유할 조건을 구체적으로 둘 필요가 있는 정도입니다.',
+      reasonSource: handoffReason ? 'analysis' : 'definition',
     },
   ];
   return rows.map((row) => ({
     ...row,
+    available: Boolean(simulationState.riskAvailability?.[row.key]),
     revisedValue: simulationState.hasAlternativeRiskData
       ? numberOrNull(simulationState.alternativePolicyRisks?.[row.key])
       : null,
   }));
 }
 
+const PROVISIONAL_RISK_WEIGHTS = {
+  factCheckNeed: 0.08,
+  manipulationRisk: 0.22,
+  overConcessionRisk: 0.2,
+  underResponseRisk: 0.2,
+  policyViolationRisk: 0.2,
+  handoffNeed: 0.1,
+};
+
+function formatBasisPercent(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return '—';
+  const rounded = Math.round(number * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
+function basisValueText(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item ?? '').trim()).filter(Boolean).join(' · ');
+  if (value && typeof value === 'object') {
+    return Object.entries(value)
+      .filter(([, enabled]) => Boolean(enabled))
+      .map(([label]) => label)
+      .join(' · ');
+  }
+  return String(value ?? '').trim();
+}
+
+function policyFlagValue(source, ...keys) {
+  const flags = asObject(source);
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(flags, key)) {
+      const value = flags[key];
+      if (value === false || value === 0 || String(value).toLowerCase() === 'false') return false;
+      return Boolean(value);
+    }
+  }
+  return null;
+}
+
+function normalizedOverallWeights() {
+  const raw = asObject(simulationState.riskWeights);
+  const aliases = {
+    factCheckNeed: ['fact_check_need', 'factCheckNeed'],
+    manipulationRisk: ['manipulation_risk', 'manipulationRisk'],
+    overConcessionRisk: ['over_concession_risk', 'overConcessionRisk'],
+    underResponseRisk: ['under_response_risk', 'underResponseRisk'],
+    policyViolationRisk: ['policy_violation_risk', 'policyViolationRisk'],
+    handoffNeed: ['escalation_need', 'escalationNeed', 'handoff_need', 'handoffNeed'],
+  };
+  const fromServer = Object.fromEntries(Object.entries(aliases).map(([key, candidates]) => {
+    const value = numberOrNull(firstMeaningfulValue(...candidates.map((candidate) => raw[candidate])));
+    const normalized = value === null ? null : value > 1 ? value / 100 : value;
+    return [key, normalized !== null && normalized >= 0 && normalized <= 1 ? normalized : null];
+  }));
+  if (Object.values(fromServer).every((value) => value !== null)) return fromServer;
+  if (simulationState.scoreVersion === 'qre-risk-v2-provisional' || simulationState.overallRiskSource === 'weighted_fallback') {
+    return PROVISIONAL_RISK_WEIGHTS;
+  }
+  return null;
+}
+
+function isUsefulBasisValue(value) {
+  const text = basisValueText(value).trim();
+  if (!text) return false;
+  return !/^(자동\s*추정|자동|미입력|입력\s*없음|없음|해당\s*없음|미제공|확인\s*필요)$/i.test(text);
+}
+
+function decisionTraceSourceLabel(value) {
+  const source = String(value ?? '').trim();
+  const labels = {
+    situation_record: '상황 기록',
+    incident_conditions: '상황 기록',
+    record: '상황 기록',
+    policy_document: '정책 문장',
+    policy: '정책 문장',
+    structured_input: '보조 정보',
+    input: '보조 정보',
+    server_evidence: '서버 근거',
+  };
+  return labels[source] || sanitizeProductLanguage(source) || '분석 근거';
+}
+
+function decisionTracePhaseLabel(value) {
+  const phase = String(value ?? '').trim();
+  if (/persona|qre|actor|유형|반응/i.test(phase)) return '유형·QRE';
+  if (/risk|score|위험/i.test(phase)) return '위험';
+  return '입력';
+}
+
+function decisionTraceTargetLabel(value) {
+  const target = String(value ?? '').trim();
+  if (/persona.?qre/i.test(target)) return '유형·QRE';
+  if (/^persona$|actor|유형/i.test(target)) return '유형';
+  if (/qre/i.test(target)) return 'QRE';
+  if (/risk|score|fact.?check|manipulation|concession|response|violation|escalation|handoff|위험/i.test(target)) return '위험';
+  if (/input|assessment|입력/i.test(target)) return '입력';
+  if (/policy|정책|규정/i.test(target)) return '정책';
+  if (!target || /common|공통/i.test(target)) return '공통';
+  return compactTraceText(sanitizeProductLanguage(target), 14);
+}
+
+function buildDecisionTrace() {
+  const providedTrace = simulationState.decisionTrace && typeof simulationState.decisionTrace === 'object'
+    ? simulationState.decisionTrace
+    : null;
+  if (providedTrace?.steps?.length) {
+    return {
+      ...providedTrace,
+      source: 'server',
+      steps: providedTrace.steps.slice(0, 6),
+    };
+  }
+
+  const steps = [];
+  const addStep = (source, evidence, interpretation, effect, target = '') => {
+    if (steps.length >= 5) return;
+    const item = {
+      phase: 'input',
+      source,
+      evidence: compactTraceText(evidence, 150),
+      interpretation: compactTraceText(interpretation, 150),
+      effect: compactTraceText(effect, 150),
+      target,
+    };
+    if (!item.evidence || steps.some((step) => step.evidence === item.evidence)) return;
+    steps.push(item);
+  };
+
+  const situation = String(simulationState.incidentConditions ?? '');
+  const structured = [simulationState.claimType, simulationState.pressureState, simulationState.evidenceState]
+    .filter(isUsefulBasisValue)
+    .map(basisValueText)
+    .join(' ');
+  const cueText = `${situation} ${structured}`;
+  const evidenceState = isUsefulBasisValue(simulationState.evidenceState)
+    ? basisValueText(simulationState.evidenceState)
+    : '';
+
+  if (evidenceState && /일부|불명확|부족|미확인|확인\s*전|진술.*(?:다름|불일치)/.test(evidenceState)) {
+    addStep(
+      '보조 정보',
+      `정보 상태: ${evidenceState}`,
+      '확인할 사실과 기록이 아직 남아 있음',
+      '사실 확인 필요와 확인 전 약속 위험을 높이는 방향',
+      'factCheckNeed'
+    );
+  } else if (/아직.*(?:확인|검토).*전|미확인|사실관계.*불명확|증거.*부족|기록.*(?:없|부족)|진술.*(?:다름|불일치)/.test(cueText)) {
+    addStep(
+      '상황 기록',
+      '사실·기록이 아직 확인되지 않았다고 적혀 있음',
+      '현재 정보만으로 사실관계를 확정하기 어려움',
+      '사실 확인 필요와 확인 전 약속 위험을 높이는 방향',
+      'factCheckNeed'
+    );
+  }
+
+  if (/공식\s*사과|사과\s*(?:요구|요청)|책임\s*인정/.test(cueText)) {
+    addStep(
+      '상황 기록',
+      '공식 사과 또는 책임 인정 요구가 기록됨',
+      '결과뿐 아니라 감정적 인정·책임 확인을 원하는 신호',
+      '학부모 유형 분류와 확인 전 약속 위험에 반영',
+      'persona'
+    );
+  }
+
+  if (/반복|계속|재차|세\s*차례|여러\s*번|수차례/.test(cueText)) {
+    addStep(
+      '상황 기록',
+      '같거나 비슷한 요구가 반복되었다고 적혀 있음',
+      '효과가 있다고 느낀 요구를 이어갈 수 있는 반복성 신호',
+      'QRE λ와 민원 압박 위험 판단에 반영',
+      'qre'
+    );
+  }
+
+  if (/교육청|온라인|공개|커뮤니티|언론|게시|신고/.test(cueText)) {
+    addStep(
+      '상황 기록',
+      '교육청·온라인 공개 등 외부 채널이 언급됨',
+      '사실 판단과 분리해 살펴야 하는 외부 압박 신호',
+      '민원 압박 위험과 관리자 공유 필요를 높이는 방향',
+      'manipulationRisk'
+    );
+  }
+
+  if (/담임\s*교체|교사\s*교체|생활지도\s*철회|지도\s*철회/.test(cueText)) {
+    addStep(
+      '상황 기록',
+      '담임 교체 또는 생활지도 철회 요구가 기록됨',
+      '확인 전에 학교 조치를 바꾸도록 요구하는 신호',
+      '확인 전 약속 위험과 관리자 공유 필요에 반영',
+      'overConcessionRisk'
+    );
+  }
+
+  const missingSafeguards = [
+    ['사실·기록 확인', policyFlagValue(simulationState.policySafeguards, 'evidence_required', 'evidenceRequired')],
+    ['관리자 승인', policyFlagValue(simulationState.policySafeguards, 'approval_required', 'approvalRequired')],
+    ['관리자 공유', policyFlagValue(simulationState.policySafeguards, 'handoff_defined', 'handoffDefined')],
+  ].filter(([, value]) => value === false).map(([label]) => label);
+  if (missingSafeguards.length) {
+    addStep(
+      '정책 문장',
+      `정책에서 ${missingSafeguards.join('·')} 기준을 확인하지 못함`,
+      '민원 상황에서 단독 판단을 막는 정책 안전장치가 부족함',
+      '학교 기준 위험과 관리자 공유 필요를 높이는 방향',
+      'policyViolationRisk'
+    );
+  } else if (steps.length < 4 && simulationState.vulnerabilities?.length) {
+    addStep(
+      '정책 진단',
+      sanitizeProductLanguage(simulationState.vulnerabilities[0]),
+      '현재 정책에서 보완이 필요한 기준으로 분류됨',
+      '관련 위험 점수의 정책 근거로 연결',
+      'policyViolationRisk'
+    );
+  }
+
+  if (steps.length < 3 && isUsefulBasisValue(simulationState.claimType)) {
+    addStep(
+      '보조 정보',
+      `주장 유형: ${basisValueText(simulationState.claimType)}`,
+      '요구가 제시된 방식을 구조화한 입력',
+      '학부모 유형 확률과 위험 계산에 사용',
+      'persona'
+    );
+  }
+  if (steps.length < 3 && isUsefulBasisValue(simulationState.pressureState)) {
+    addStep(
+      '보조 정보',
+      `압박 상태: ${basisValueText(simulationState.pressureState)}`,
+      '요구가 사실 판단에 영향을 줄 수 있는지 보는 입력',
+      '민원 압박 위험과 관리자 공유 필요에 사용',
+      'manipulationRisk'
+    );
+  }
+
+  return {
+    traceVersion: '',
+    status: 'partial',
+    source: 'fallback',
+    steps,
+    limitations: ['단서별 실제 수치 기여값이 없어 영향 방향만 표시합니다.'],
+  };
+}
+
+function calculationRecords(value, primitiveField = 'value') {
+  if (Array.isArray(value)) return value;
+  if (!value || typeof value !== 'object') return [];
+  return Object.entries(value).map(([key, item]) => (
+    item && typeof item === 'object' && !Array.isArray(item)
+      ? { key, ...item }
+      : { key, [primitiveField]: item }
+  ));
+}
+
+function firstCalculationValue(...values) {
+  return values.find((value) => value !== undefined);
+}
+
+function calculationNumber(value, maximumFractionDigits = 4) {
+  if (value === null) return 'null';
+  if (value === undefined || value === '') return '—';
+  const number = numberOrNull(value);
+  if (number === null) return '—';
+  return new Intl.NumberFormat('ko-KR', {
+    maximumFractionDigits,
+    useGrouping: false,
+  }).format(number);
+}
+
+function calculationProbability(value) {
+  if (value === null) return 'null';
+  if (value === undefined || value === '') return '—';
+  const number = numberOrNull(value);
+  if (number === null) return '—';
+  const percentage = Math.abs(number) <= 1 ? number * 100 : number;
+  return `${calculationNumber(percentage, 2)}%`;
+}
+
+function calculationValue(value) {
+  if (value === null) return 'null';
+  if (value === undefined || value === '') return '—';
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  if (typeof value === 'number') return calculationNumber(value);
+  if (typeof value === 'object') {
+    try {
+      return compactTraceText(JSON.stringify(value), 90);
+    } catch {
+      return '—';
+    }
+  }
+  return compactTraceText(value, 90);
+}
+
+function calculationTerms(value) {
+  return calculationRecords(value).map((term) => ({
+    name: compactTraceText(firstMeaningfulValue(
+      term?.label,
+      term?.name,
+      term?.feature,
+      term?.ref,
+      term?.metric,
+      term?.risk_key,
+      term?.riskKey,
+      term?.key
+    ), 80) || '기여항',
+    value: firstCalculationValue(term?.value, term?.feature_value, term?.featureValue, term?.score),
+    weight: firstCalculationValue(term?.weight, term?.coefficient),
+    contribution: firstCalculationValue(term?.contribution, term?.weighted_value, term?.weightedValue),
+  }));
+}
+
+function sumProvidedContributions(terms) {
+  if (!terms.length) return null;
+  const values = terms.map((term) => numberOrNull(term.contribution));
+  if (values.some((value) => value === null)) return null;
+  return values.reduce((sum, value) => sum + value, 0);
+}
+
+function calculationPhase(root, pattern, order) {
+  const phases = Array.isArray(root.phases) ? root.phases : [];
+  return phases.find((phase) => {
+    const key = `${phase?.key ?? ''} ${phase?.phase ?? ''}`;
+    return pattern.test(key) || Number(phase?.phase) === order;
+  }) ?? {};
+}
+
+function buildCalculationLogView() {
+  const root = asObject(simulationState.calculationLog);
+  const hasLog = Object.keys(root).length > 0;
+  const inputPhase = calculationPhase(root, /input|assessment|입력/i, 1);
+  const personaPhase = calculationPhase(root, /persona|qre|actor|유형|반응/i, 2);
+  const riskPhase = calculationPhase(root, /risk|score|위험/i, 3);
+  const input = asObject(firstMeaningfulValue(root.input, root.input_assessment, root.inputAssessment, inputPhase.input, inputPhase.inputs, inputPhase));
+  const persona = asObject(firstMeaningfulValue(root.persona, personaPhase.persona));
+  const qre = asObject(firstMeaningfulValue(root.qre, personaPhase.qre));
+  const risk = asObject(firstMeaningfulValue(root.risk, root.risk_scoring, root.riskScoring, riskPhase.risk, riskPhase));
+  const run = asObject(firstMeaningfulValue(root.run, root.meta, root.metadata));
+
+  const evidence = calculationRecords(firstMeaningfulValue(input.evidence, inputPhase.evidence));
+  const evidenceById = Object.fromEntries(evidence
+    .map((item) => [String(item?.id ?? '').trim(), item])
+    .filter(([id]) => id));
+  const explicitFeatures = calculationRecords(firstMeaningfulValue(input.features, input.encoded_features, input.encodedFeatures));
+  const signalFeatures = explicitFeatures.length ? [] : calculationRecords(firstMeaningfulValue(input.signals, inputPhase.signals));
+  const features = (explicitFeatures.length ? explicitFeatures : signalFeatures).map((feature) => {
+    const evidenceIds = Array.isArray(feature?.evidence_ids ?? feature?.evidenceIds)
+      ? (feature.evidence_ids ?? feature.evidenceIds).map(String)
+      : [];
+    const citedEvidence = evidenceIds.map((id) => evidenceById[id]).find(Boolean);
+    return {
+      key: compactTraceText(firstMeaningfulValue(feature?.key, feature?.id), 80),
+      label: compactTraceText(firstMeaningfulValue(feature?.label, feature?.name, feature?.key, feature?.id), 80) || '입력 특징',
+      source: compactTraceText(firstMeaningfulValue(feature?.source, citedEvidence?.source), 50),
+      excerpt: compactTraceText(firstMeaningfulValue(
+        feature?.source_excerpt,
+        feature?.sourceExcerpt,
+        citedEvidence?.summary,
+        citedEvidence?.excerpt,
+        citedEvidence?.evidence
+      ), 130),
+      rawValue: firstCalculationValue(feature?.raw_value, feature?.rawValue, feature?.original_value, feature?.originalValue),
+      encodedValue: firstCalculationValue(feature?.encoded_value, feature?.encodedValue, signalFeatures.length ? feature?.value : undefined),
+      encoding: compactTraceText(firstMeaningfulValue(feature?.encoding, feature?.encoder), 50),
+      missing: feature?.missing === true,
+      confidence: firstCalculationValue(feature?.confidence, feature?.score),
+    };
+  });
+
+  const selectedType = compactTraceText(firstMeaningfulValue(persona.selected_type, persona.selectedType, simulationState.actorType), 40);
+  let personaCandidates = calculationRecords(firstMeaningfulValue(persona.candidates, persona.classes, persona.types));
+  if (!personaCandidates.length) {
+    personaCandidates = calculationRecords(firstMeaningfulValue(persona.probabilities, persona.actor_probabilities, persona.actorProbabilities), 'probability');
+  }
+  personaCandidates = personaCandidates.map((candidate) => {
+    const terms = calculationTerms(firstMeaningfulValue(candidate?.terms, candidate?.factors, candidate?.contributions));
+    const type = compactTraceText(firstMeaningfulValue(candidate?.type, candidate?.label, candidate?.key), 40) || '유형';
+    const provenance = asObject(candidate?.provenance);
+    return {
+      type,
+      selected: candidate?.selected === true || type === selectedType,
+      rawProbability: firstCalculationValue(candidate?.raw_probability, candidate?.rawProbability, candidate?.model_probability, candidate?.modelProbability),
+      normalizationFactor: firstCalculationValue(candidate?.normalization_factor, candidate?.normalizationFactor),
+      source: compactTraceText(firstMeaningfulValue(
+        provenance.raw_probability,
+        provenance.kind,
+        candidate?.source
+      ), 70),
+      base: firstCalculationValue(candidate?.base, candidate?.bias, candidate?.intercept),
+      terms,
+      contributionSum: firstCalculationValue(candidate?.contribution_sum, candidate?.contributionSum, sumProvidedContributions(terms)),
+      logit: firstCalculationValue(candidate?.logit, candidate?.score, candidate?.raw_score, candidate?.rawScore),
+      probability: firstCalculationValue(candidate?.probability, candidate?.p, candidate?.value),
+    };
+  });
+
+  const sampledAction = compactTraceText(firstMeaningfulValue(qre.sampled_action, qre.sampledAction, qre.selected_action, qre.selectedAction), 80);
+  const qreActions = calculationRecords(firstMeaningfulValue(qre.actions, qre.candidates)).map((action) => {
+    const name = compactTraceText(firstMeaningfulValue(action?.action, action?.label, action?.name, action?.key), 80) || '행동';
+    const terms = calculationTerms(firstMeaningfulValue(action?.utility_terms, action?.utilityTerms, action?.terms, action?.factors));
+    return {
+      name,
+      eligible: action?.eligible,
+      selected: action?.selected === true || Boolean(sampledAction && name === sampledAction),
+      terms,
+      utility: firstCalculationValue(action?.utility, action?.u),
+      lambdaUtility: firstCalculationValue(action?.lambda_utility, action?.lambdaUtility, action?.qre_logit, action?.qreLogit),
+      shiftedLambdaUtility: firstCalculationValue(action?.shifted_lambda_utility, action?.shiftedLambdaUtility),
+      expValue: firstCalculationValue(action?.exp_value, action?.expValue),
+      probability: firstCalculationValue(action?.probability, action?.p),
+    };
+  });
+
+  const overall = asObject(firstMeaningfulValue(risk.overall, riskPhase.overall, root.overall));
+  const overallTerms = calculationTerms(firstMeaningfulValue(overall.terms, overall.contributions));
+  const overallTermByKey = Object.fromEntries(calculationRecords(firstMeaningfulValue(overall.terms, overall.contributions))
+    .map((term) => [String(firstMeaningfulValue(term?.metric, term?.risk_key, term?.riskKey, term?.key) ?? '').trim(), term])
+    .filter(([key]) => key));
+  const riskMetrics = calculationRecords(firstMeaningfulValue(risk.metrics, risk.risks, riskPhase.risks), 'final_score').map((metric) => {
+    const key = String(firstMeaningfulValue(metric?.key, metric?.risk_key, metric?.riskKey) ?? '').trim();
+    const terms = calculationTerms(firstMeaningfulValue(metric?.terms, metric?.contributions, metric?.factors));
+    const overallTerm = overallTermByKey[key] ?? {};
+    return {
+      key,
+      label: compactTraceText(firstMeaningfulValue(metric?.label, riskMetricLabel(key)), 80),
+      formulaId: compactTraceText(firstMeaningfulValue(metric?.formula_id, metric?.formulaId), 80),
+      formula: compactTraceText(metric?.formula, 180),
+      base: firstCalculationValue(metric?.base, metric?.intercept),
+      terms,
+      contributionSum: firstCalculationValue(metric?.contribution_sum, metric?.contributionSum, sumProvidedContributions(terms)),
+      rawScore: firstCalculationValue(metric?.raw_score, metric?.rawScore),
+      finalScore: firstCalculationValue(metric?.final_score, metric?.finalScore, metric?.score, metric?.value),
+      rounding: compactTraceText(metric?.rounding, 50),
+      overallWeight: firstCalculationValue(overallTerm?.weight, metric?.overall_weight, metric?.overallWeight),
+      overallContribution: firstCalculationValue(overallTerm?.contribution, metric?.overall_contribution, metric?.overallContribution),
+    };
+  });
+
+  const hasInputDetail = features.length > 0 && features.every((feature) => feature.encodedValue !== undefined && feature.encodedValue !== null);
+  const hasPersonaDetail = personaCandidates.length >= ACTOR_TYPES.length && personaCandidates.every((candidate) => {
+    const hasTransparentClassifierCalculation = candidate.logit !== undefined && candidate.logit !== null && candidate.terms.length > 0;
+    const hasHonestModelNormalization = candidate.rawProbability !== undefined && candidate.rawProbability !== null;
+    return candidate.probability !== undefined && candidate.probability !== null &&
+      (hasTransparentClassifierCalculation || hasHonestModelNormalization);
+  });
+  const hasQreDetail = qreActions.length > 0 && qreActions.every((action) =>
+    action.utility !== undefined && action.utility !== null &&
+    action.probability !== undefined && action.probability !== null &&
+    action.terms.length > 0
+  );
+  const hasRiskDetail = riskMetrics.length >= 6 && riskMetrics.every((metric) =>
+    metric.terms.length > 0 &&
+    metric.rawScore !== undefined && metric.rawScore !== null &&
+    metric.finalScore !== undefined && metric.finalScore !== null
+  );
+  const hasOverallDetail = overallTerms.length > 0 && overallTerms.every((term) => term.contribution !== undefined && term.contribution !== null) &&
+    firstMeaningfulValue(overall.raw_score, overall.rawScore) !== undefined;
+  const stageStatus = (hasAny, complete) => complete ? 'complete' : hasAny ? 'partial' : 'missing';
+  const inputStatus = stageStatus(features.length > 0, hasInputDetail);
+  const personaStatus = stageStatus(personaCandidates.length > 0, hasPersonaDetail);
+  const qreStatus = stageStatus(qreActions.length > 0, hasQreDetail);
+  const riskStatus = stageStatus(riskMetrics.length > 0, hasRiskDetail && hasOverallDetail);
+  const derivedStatus = inputStatus === 'complete' && personaStatus === 'complete' && qreStatus === 'complete' && riskStatus === 'complete'
+    ? 'complete'
+    : hasLog
+      ? 'partial'
+      : 'missing';
+
+  return {
+    root,
+    hasLog,
+    status: derivedStatus,
+    declaredStatus: compactTraceText(firstMeaningfulValue(root.status, run.status), 30),
+    limitations: (normalizeStringList(root.limitations) ?? []).slice(0, 4),
+    run: {
+      id: compactTraceText(firstMeaningfulValue(run.run_id, run.runId, run.id, root.trace_id, root.traceId), 80),
+      schemaVersion: compactTraceText(firstMeaningfulValue(root.schema_version, root.schemaVersion, root.trace_version, root.traceVersion), 80),
+      engineVersion: compactTraceText(firstMeaningfulValue(run.engine_version, run.engineVersion), 80),
+      scoreVersion: compactTraceText(firstMeaningfulValue(run.score_version, run.scoreVersion, risk.score_version, risk.scoreVersion, simulationState.scoreVersion), 80),
+      weightsVersion: compactTraceText(firstMeaningfulValue(run.weights_version, run.weightsVersion, overall.weights_version, overall.weightsVersion, simulationState.weightsVersion), 80),
+      seed: firstCalculationValue(run.seed, qre.seed, qre.random_seed, qre.randomSeed),
+      precision: firstCalculationValue(run.precision, root.precision),
+      rounding: compactTraceText(firstMeaningfulValue(run.rounding, overall.rounding), 50),
+    },
+    input: {
+      features,
+      status: inputStatus,
+    },
+    persona: {
+      candidates: personaCandidates,
+      selectedType,
+      confidence: firstCalculationValue(persona.confidence, simulationState.actorConfidence),
+      holdMargin: firstCalculationValue(persona.hold_margin, persona.holdMargin, asObject(persona.selection).hold_margin, asObject(persona.selection).holdMargin),
+      rawProbabilityTotal: firstCalculationValue(persona.raw_probability_total, persona.rawProbabilityTotal),
+      normalizationFactor: firstCalculationValue(persona.normalization_factor, persona.normalizationFactor),
+      source: compactTraceText(firstMeaningfulValue(asObject(persona.provenance).kind, persona.source), 70),
+      formula: compactTraceText(persona.formula, 180),
+      status: personaStatus,
+    },
+    qre: {
+      actions: qreActions,
+      lambda: firstCalculationValue(qre.lambda, qre.lambda_qre, qre.lambdaQre, simulationState.qreLambda),
+      normalizer: firstCalculationValue(qre.normalizer_z, qre.normalizerZ, qre.z),
+      seed: firstCalculationValue(qre.seed, qre.random_seed, qre.randomSeed, run.seed),
+      sampleValue: firstCalculationValue(qre.sample_value, qre.sampleValue, qre.random_draw, qre.randomDraw),
+      formula: compactTraceText(qre.formula, 180),
+      status: qreStatus,
+    },
+    risk: {
+      metrics: riskMetrics,
+      overall: {
+        method: compactTraceText(firstMeaningfulValue(overall.method, overall.source), 80),
+        formula: compactTraceText(overall.formula, 180),
+        terms: overallTerms,
+        rawScore: firstCalculationValue(overall.raw_score, overall.rawScore),
+        finalScore: firstCalculationValue(overall.final_score, overall.finalScore, overall.score),
+        rounding: compactTraceText(overall.rounding, 50),
+      },
+      status: riskStatus,
+    },
+  };
+}
+
+function calculationStageLabel(status) {
+  if (status === 'complete') return '전체 로그';
+  if (status === 'partial') return '부분 로그';
+  return '미제공';
+}
+
+const ADMIN_RESEARCH_FEATURE_ORDER = [
+  'evidence',
+  'claim_severity',
+  'pressure',
+  'constraint_sensitivity',
+  'policy_ambiguity',
+  'policy_flexibility',
+  'policy_restraint',
+  'response_under',
+];
+
+const ADMIN_RESEARCH_FEATURE_LABELS = {
+  evidence: '정보 확인 정도',
+  claim_severity: '주장 신호 강도',
+  pressure: '압박 신호 강도',
+  constraint_sensitivity: '학교 기준 민감도',
+  policy_ambiguity: '정책 안전장치 공백',
+  policy_flexibility: '정책 재량·수용 여지',
+  policy_restraint: '정책 보호장치 강도',
+  response_under: '현재 대응 누락 신호',
+  actor_strategic: '유형 기반 전략성',
+  qre_pressure: '압박 행동 확률',
+};
+
+function adminResearchFeatureMap(calculationLog) {
+  return Object.fromEntries(calculationLog.input.features
+    .filter((feature) => feature.key)
+    .map((feature) => [feature.key, feature]));
+}
+
+function adminResearchCoreFeatures(calculationLog) {
+  const byKey = adminResearchFeatureMap(calculationLog);
+  const selected = ADMIN_RESEARCH_FEATURE_ORDER.map((key) => byKey[key]).filter(Boolean);
+  return selected.length ? selected : calculationLog.input.features.slice(0, 8);
+}
+
+function adminResearchFeatureEvidence(feature) {
+  const rawIsCompact = ['string', 'number', 'boolean'].includes(typeof feature.rawValue);
+  const raw = rawIsCompact ? calculationValue(feature.rawValue) : '';
+  const excerpt = compactTraceText(feature.excerpt, 105);
+  if (raw && raw !== '—' && excerpt && raw !== excerpt) return `${raw} · ${excerpt}`;
+  return raw && raw !== '—' ? raw : excerpt || '근거 문구 미제공';
+}
+
+function adminResearchSourceLabel(value) {
+  const source = String(value ?? '').trim();
+  if (/model_estimate.*benchmark_config/i.test(source)) return '모델 추정 → 공개 기준';
+  if (/model_estimate.*deterministic_calculation/i.test(source)) return '모델 추정 → 서버 계산';
+  if (/deterministic_calculation/i.test(source)) return '서버 고정 계산';
+  return decisionTraceSourceLabel(source);
+}
+
+function adminResearchProbabilityPoints(value) {
+  const number = numberOrNull(value);
+  if (number === null) return null;
+  return Math.abs(number) <= 1 ? number * 100 : number;
+}
+
+function adminResearchSignedNumber(value) {
+  const number = numberOrNull(value);
+  if (number === null) return '—';
+  return `${number > 0 ? '+' : ''}${calculationNumber(number, 2)}`;
+}
+
+function adminResearchTopTerms(terms, limit = 2) {
+  return terms
+    .filter((term) => numberOrNull(term.contribution) !== null)
+    .sort((a, b) => Math.abs(numberOrNull(b.contribution)) - Math.abs(numberOrNull(a.contribution)))
+    .slice(0, limit);
+}
+
+function buildAdminPolicyComparison(calculationLog) {
+  const proposed = asObject(firstMeaningfulValue(
+    calculationLog.root.proposed_policy_simulation,
+    calculationLog.root.proposedPolicySimulation
+  ));
+  const proposedRisk = asObject(proposed.risk);
+  const proposedOverall = asObject(proposedRisk.overall);
+  const currentByKey = Object.fromEntries(calculationLog.risk.metrics.map((metric) => [metric.key, metric]));
+  const metrics = calculationRecords(proposedRisk.metrics, 'final_score').map((metric) => {
+    const key = String(firstMeaningfulValue(metric?.key, metric?.risk_key, metric?.riskKey) ?? '').trim();
+    const currentScore = currentByKey[key]?.finalScore;
+    const proposedScore = firstCalculationValue(metric?.final_score, metric?.finalScore, metric?.score);
+    const currentNumber = numberOrNull(currentScore);
+    const proposedNumber = numberOrNull(proposedScore);
+    return {
+      key,
+      label: compactTraceText(firstMeaningfulValue(metric?.label, riskMetricLabel(key)), 80) || key,
+      currentScore,
+      proposedScore,
+      delta: currentNumber === null || proposedNumber === null ? null : proposedNumber - currentNumber,
+    };
+  }).filter((metric) => metric.key);
+  const currentOverall = calculationLog.risk.overall.finalScore;
+  const proposedOverallScore = firstCalculationValue(proposedOverall.final_score, proposedOverall.finalScore, proposedOverall.score);
+  const currentOverallNumber = numberOrNull(currentOverall);
+  const proposedOverallNumber = numberOrNull(proposedOverallScore);
+  return {
+    status: compactTraceText(proposed.status, 40),
+    metrics,
+    currentOverall,
+    proposedOverall: proposedOverallScore,
+    overallDelta: currentOverallNumber === null || proposedOverallNumber === null
+      ? null
+      : proposedOverallNumber - currentOverallNumber,
+  };
+}
+
+function renderAdminResearchAppendix(calculationLog) {
+  if (!calculationLog.hasLog) return '';
+  const rootValidation = asObject(calculationLog.root.validation);
+  const qreValidation = asObject(asObject(calculationLog.root.qre).validation);
+  const riskValidation = asObject(asObject(calculationLog.root.risk).validation);
+  const entries = [
+    ['유형 확률합', rootValidation.persona_probability_sum],
+    ['QRE 확률합', firstCalculationValue(rootValidation.qre_probability_sum, qreValidation.exact_probability_sum)],
+    ['효용 합산', rootValidation.qre_utility_terms_verified],
+    ['위험 합산', rootValidation.risk_terms_verified],
+    ['종합 합산', rootValidation.overall_terms_verified],
+    ['유효 숫자', firstCalculationValue(rootValidation.finite_numbers, riskValidation.all_finite)],
+  ].filter(([, value]) => value !== undefined && value !== null && value !== '');
+  if (!entries.length) return '';
+  const validationValue = (value) => typeof value === 'boolean'
+    ? value ? '통과' : '확인 필요'
+    : calculationNumber(value, 4);
+  return `
+    <section class="research-validation-summary" aria-label="연구 계산 검증 요약">
+      <strong>계산 검증</strong>
+      <ul>${entries.map(([label, value]) => `<li data-valid="${value === false ? 'false' : 'true'}"><span>${escapeHtml(label)}</span><b>${escapeHtml(validationValue(value))}</b></li>`).join('')}</ul>
+    </section>
+  `;
+}
+
+function renderCalculationBasis() {
+  if (!dom.calculationBasis) return;
+  const researchAccess = hasAdminResearchAccess();
+  const probabilities = normalizeActorProbabilities(simulationState.actorProbabilities);
+  const ranked = Object.entries(probabilities).sort((a, b) => Number(b[1]) - Number(a[1]));
+  const confidenceValue = numberOrNull(simulationState.actorConfidence);
+  const confidence = confidenceValue === null ? null : clampMetric(confidenceValue * 100);
+  const topMargin = ranked.length > 1 ? (Number(ranked[0][1]) - Number(ranked[1][1])) * 100 : null;
+  const basisInputs = [
+    ['주장 유형', simulationState.claimType],
+    ['정보 상태', simulationState.evidenceState],
+    ['압박 상태', simulationState.pressureState],
+    ['규칙 제약', simulationState.ruleConstraint],
+  ].filter(([, value]) => isUsefulBasisValue(value)).map(([label, value]) => [label, basisValueText(value)]);
+  const safeguards = [
+    ['사실·기록 확인', policyFlagValue(simulationState.policySafeguards, 'evidence_required', 'evidenceRequired')],
+    ['관리자 승인', policyFlagValue(simulationState.policySafeguards, 'approval_required', 'approvalRequired')],
+    ['적용 기준', policyFlagValue(simulationState.policySafeguards, 'threshold_defined', 'thresholdDefined')],
+    ['처리 기한', policyFlagValue(simulationState.policySafeguards, 'deadline_defined', 'deadlineDefined')],
+    ['관리자 공유', policyFlagValue(simulationState.policySafeguards, 'handoff_defined', 'handoffDefined')],
+    ['압박·사실 분리', policyFlagValue(simulationState.policySafeguards, 'pressure_separated', 'pressureSeparated')],
+    ['개인정보 보호', policyFlagValue(simulationState.policySafeguards, 'privacy_guard', 'privacyGuard')],
+  ];
+  const calculationLog = buildCalculationLogView();
+  const sourceLabels = {
+    server_overall: '서버가 계산한 종합 위험',
+    server_deterministic_scoring: '서버 고정식으로 계산',
+    server_deterministic_audit_log: '서버 공개 계산 장부로 계산',
+    policy_balance: '서버 정책 균형 점수에서 환산',
+    weighted_fallback: '화면 임시 계산 · 서버 계산 로그 아님',
+  };
+  let sourceLabel = sourceLabels[simulationState.overallRiskSource]
+    || sanitizeProductLanguage(simulationState.overallRiskSource)
+    || '계산 출처가 응답에 포함되지 않음';
+  if (researchAccess && calculationLog.risk.overall.terms.length) {
+    sourceLabel = `${calculationLog.risk.overall.method || '서버 관리자 계산 장부'} · ${calculationNumber(calculationLog.risk.overall.rawScore)} → ${calculationNumber(calculationLog.risk.overall.finalScore)}`;
+  }
+  const lambda = normalizeQreLambda(simulationState.qreLambda);
+  const trace = buildDecisionTrace();
+  const traceSteps = trace.steps ?? [];
+  const actorIsClose = ranked.length > 1 && Number(ranked[0][1]) - Number(ranked[1][1]) < ACTOR_HOLD_MARGIN;
+  const selectedActor = actorIsClose ? '판단 보류' : normalizeActorType(simulationState.actorType) || ranked[0]?.[0] || '판단 보류';
+  const selectedActorProbability = ranked.find(([type]) => type === selectedActor)?.[1] ?? null;
+  const runnerUp = ranked[1];
+  const allRiskMetrics = riskMetricRows();
+  const metrics = allRiskMetrics.filter((item) => item.available);
+  const highestRisk = [...metrics].sort((a, b) => b.value - a.value)[0];
+  const traceStatus = trace.source === 'server'
+    ? `서버가 반환한 구조화 근거 ${traceSteps.length}개${trace.traceVersion ? ` · ${trace.traceVersion}` : ''}`
+    : '현재 응답의 기록 문구와 정책 안전장치만 연결한 부분 근거';
+  const qreLabel = lambda === 0.5
+    ? '요구 방식이 자주 바뀔 수 있음'
+    : lambda === 1.5
+      ? '요구가 비교적 일정한 편'
+      : lambda === 3
+        ? '같은 요구를 매우 일관되게 반복'
+        : '일관성 값 확인 필요';
+  const overallRisk = simulationState.hasOverallRiskData ? criticalRiskScore() : null;
+  const uniqueStageValues = (values, limit = 2) => [...new Set(values.map((value) => compactTraceText(value, 90)).filter(Boolean))].slice(0, limit);
+  const situationTraceSteps = traceSteps.filter((step) => !/정책/.test(decisionTraceSourceLabel(step.source)));
+  const policyTraceSteps = traceSteps.filter((step) => /정책/.test(decisionTraceSourceLabel(step.source)));
+  const situationStageValues = uniqueStageValues([
+    ...basisInputs.filter(([label]) => label !== '규칙 제약').map(([label, value]) => `${label} · ${basisValueText(value)}`),
+    ...situationTraceSteps.map((step) => step.evidence),
+  ]);
+  const missingSafeguardLabels = safeguards.filter(([, value]) => value === false).map(([label]) => label);
+  const coveredSafeguardLabels = safeguards.filter(([, value]) => value === true).map(([label]) => label);
+  const policyStageValues = uniqueStageValues([
+    ...policyTraceSteps.map((step) => step.evidence),
+    missingSafeguardLabels.length ? `${missingSafeguardLabels.slice(0, 3).join('·')} 기준 없음` : '',
+    simulationState.vulnerabilities?.[0],
+    coveredSafeguardLabels.length ? `${coveredSafeguardLabels.slice(0, 3).join('·')} 기준 확인` : '',
+    simulationState.policySummary,
+  ], 1);
+  const personaStep = traceSteps.find((step) => /persona|유형|감정형|오해형|정당형|기회주의형|적대형/.test(`${step.target} ${step.effect}`));
+  const qreStep = traceSteps.find((step) => /qre|반복|일관성/i.test(`${step.target} ${step.effect}`));
+  const personaBasis = personaStep
+    ? `${compactTraceText(personaStep.evidence, 48)} → ${compactTraceText(personaStep.interpretation, 62)}`
+    : ranked.length ? '5가지 유형의 확률을 비교한 결과' : '유형별 확률 근거가 제공되지 않음';
+  const qreBasis = qreStep
+    ? `${compactTraceText(qreStep.evidence, 48)} → ${compactTraceText(qreStep.interpretation, 62)}`
+    : lambda === null ? 'QRE 계산값이 제공되지 않음' : '서버가 반환한 요구 선택 일관성 값';
+  const highestRiskBasis = highestRisk
+    ? compactTraceText(sanitizeProductLanguage(highestRisk.help), 105)
+    : '확인된 위험 점수가 없어 계산 결과를 연결하지 않음';
+  const researchFeatures = adminResearchCoreFeatures(calculationLog);
+  const researchFeatureByKey = adminResearchFeatureMap(calculationLog);
+  const researchBridgeFeatures = ['actor_strategic', 'qre_pressure']
+    .map((key) => researchFeatureByKey[key])
+    .filter(Boolean);
+  const researchPersonaRanked = calculationLog.persona.candidates
+    .filter((candidate) => adminResearchProbabilityPoints(candidate.probability) !== null)
+    .sort((a, b) => adminResearchProbabilityPoints(b.probability) - adminResearchProbabilityPoints(a.probability));
+  const researchPersonaMargin = researchPersonaRanked.length > 1
+    ? adminResearchProbabilityPoints(researchPersonaRanked[0].probability) - adminResearchProbabilityPoints(researchPersonaRanked[1].probability)
+    : null;
+  const researchQreTopAction = calculationLog.qre.actions
+    .filter((action) => action.eligible !== false && adminResearchProbabilityPoints(action.probability) !== null)
+    .sort((a, b) => adminResearchProbabilityPoints(b.probability) - adminResearchProbabilityPoints(a.probability))[0];
+  const policyComparison = buildAdminPolicyComparison(calculationLog);
+  const policyComparisonHighlights = [...policyComparison.metrics]
+    .filter((metric) => metric.delta !== null)
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+    .slice(0, 3);
+  const calculationRun = asObject(calculationLog.root.run);
+  const researchModelAlias = compactTraceText(firstMeaningfulValue(calculationRun.model_alias, calculationRun.modelAlias), 80);
+  const scoreAndWeightVersions = [calculationLog.run.scoreVersion, calculationLog.run.weightsVersion].filter(Boolean).join(' · ');
+  const calculationRunMeta = [
+    ['계산 ID', calculationLog.run.id],
+    ['모델', researchModelAlias],
+    ['엔진', calculationLog.run.engineVersion],
+    ['점수·가중치', scoreAndWeightVersions],
+  ].filter(([, value]) => value !== null && value !== undefined && value !== '');
+  const calculationPersonaQreStatus = calculationLog.persona.status === 'complete' && calculationLog.qre.status === 'complete'
+    ? 'complete'
+    : calculationLog.persona.status !== 'missing' || calculationLog.qre.status !== 'missing'
+      ? 'partial'
+      : 'missing';
+  const calculationFlowStatus = researchAccess
+    ? calculationLog.hasLog
+      ? `입력 ${calculationStageLabel(calculationLog.input.status)} · 유형·QRE ${calculationStageLabel(calculationPersonaQreStatus)} · 위험 ${calculationStageLabel(calculationLog.risk.status)}`
+      : `${traceStatus} · 이 기록의 관리자 계산 장부는 미제공`
+    : '입력 확인 · 유형·QRE 추정 · 학교 대응 위험 6가지 계산';
+
+  dom.calculationBasis.innerHTML = `
+    <section class="engine-decision-flow" aria-label="정책 위험 분석 3단계">
+      <div class="engine-flow-grid" role="list">
+        <section class="engine-flow-stage" role="listitem">
+          <header class="engine-stage-head"><b>01</b><div><span>입력 확인</span><h4>상황·현재 정책</h4></div></header>
+          <p class="engine-stage-description">기록 속 요구와 정보 상태, 정책의 안전장치를 정리합니다.</p>
+          <div class="engine-stage-results">
+            <div><span>상황</span><strong>${escapeHtml(sanitizeProductLanguage(situationStageValues.join(' · ') || '상황 기록이 입력됨'))}</strong></div>
+            <div><span>정책</span><strong>${escapeHtml(sanitizeProductLanguage(policyStageValues[0] || (simulationState.verifiedPolicyText ? '현재 정책 문장이 입력됨' : '정책 입력 확인 필요')))}</strong></div>
+          </div>
+        </section>
+        <div class="engine-flow-link" aria-hidden="true"><span>분류·추정</span><i>→</i></div>
+        <section class="engine-flow-stage is-core" role="listitem">
+          <header class="engine-stage-head"><b>02</b><div><span>반응 모델</span><h4>학부모 유형·QRE</h4></div></header>
+          <p class="engine-stage-description">가능성이 높은 반응 유형과 요구 선택의 일관성을 계산합니다.</p>
+          <div class="engine-stage-results">
+            <div><span>학부모 유형</span><strong>${escapeHtml(selectedActor)}${selectedActorProbability === null ? '<b>—</b>' : `<b>${formatBasisPercent(Number(selectedActorProbability) * 100)}%</b>`}</strong><small>${escapeHtml(sanitizeProductLanguage(personaBasis))}${runnerUp && topMargin !== null ? ` · 1·2위 차이 ${formatBasisPercent(topMargin)}%p` : ''}</small></div>
+            <div><span>요구 일관성</span><strong>${escapeHtml(qreLabel)}<b>${lambda === null ? 'λ —' : `λ ${lambda.toFixed(1)}`}</b></strong><small>${escapeHtml(sanitizeProductLanguage(qreBasis))}</small></div>
+          </div>
+        </section>
+        <div class="engine-flow-link" aria-hidden="true"><span>위험 계산</span><i>→</i></div>
+        <section class="engine-flow-stage" role="listitem">
+          <header class="engine-stage-head"><b>03</b><div><span>정책 위험</span><h4>6가지 위험도 계산</h4></div></header>
+          <p class="engine-stage-description">예상 반응이 현재 정책을 만났을 때의 위험을 계산합니다.</p>
+          <div class="engine-stage-results">
+            <div><span>종합 위험</span><strong>${overallRisk === null ? '확인 필요' : `${overallRisk}<b>/100 · ${metricStatusLabel(overallRisk)}</b>`}</strong><small>${escapeHtml(sourceLabel)}</small></div>
+            <div><span>가장 높은 위험</span><strong>${highestRisk ? `${escapeHtml(highestRisk.label)}<b>${highestRisk.value}점</b>` : '점수 확인 필요'}</strong><small>${escapeHtml(highestRiskBasis)}</small></div>
+          </div>
+        </section>
+      </div>
+      <p class="engine-flow-status"><span>${researchAccess ? calculationLog.hasLog ? 'ADMIN 계산 장부' : 'ADMIN 부분 기록' : '분석 흐름'}</span>${escapeHtml(calculationFlowStatus)} · 입력 → 유형·QRE → 위험 계산 순서로 저장합니다.</p>
+    </section>
+
+    ${researchAccess ? `
+    <aside class="admin-research-panel">
+    <details class="calculation-spec" open>
+      <summary><span>관리자 연구 계산 장부</span><small>ADMIN · 핵심값 3단계</small></summary>
+      <section class="calculation-log-header" data-status="${calculationLog.hasLog ? calculationLog.status : 'missing'}">
+        <div><span>${calculationLog.hasLog ? '핵심 연구 장부' : '계산 장부 미제공'}</span><strong>${calculationLog.hasLog ? '입력에서 위험 점수까지, 계산에 영향 준 값만 남겼습니다.' : '현재 기록에는 관리자용 계산값이 없습니다.'}</strong><p>${calculationLog.hasLog ? '전체 원시·중간값은 보호된 서버 로그에 그대로 보존됩니다.' : '관리자 권한으로 새 분석을 실행하면 3단계 핵심값이 표시됩니다.'}</p></div>
+        ${calculationRunMeta.length ? `<dl>${calculationRunMeta.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(calculationValue(value))}</dd></div>`).join('')}</dl>` : ''}
+      </section>
+      <ol class="research-three-step calculation-ledger" aria-label="관리자 서버 계산 장부 3단계">
+        <li>
+          <header class="research-step-head"><b>01</b><div><span>상황·정책 입력</span><h4>핵심 입력 변수</h4><p>위험 계산에 직접 쓰인 상황·정책 값만 봅니다.</p></div><i data-status="${calculationLog.input.status}">${calculationStageLabel(calculationLog.input.status)}</i></header>
+          <div class="research-step-body">
+            ${researchFeatures.length ? `<div class="research-compact-table-wrap"><table class="research-compact-table research-input-table"><thead><tr><th>핵심 변수</th><th>계산값</th><th>판단 근거</th></tr></thead><tbody>${researchFeatures.map((feature) => `<tr data-missing="${feature.missing}"><th><span>${feature.key.startsWith('policy_') ? '정책' : feature.key.startsWith('response_') ? '대응' : '상황'}</span><strong>${escapeHtml(sanitizeProductLanguage(ADMIN_RESEARCH_FEATURE_LABELS[feature.key] || feature.label))}</strong><code>${escapeHtml(feature.key || '—')}</code></th><td><b>${escapeHtml(calculationValue(feature.encodedValue))}</b></td><td><p>${escapeHtml(sanitizeProductLanguage(adminResearchFeatureEvidence(feature)))}</p>${feature.source ? `<small>${escapeHtml(adminResearchSourceLabel(feature.source))}</small>` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="calculation-log-empty"><strong>핵심 입력값이 없습니다.</strong><p>이 기록에는 서버 입력 벡터가 저장되지 않았습니다.</p></div>'}
+          </div>
+        </li>
+        <li>
+          <header class="research-step-head"><b>02</b><div><span>학부모 반응 모델</span><h4>유형 확률·QRE</h4><p>유형별 가능성과 행동별 효용·확률을 함께 비교합니다.</p></div><i data-status="${calculationPersonaQreStatus}">${calculationStageLabel(calculationPersonaQreStatus)}</i></header>
+          <div class="research-step-body">
+            <div class="research-compact-columns">
+              <section class="research-block">
+                <div class="research-table-heading"><h5>유형 확률</h5><span>${calculationLog.persona.candidates.length}개 유형</span></div>
+                ${calculationLog.persona.candidates.length ? `<div class="research-compact-table-wrap"><table class="research-compact-table research-persona-table"><thead><tr><th>유형</th><th>모델 P</th><th>최종 P</th></tr></thead><tbody>${calculationLog.persona.candidates.map((candidate) => `<tr data-selected="${candidate.selected}"><th>${escapeHtml(candidate.type)}${candidate.selected ? '<span>선택</span>' : ''}</th><td>${escapeHtml(calculationProbability(candidate.rawProbability))}</td><td><b>${escapeHtml(calculationProbability(candidate.probability))}</b></td></tr>`).join('')}</tbody></table></div>` : '<div class="calculation-log-empty"><strong>유형 확률이 없습니다.</strong><p>5개 유형의 확률 기록이 필요합니다.</p></div>'}
+                <p class="research-inline-summary"><span>선택 <b>${escapeHtml(calculationLog.persona.selectedType || '—')}</b></span><span>신뢰도 <b>${escapeHtml(calculationProbability(calculationLog.persona.confidence))}</b></span><span>1·2위 차이 <b>${researchPersonaMargin === null ? '—' : `${escapeHtml(calculationNumber(researchPersonaMargin, 2))}%p`}</b></span><span>보류 기준 <b>${escapeHtml(calculationProbability(calculationLog.persona.holdMargin))}</b></span></p>
+              </section>
+              <section class="research-block">
+                <div class="research-table-heading"><h5>행동 효용·확률</h5><span>λ ${escapeHtml(calculationValue(calculationLog.qre.lambda))}</span></div>
+                ${calculationLog.qre.actions.length ? `<div class="research-compact-table-wrap"><table class="research-compact-table research-qre-table"><thead><tr><th>행동</th><th>효용 U</th><th>확률 P</th></tr></thead><tbody>${calculationLog.qre.actions.map((action) => `<tr data-highlight="${action.selected || action === researchQreTopAction}" data-eligible="${action.eligible !== false}"><th>${escapeHtml(sanitizeProductLanguage(action.name))}${action.selected ? '<span>선택</span>' : action === researchQreTopAction ? '<span>최고 확률</span>' : ''}</th><td>${escapeHtml(calculationValue(action.utility))}</td><td><b>${escapeHtml(calculationProbability(action.probability))}</b></td></tr>`).join('')}</tbody></table></div>` : '<div class="calculation-log-empty"><strong>행동별 효용·확률이 없습니다.</strong><p>QRE 행동 후보의 U와 P가 필요합니다.</p></div>'}
+                <p class="research-inline-summary"><span>후보 <b>${calculationLog.qre.actions.length}개</b></span>${researchBridgeFeatures.map((feature) => `<span>${escapeHtml(ADMIN_RESEARCH_FEATURE_LABELS[feature.key] || feature.label)} <b>${escapeHtml(calculationValue(feature.encodedValue))}</b></span>`).join('')}</p>
+              </section>
+            </div>
+          </div>
+        </li>
+        <li>
+          <header class="research-step-head"><b>03</b><div><span>정책 위험 계산</span><h4>6가지 위험·기여도</h4><p>점수와 종합 위험을 실제로 끌어올린 요인을 봅니다.</p></div><i data-status="${calculationLog.risk.status}">${calculationStageLabel(calculationLog.risk.status)}</i></header>
+          <div class="research-step-body">
+            ${calculationLog.risk.metrics.length ? `<div class="research-compact-table-wrap"><table class="research-compact-table research-risk-table"><thead><tr><th>위험</th><th>점수</th><th>가중치</th><th>종합 기여</th><th>주요 원인</th></tr></thead><tbody>${calculationLog.risk.metrics.map((metric) => { const topTerms = adminResearchTopTerms(metric.terms); return `<tr><th>${escapeHtml(sanitizeProductLanguage(metric.label))}</th><td><b>${escapeHtml(calculationValue(metric.finalScore))}</b></td><td>${escapeHtml(calculationValue(metric.overallWeight))}</td><td>${escapeHtml(calculationValue(metric.overallContribution))}</td><td>${topTerms.length ? topTerms.map((term) => `<span>${escapeHtml(sanitizeProductLanguage(term.name))} <b>${escapeHtml(adminResearchSignedNumber(term.contribution))}</b></span>`).join('') : '—'}</td></tr>`; }).join('')}</tbody></table></div>` : '<div class="calculation-log-empty"><strong>위험별 기여 계산이 없습니다.</strong><p>6개 위험의 점수와 종합 기여값이 필요합니다.</p></div>'}
+            <section class="research-overall-summary">
+              <div><span>종합 위험</span><strong>${escapeHtml(calculationValue(calculationLog.risk.overall.finalScore))}<small>/100</small></strong></div>
+              <p>Σ(위험 점수 × 가중치) = <b>${escapeHtml(calculationValue(calculationLog.risk.overall.rawScore))}</b> → ${escapeHtml(calculationValue(calculationLog.risk.overall.finalScore))}</p>
+            </section>
+            ${policyComparison.metrics.length ? `<section class="research-policy-comparison"><header><div><span>정책 초안 비교</span><h5>변화가 큰 위험 ${policyComparisonHighlights.length}개</h5></div><small>${escapeHtml(policyComparison.status || '모의 계산')}</small></header><div class="research-policy-total"><span>종합 위험</span><b>${escapeHtml(calculationValue(policyComparison.currentOverall))}</b><i>→</i><strong>${escapeHtml(calculationValue(policyComparison.proposedOverall))}</strong><em data-delta="${policyComparison.overallDelta === null ? 'none' : policyComparison.overallDelta < 0 ? 'down' : policyComparison.overallDelta > 0 ? 'up' : 'same'}">${policyComparison.overallDelta === null ? '—' : adminResearchSignedNumber(policyComparison.overallDelta)}</em></div><ul>${policyComparisonHighlights.map((metric) => `<li><span>${escapeHtml(sanitizeProductLanguage(metric.label))}</span><b>${escapeHtml(calculationValue(metric.currentScore))} → ${escapeHtml(calculationValue(metric.proposedScore))}</b><em data-delta="${metric.delta < 0 ? 'down' : metric.delta > 0 ? 'up' : 'same'}">${escapeHtml(adminResearchSignedNumber(metric.delta))}</em></li>`).join('')}</ul></section>` : ''}
+          </div>
+        </li>
+      </ol>
+      ${renderAdminResearchAppendix(calculationLog)}
+      ${calculationLog.limitations.length ? `<p class="calculation-log-limitations"><span>연구 유의</span>${escapeHtml(compactTraceText(calculationLog.limitations[0], 200))}</p>` : ''}
+    </details>
+    <p class="basis-disclaimer">화면에서 생략한 원시 JSON과 중간 계산값은 보호된 서버 원본 로그에 그대로 남습니다.</p>
+    </aside>
+    ` : '<p class="admin-access-note"><span>교사용 핵심 화면</span>복잡한 계산 장부는 관리자 연구 계정에서만 별도로 표시됩니다.</p>'}
+  `;
+}
+
 function renderPolicyAssessment() {
   if (!dom.policyAssessment) return;
-  const safeguards = simulationState.policySafeguards && typeof simulationState.policySafeguards === 'object'
-    ? simulationState.policySafeguards
-    : {};
-  const safeguardRows = [
-    ['evidence_required', '사실·기록 확인'],
-    ['approval_required', '관리자 승인'],
-    ['threshold_defined', '적용 기준'],
-    ['deadline_defined', '처리 기한'],
-    ['handoff_defined', '관리자 공유'],
-    ['pressure_separated', '압박과 사실 판단 분리'],
-    ['privacy_guard', '개인정보 보호'],
-  ];
   const verifiedPolicy = String(simulationState.verifiedPolicyText || '').trim();
   const strengths = Array.isArray(simulationState.policyStrengths) ? simulationState.policyStrengths : [];
   const gaps = Array.isArray(simulationState.vulnerabilities) ? simulationState.vulnerabilities : [];
-  const currentRisk = criticalRiskScore();
-  const revisedRisk = simulationState.alternativePolicyRisks?.overallRisk;
-  const delta = simulationState.hasAlternativeRiskData ? Number(revisedRisk) - currentRisk : null;
+  const policyPreview = verifiedPolicy.length > 280 ? `${compactText(verifiedPolicy, 280)}…` : verifiedPolicy;
+  const strengthText = strengths.length
+    ? strengths.slice(0, 2).map((item) => sanitizeProductLanguage(item)).join(' · ')
+    : '정책에서 명확히 확인된 강점이 없습니다.';
+  const gapText = gaps.length
+    ? gaps.slice(0, 2).map((item) => sanitizeProductLanguage(item)).join(' · ')
+    : '추가로 확인된 큰 빈틈이 없습니다.';
 
   dom.policyAssessment.innerHTML = `
-    <section class="policy-source-card" data-status="${verifiedPolicy ? 'provided' : 'missing'}">
-      <span>${verifiedPolicy ? '점수에 반영한 현재 정책' : '정책 문장을 확인하지 못함'}</span>
-      <p>${escapeHtml(sanitizeProductLanguage(verifiedPolicy || '현재 정책에서 위험 계산에 반영할 수 있는 명확한 기준을 찾지 못했습니다.'))}</p>
+    <section class="policy-diagnosis-card" data-status="${verifiedPolicy ? 'provided' : 'missing'}">
+      <span>진단</span>
+      <p>${escapeHtml(sanitizeProductLanguage(simulationState.policySummary || '현재 정책의 기준과 빠진 부분을 확인했습니다.'))}</p>
     </section>
-    <p class="policy-diagnosis-copy">${escapeHtml(sanitizeProductLanguage(simulationState.policySummary || '현재 정책의 구성과 빠진 기준을 분석했습니다.'))}</p>
-    <div class="policy-safeguard-grid" aria-label="현재 정책 안전장치">
-      ${safeguardRows.map(([key, label]) => `<span data-covered="${safeguards[key] ? 'true' : 'false'}"><i aria-hidden="true">${safeguards[key] ? '✓' : '–'}</i>${escapeHtml(label)}<small>${safeguards[key] ? '정책에 있음' : '보완 필요'}</small></span>`).join('')}
+    <div class="policy-key-points">
+      <div><span>확인된 강점</span><p>${escapeHtml(strengthText)}</p></div>
+      <div><span>가장 먼저 보완</span><p>${escapeHtml(gapText)}</p></div>
     </div>
-    <div class="policy-findings-grid">
-      <section><span>정책의 강점</span>${strengths.length ? `<ul>${strengths.map((item) => `<li>${escapeHtml(sanitizeProductLanguage(item))}</li>`).join('')}</ul>` : '<p>명확히 확인된 강점이 없습니다.</p>'}</section>
-      <section><span>정책의 빈틈</span>${gaps.length ? `<ul>${gaps.map((item) => `<li>${escapeHtml(sanitizeProductLanguage(item))}</li>`).join('')}</ul>` : '<p>추가로 확인된 빈틈이 없습니다.</p>'}</section>
-    </div>
-    ${simulationState.alternativePolicy ? `
-      <section class="revised-policy-card">
-        <div><span>권장 정책안</span><small>학교 내부 검토용 초안</small></div>
-        <p>${escapeHtml(sanitizeProductLanguage(simulationState.alternativePolicy))}</p>
-        ${simulationState.recommendation ? `<small>${escapeHtml(sanitizeProductLanguage(simulationState.recommendation))}</small>` : ''}
-        <button class="ghost-button" type="button" data-copy-policy>정책안 복사</button>
-      </section>
-      ${simulationState.hasAlternativeRiskData ? `
-        <div class="policy-risk-impact" data-tone="${delta < 0 ? 'better' : delta > 0 ? 'worse' : 'same'}">
-          <div><span>현재 정책 위험</span><strong>${currentRisk}</strong></div><i aria-hidden="true">→</i><div><span>권장안 적용 예상</span><strong>${escapeHtml(revisedRisk)}</strong></div><b>${delta < 0 ? `${Math.abs(delta)}점 감소` : delta > 0 ? `${delta}점 증가` : '변화 없음'}</b>
-        </div>
-      ` : ''}
-    ` : ''}
+    <div class="policy-source-line"><span>분석한 현재 정책</span><p>${escapeHtml(sanitizeProductLanguage(policyPreview || '현재 정책 문장을 확인하지 못했습니다.'))}</p></div>
   `;
+}
 
-  dom.policyAssessment.querySelector('[data-copy-policy]')?.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(sanitizeProductLanguage(simulationState.alternativePolicy));
-      showToast('권장 정책안을 복사했습니다.', 'ready');
-    } catch {
-      showToast('정책안을 복사할 수 없습니다.', 'error');
-    }
-  });
+function renderPersonaAssessment() {
+  if (!dom.personaAssessment) return;
+  const probabilities = normalizeActorProbabilities(simulationState.actorProbabilities);
+  const ranked = Object.entries(probabilities).sort((a, b) => Number(b[1]) - Number(a[1]));
+  const isCloseCall = ranked.length > 1 && Number(ranked[0][1]) - Number(ranked[1][1]) < ACTOR_HOLD_MARGIN;
+  const actorType = isCloseCall
+    ? '판단 보류'
+    : ACTOR_TYPES.includes(simulationState.actorType)
+    ? simulationState.actorType
+    : ranked[0]?.[0] || '판단 보류';
+  const actorMeta = {
+    정당형: { label: '근거 중심 반응', description: '확인 가능한 기록과 해결 절차를 중심으로 반응할 가능성이 큽니다.' },
+    오해형: { label: '설명이 먼저 필요한 반응', description: '사실이나 학교 기준을 다르게 이해해 추가 설명이 필요할 가능성이 큽니다.' },
+    감정형: { label: '감정 확인을 중시하는 반응', description: '결과뿐 아니라 감정이 받아들여졌다는 확인을 중요하게 여길 가능성이 큽니다.' },
+    기회주의형: { label: '예외 가능성을 살피는 반응', description: '예외나 더 큰 조치가 가능한지 요구를 이어갈 가능성이 있습니다.' },
+    적대형: { label: '압박 효과를 중시하는 반응', description: '책임 인정이나 공개 압박처럼 갈등이 커질 수 있는 요구를 이어갈 가능성이 있습니다.' },
+    '판단 보류': { label: '유형 판단 보류', description: '현재 기록만으로는 한 가지 반응 유형을 뚜렷하게 고르기 어렵습니다.' },
+  }[actorType];
+  const lambda = normalizeQreLambda(simulationState.qreLambda);
+  const qreMeta = lambda === 0.5
+    ? { label: '반응 변화가 큰 편', description: '상황에 따라 여러 요구 방식으로 바뀔 가능성이 큽니다.' }
+    : lambda === 3
+      ? { label: '같은 요구를 반복할 가능성이 높음', description: '효과가 있다고 판단한 요구를 매우 일관되게 이어갈 가능성이 큽니다.' }
+      : lambda === 1.5
+        ? { label: '요구가 비교적 일정한 편', description: '효과가 있다고 느끼는 요구를 비교적 꾸준히 이어갈 가능성이 있습니다.' }
+        : { label: 'QRE 값 확인 필요', description: '이번 분석에서 QRE 값을 확인하지 못했습니다.' };
+  const personaDescription = actorType !== '판단 보류' && simulationState.personaSummary
+    ? sanitizeProductLanguage(simulationState.personaSummary)
+    : actorMeta.description;
+
+  dom.personaAssessment.innerHTML = `
+    <div class="persona-summary-grid">
+      <section class="persona-type-card">
+        <span>추정 학부모 유형</span>
+        <strong>${escapeHtml(actorType)}<small>${escapeHtml(actorMeta.label)}</small></strong>
+        <p>${escapeHtml(personaDescription)}</p>
+      </section>
+      <section class="qre-summary-card">
+        <span>QRE λ <b>${lambda === null ? '—' : lambda.toFixed(1)}</b></span>
+        <strong>${escapeHtml(qreMeta.label)}</strong>
+        <p>${escapeHtml(qreMeta.description)}</p>
+      </section>
+    </div>
+    <p class="persona-disclaimer">QRE λ는 어떤 요구를 얼마나 일관되게 고를지 나타내는 값입니다. 성격 진단이 아니라 현재 기록을 바탕으로 한 계산용 추정입니다.</p>
+  `;
 }
 
 function renderSimulationHud() {
   if (!dom.simulationHud) return;
   if (!String(simulationState.verifiedPolicyText || '').trim()) {
     dom.simulationHud.innerHTML = `
-      <section class="policy-source-card risk-unavailable-card" data-status="missing">
-        <span>위험 점수를 표시하지 않았습니다</span>
+      <section class="risk-unavailable-card">
+        <span>위험도를 추정하지 못했습니다</span>
         <p>정책·학교 기준 입력란에 실제로 적용 중인 문장을 붙여 넣고 다시 분석해 주세요.</p>
       </section>
     `;
     return;
   }
   const summary = policyDecisionSummary();
-  const overallRisk = criticalRiskScore();
   const metrics = riskMetricRows();
+  const availableMetrics = metrics.filter((item) => item.available);
+  const overallRisk = simulationState.hasOverallRiskData ? criticalRiskScore() : null;
   const headline = simulationState.analysisHeadline || summary.title;
+  const highestRisk = [...availableMetrics].sort((a, b) => b.value - a.value)[0];
   dom.simulationHud.innerHTML = `
-    <div class="decision-banner" data-tone="${summary.tone}">
-      <div>
-        <span>정책 위험 결론</span>
-        <h3>${escapeHtml(sanitizeProductLanguage(headline))}</h3>
-        <p>${escapeHtml(summary.detail)}</p>
+    <div class="compact-risk-summary" data-tone="${overallRisk === null ? 'neutral' : metricTone(overallRisk)}">
+      <div class="compact-overall-score">
+        <span>종합 추정 위험</span>
+        <strong>${overallRisk === null ? '—' : overallRisk}${overallRisk === null ? '' : '<small>/100</small>'}</strong>
+        <b>${overallRisk === null ? '확인 필요' : metricStatusLabel(overallRisk)}</b>
       </div>
-      <div class="balance-score">
-        <span>전체 위험</span>
-        <strong>${overallRisk}<small>/100</small></strong>
-        <p>${metricStatusLabel(overallRisk)}</p>
+      <div>
+        <span>AI 추정치 · 참고용</span>
+        <h4>${escapeHtml(sanitizeProductLanguage(headline))}</h4>
+        <p>${highestRisk ? `가장 높은 항목은 ‘${escapeHtml(highestRisk.label)}’ ${escapeHtml(highestRisk.value)}점입니다.` : '위험 점수를 확인하지 못했습니다.'}</p>
       </div>
     </div>
-    <section class="all-risk-details" aria-labelledby="school-risk-list-title">
-      <h3 class="expanded-section-title" id="school-risk-list-title">세부 위험</h3>
-      <div class="risk-list" aria-label="학교 대응 위험 6가지 점수">
+    <section aria-label="학교 대응 위험 6가지 점수">
+      <ul class="compact-risk-grid">
         ${metrics.map((item) => `
-          <div class="risk-row" data-tone="${metricTone(item.value)}">
-            <div><span>${escapeHtml(item.label)}</span><small>${escapeHtml(item.help)}</small></div>
-            <div class="risk-score-pair"><strong><small>현재</small>${escapeHtml(item.value)}</strong>${item.revisedValue !== null ? `<i aria-hidden="true">→</i><strong data-revised><small>권장안</small>${escapeHtml(item.revisedValue)}</strong>` : ''}</div>
-            <i role="progressbar" aria-label="${escapeHtml(item.label)} ${escapeHtml(item.value)}점" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${escapeHtml(item.value)}" style="--value: ${escapeHtml(item.value)}%"></i>
-          </div>
+          <li data-tone="${item.available ? metricTone(item.value) : 'neutral'}" data-available="${item.available}">
+            <div><span>${escapeHtml(item.label)}</span><strong>${item.available ? escapeHtml(item.value) : '—'}</strong></div>
+            <i${item.available ? ` role="progressbar" aria-label="${escapeHtml(item.label)}" aria-describedby="risk-reason-${escapeHtml(item.key)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${escapeHtml(item.value)}" aria-valuetext="${metricStatusLabel(item.value)} ${escapeHtml(item.value)}점" style="--value: ${escapeHtml(item.value)}%"` : ' aria-hidden="true"'}></i>
+            <small id="risk-reason-${escapeHtml(item.key)}"><b>${item.reasonSource === 'analysis' ? '사례 근거' : '지표 정의'}</b>${escapeHtml(sanitizeProductLanguage(item.help))}</small>
+          </li>
         `).join('')}
-      </div>
+      </ul>
+      ${availableMetrics.length < metrics.length ? '<p class="risk-missing-note">응답에서 확인되지 않은 점수는 임의로 0점 처리하지 않고 —로 표시했습니다.</p>' : ''}
     </section>
   `;
 }
 
 function renderAnalysisPanels() {
   renderPolicyAssessment();
+  renderPersonaAssessment();
   renderSimulationHud();
+  renderCalculationBasis();
   renderInputGuidance();
 }
 
@@ -1304,14 +2933,14 @@ function renderMessages() {
   if (!visibleMessages.length) {
     const empty = document.createElement('p');
     empty.className = 'followup-empty';
-    empty.textContent = '위 결과에서 더 필요한 내용이 있으면 아래에 바로 물어보세요.';
+    empty.textContent = '결과에서 이해되지 않는 부분만 짧게 물어보세요.';
     dom.messageList.append(empty);
   }
 
   for (const message of visibleMessages) {
     const item = document.createElement('article');
     item.className = `message ${message.role === 'user' ? 'user' : 'assistant'}`;
-    const role = message.role === 'user' ? '내가 적은 내용' : 'AI 정책 분석';
+    const role = message.role === 'user' ? '내 질문' : 'AI 추가 설명';
     item.innerHTML = `
       <span class="role">${role}</span>
       ${message.role === 'assistant' ? formatAssistantMessage(message.content) : `<p>${escapeHtml(compactText(sanitizeProductLanguage(message.content), 1200))}</p>`}
@@ -1323,9 +2952,9 @@ function renderMessages() {
     const loading = document.createElement('article');
     loading.className = 'message assistant is-loading';
     loading.innerHTML = `
-      <span class="role">AI가 정책과 위험을 분석하고 있어요</span>
+      <span class="role">AI가 추가로 확인하고 있어요</span>
       <div class="loading-copy">
-        <span>현재 정책 확인 → 정책 빈틈 진단 → 6가지 위험 비교</span>
+        <span>정책 확인 → 학부모 유형·QRE 추정 → 위험 계산</span>
         <i></i><i></i><i></i>
       </div>
     `;
@@ -1333,7 +2962,10 @@ function renderMessages() {
   }
 
   if (!isSending && analysisRequestCount() >= MAX_ANALYSIS_CYCLES) {
-    dom.messageList.append(createPolicyReportPanel());
+    const limitNote = document.createElement('p');
+    limitNote.className = 'chat-limit-note';
+    limitNote.textContent = '이 기록에서 사용할 수 있는 추가 질문을 모두 사용했습니다.';
+    dom.messageList.append(limitNote);
   }
 
   dom.messageList.scrollTop = dom.messageList.scrollHeight;
@@ -1350,7 +2982,7 @@ function renderSendState() {
     : maxCycles
       ? '추가 질문을 모두 사용했어요'
       : noCredits
-        ? 'AI 이용 포인트 없음'
+        ? hasAdminResearchAccess() ? '이번 달 분석 요청 한도 도달' : 'AI 이용 포인트 없음'
         : '질문 보내기';
 
   if (dom.runSimulation) {
@@ -1382,8 +3014,9 @@ function createPolicyReportPanel() {
   const panel = document.createElement('section');
   panel.className = 'final-report-card';
   const reportCreated = hasFinalReport();
+  const detailCost = finalReportRequestCost();
   const canRequestDetail =
-    session?.user && activeConversation?.id && remainingUsage() >= FINAL_REPORT_COST && !isRequestingReport && !reportCreated;
+    session?.user && activeConversation?.id && remainingUsage() >= detailCost && !isRequestingReport && !reportCreated;
   const hasVerifiedPolicy = Boolean(String(simulationState.verifiedPolicyText || '').trim());
   panel.innerHTML = `
     <span class="section-kicker">정리가 끝났어요</span>
@@ -1397,7 +3030,7 @@ function createPolicyReportPanel() {
     <div class="result-actions">
       <button class="primary-button" type="button" data-new-simulation>새 기록</button>
       <button class="ghost-button" type="button" data-final-report ${canRequestDetail ? '' : 'disabled'}>
-        ${reportCreated ? '자세한 분석을 만들었어요' : isRequestingReport ? '자세한 분석 만드는 중' : `자세한 분석 보기 · ${FINAL_REPORT_COST}포인트`}
+        ${reportCreated ? '자세한 분석을 만들었어요' : isRequestingReport ? '자세한 분석 만드는 중' : hasAdminResearchAccess() ? '자세한 분석 보기 · 1회 호출' : `자세한 분석 보기 · ${detailCost}포인트`}
       </button>
     </div>
   `;
@@ -1528,9 +3161,12 @@ async function restoreSession() {
 
 async function loadUsage({ preserveOnError = true, minimumUsed = null } = {}) {
   if (!session?.user || !supabase) {
+    invalidateResearchAccess({ clearData: true });
     applyUsageState({ tier: 'unauth', used: 0, limit: 0 });
     return;
   }
+
+  const expectedUserId = session.user.id;
 
   try {
     const { data, error } = await withTimeout(
@@ -1539,8 +3175,12 @@ async function loadUsage({ preserveOnError = true, minimumUsed = null } = {}) {
       '이번 달 AI 사용량을 확인하는 데 시간이 걸리고 있습니다.'
     );
     if (!error && data) {
+      if (session?.user?.id !== expectedUserId) return;
+      setResearchAccessVerification(data?.tier ?? data?.membership_tier, expectedUserId);
       applyUsageState(data, { minimumUsed });
       lastUsageRefreshAt = Date.now();
+      renderAuth();
+      renderCalculationBasis();
       return;
     }
   } catch {
@@ -1554,22 +3194,29 @@ async function loadUsage({ preserveOnError = true, minimumUsed = null } = {}) {
       '권한 정보를 확인하는 중 응답이 지연되고 있습니다.'
     );
     if (!error) {
+      if (session?.user?.id !== expectedUserId) return;
       const tier = normalizeTier(data?.tier);
+      setResearchAccessVerification(tier, expectedUserId);
       applyUsageState({
         tier,
         used: preserveOnError ? Math.max(usageState.used, numberOrNull(minimumUsed) ?? 0) : 0,
         limit: tierInfo(tier).limit,
       });
       lastUsageRefreshAt = Date.now();
+      renderAuth();
+      renderCalculationBasis();
       return;
     }
   } catch {
     // Preserve the last known quota if Supabase is temporarily slow.
   }
 
+  invalidateResearchAccess();
   if (!preserveOnError) {
     applyUsageState({ tier: 'general', used: 0, limit: tierConfig.general.limit });
   }
+  renderAuth();
+  renderCalculationBasis();
 }
 
 function refreshUsageWhenVisible() {
@@ -1607,6 +3254,82 @@ async function loadConversations() {
   await loadMessages({ silent: true });
 }
 
+function stripEmbeddedCalculationLogs(message) {
+  const metadata = asObject(message?.metadata);
+  const cleanedMetadata = { ...metadata };
+  delete cleanedMetadata.calculation_log;
+  delete cleanedMetadata.calculationLog;
+
+  for (const stateKey of ['simulation_state', 'simulationState', 'game_state', 'gameState', 'analysis_state', 'analysisState']) {
+    const state = cleanedMetadata[stateKey];
+    if (!state || typeof state !== 'object' || Array.isArray(state)) continue;
+    const cleanedState = { ...state };
+    delete cleanedState.calculation_log;
+    delete cleanedState.calculationLog;
+    delete cleanedState.previous_calculation_log;
+    delete cleanedState.previousCalculationLog;
+    cleanedMetadata[stateKey] = cleanedState;
+  }
+
+  return { ...message, metadata: cleanedMetadata };
+}
+
+async function hydrateAdminCalculationLogs(sourceMessages) {
+  const safeMessages = sourceMessages.map(stripEmbeddedCalculationLogs);
+  if (!hasAdminResearchAccess() || !session?.user || !supabase) return safeMessages;
+
+  const expectedUserId = session.user.id;
+  const expectedConversationId = activeConversation?.id;
+  if (!expectedConversationId) return safeMessages;
+
+  const assistantIds = safeMessages
+    .filter((message) => message.role === 'assistant' && message.id)
+    .map((message) => message.id)
+    .slice(0, 100);
+  if (!assistantIds.length) return safeMessages;
+
+  try {
+    const { data, error } = await withTimeout(
+      supabase
+        .from('report_admin_calculation_logs')
+        .select('message_id, conversation_id, run_id, detail, created_at')
+        .eq('user_id', expectedUserId)
+        .eq('conversation_id', expectedConversationId)
+        .in('message_id', assistantIds),
+      12000,
+      '관리자 연구 데이터를 불러오는 중 응답이 지연되고 있습니다.'
+    );
+    if (error) return safeMessages;
+
+    if (
+      session?.user?.id !== expectedUserId ||
+      activeConversation?.id !== expectedConversationId ||
+      !hasAdminResearchAccess()
+    ) return safeMessages;
+
+    const detailByMessageId = new Map((data ?? [])
+      .filter((row) => {
+        if (!row?.message_id || row.conversation_id !== expectedConversationId) return false;
+        if (!row.detail || typeof row.detail !== 'object' || Array.isArray(row.detail)) return false;
+        const detailRun = asObject(asObject(row.detail).run);
+        const detailRunId = String(detailRun.run_id ?? detailRun.runId ?? '').trim();
+        return Boolean(detailRunId && detailRunId === String(row.run_id ?? '').trim());
+      })
+      .map((row) => [row.message_id, row.detail]));
+
+    return safeMessages.map((message) => {
+      const detail = detailByMessageId.get(message.id);
+      if (!detail) return message;
+      return {
+        ...message,
+        metadata: { ...message.metadata, calculation_log: detail },
+      };
+    });
+  } catch {
+    return safeMessages;
+  }
+}
+
 async function loadMessages({ silent = false } = {}) {
   if (!activeConversation?.id || !session?.user || !supabase) {
     messages = [];
@@ -1618,25 +3341,30 @@ async function loadMessages({ silent = false } = {}) {
     return;
   }
 
+  const expectedConversationId = activeConversation.id;
+  const expectedUserId = session.user.id;
   const hadConfirmedAnalysis = hasAnalysisResult();
-  const preservedMessages = hadConfirmedAnalysis ? [...messages] : null;
+  const preservedMessages = hadConfirmedAnalysis ? messages.map(stripEmbeddedCalculationLogs) : null;
   if (!hadConfirmedAnalysis) analysisPhase = 'loading';
   try {
     const { data, error } = await withTimeout(
       supabase
         .from('report_messages')
         .select('id, role, content, metadata, created_at')
-        .eq('conversation_id', activeConversation.id)
-        .eq('user_id', session.user.id)
+        .eq('conversation_id', expectedConversationId)
+        .eq('user_id', expectedUserId)
         .order('created_at', { ascending: true })
         .limit(100),
       12000,
       'AI가 정리한 내용을 불러오는 데 시간이 걸리고 있습니다.'
     );
     if (error) throw error;
-    const loadedMessages = data ?? [];
+    if (activeConversation?.id !== expectedConversationId || session?.user?.id !== expectedUserId) return;
+    const loadedMessages = await hydrateAdminCalculationLogs(data ?? []);
+    if (activeConversation?.id !== expectedConversationId || session?.user?.id !== expectedUserId) return;
     const loadedIsStale = preservedMessages && analysisRequestCount(loadedMessages) < analysisRequestCount(preservedMessages);
-    messages = loadedIsStale ? preservedMessages : loadedMessages;
+    const loadedDroppedTrace = preservedMessages && hasDecisionTraceResult(preservedMessages) && !hasDecisionTraceResult(loadedMessages);
+    messages = loadedIsStale || loadedDroppedTrace ? preservedMessages : loadedMessages;
     syncSimulationStateFromMessages();
     workspaceView = hasAnalysisResult() ? 'results' : 'input';
     analysisPhase = hasAnalysisResult() ? 'success' : 'idle';
@@ -1663,6 +3391,9 @@ async function selectConversation(id) {
     calendarCursor = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
   }
   messages = [];
+  resetSimulationState();
+  simulationState.recordDate = selectedCalendarDate;
+  simulationState.recordTitle = activeConversation?.title || '';
   analysisPhase = activeConversation ? 'loading' : 'idle';
   renderAll();
   await loadMessages();
@@ -1799,7 +3530,9 @@ function buildPolicyAnalysisRequest(extraText = '') {
     simulationState.policyDocument || '입력하지 않음',
     '',
     '[요청]',
-    extraText || '현재 정책의 강점과 빈틈을 진단하고, 학교 대응 위험 6가지와 권장 정책안을 쉬운 한국어로 정리해줘.',
+    extraText || (hasAdminResearchAccess()
+      ? '현재 정책을 진단하고, 학부모 반응 유형과 QRE λ를 추정한 뒤 학교 대응 위험 6가지를 계산해줘. 유형과 QRE는 쉬운 한국어 설명을 함께 쓰고, 실제 입력값·효용·확률·가중치·기여도를 구조화된 calculation_log로 함께 반환해줘.'
+      : '현재 정책을 진단하고, 학부모 반응 유형과 QRE λ를 추정한 뒤 학교 대응 위험 6가지를 쉬운 한국어로 정리해줘.'),
   ].join('\n');
   return compactText(request, MAX_POLICY_ANALYSIS_CHARS);
 }
@@ -1852,7 +3585,9 @@ async function sendMessage(message, { generatedFromInput = false } = {}) {
 
   const requestState = buildApiCompatibleState();
   if (remainingUsage() <= 0) {
-    showToast('이번 달 AI 이용 포인트를 모두 사용했습니다.', 'error');
+    showToast(hasAdminResearchAccess()
+      ? '이번 달 관리자 분석 요청 1,000회를 모두 사용했습니다.'
+      : '이번 달 AI 이용 포인트를 모두 사용했습니다.', 'error');
     return;
   }
 
@@ -1892,6 +3627,13 @@ async function sendMessage(message, { generatedFromInput = false } = {}) {
       mode: 'teacher_analysis',
       message: text,
       [compatStateKey]: requestState,
+      clientGuidance: [
+        '구조화된 결과에 claim_type, evidence_state, pressure_state, rule_constraint, score_version과 정책 flags를 가능한 범위에서 포함한다.',
+        '위험 6개에는 각 항목의 짧고 검증 가능한 risk_reasons를 포함한다.',
+        'decision_trace는 일반 사용자용 근거 요약으로 input_assessment → persona_qre → risk_scoring 순서를 유지한다.',
+        hasAdminResearchAccess() ? ADMIN_CALCULATION_LOG_GUIDANCE : '',
+        '내부 사고 과정이나 장문의 추론은 노출하지 않고 입력 특징값·고정 공식·산술 결과처럼 검증 가능한 계산 정보만 반환한다.',
+      ].filter(Boolean).join('\n'),
     });
     if (data?.error) throw new Error(data.error);
     committedUsage = commitUsageAfterRequest(data, usageBefore, 1);
@@ -1905,10 +3647,31 @@ async function sendMessage(message, { generatedFromInput = false } = {}) {
       '현재 정책과 학교 대응 위험을 분석했습니다.'
     );
 
-    const confirmedState = data?.simulation_state ?? data?.simulationState ?? data?.game_state ?? data?.[compatStateKey];
-    if (!confirmedState || typeof confirmedState !== 'object') {
+    const rawConfirmedState = data?.simulation_state ?? data?.simulationState ?? data?.game_state ?? data?.[compatStateKey];
+    if (!rawConfirmedState || typeof rawConfirmedState !== 'object') {
       throw new Error('정리된 결과를 받지 못했습니다. 잠시 뒤 다시 시도해 주세요.');
     }
+    const responseHasResearchDetail = data?.meta?.research_detail === true &&
+      normalizeTier(data?.meta?.access_tier) === 'admin' &&
+      hasAdminResearchAccess();
+    const receivedCalculationLog = responseHasResearchDetail
+      ? firstMeaningfulValue(
+          data?.calculation_log,
+          data?.calculationLog,
+          data?.analysis_result?.calculation_log,
+          data?.analysis_result?.calculationLog,
+          data?.analysis_state?.calculation_log,
+          data?.analysis_state?.calculationLog
+        )
+      : null;
+    const confirmedState = composeSimulationPayload(
+      rawConfirmedState,
+      data?.analysis_state,
+      data?.analysis_result,
+      data?.calculation_basis,
+      data?.decision_trace ?? data?.decisionTrace,
+      receivedCalculationLog
+    );
     remapApiSimulationState(
       confirmedState,
       Boolean(data?.is_complete ?? data?.isComplete ?? data?.is_game_over ?? data?.isGameOver)
@@ -1921,10 +3684,13 @@ async function sendMessage(message, { generatedFromInput = false } = {}) {
         content: assistantMessage,
         metadata: {
           mode: 'policy_simulation',
-          simulation_state: confirmedState,
-          game_state: confirmedState,
+          simulation_state: rawConfirmedState,
+          game_state: rawConfirmedState,
           analysis_state: data?.analysis_state ?? null,
           analysis_result: data?.analysis_result ?? null,
+          calculation_basis: data?.calculation_basis ?? null,
+          decision_trace: data?.decision_trace ?? data?.decisionTrace ?? null,
+          calculation_log: receivedCalculationLog ?? null,
           is_complete: simulationState.isComplete,
         },
         created_at: new Date().toISOString(),
@@ -1962,15 +3728,21 @@ async function sendMessage(message, { generatedFromInput = false } = {}) {
     isSending = false;
     renderAll();
     if (generatedFromInput && analysisPhase === 'success') {
-      window.setTimeout(() => dom.analysisContent?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+      window.setTimeout(() => {
+        dom.analysisResultTitle?.focus({ preventScroll: true });
+        dom.analysisContent?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
     }
   }
 }
 
 async function requestFinalReport() {
   if (isRequestingReport || !session?.user || !activeConversation?.id) return;
-  if (remainingUsage() < FINAL_REPORT_COST) {
-    showToast(`자세한 분석에는 AI 이용 포인트 ${FINAL_REPORT_COST}이 필요합니다.`, 'error');
+  const requestCost = finalReportRequestCost();
+  if (remainingUsage() < requestCost) {
+    showToast(hasAdminResearchAccess()
+      ? '이번 달 관리자 AI 호출 한도를 모두 사용했습니다.'
+      : `자세한 분석에는 AI 이용 포인트 ${requestCost}이 필요합니다.`, 'error');
     return;
   }
 
@@ -1984,20 +3756,21 @@ async function requestFinalReport() {
       conversationId: activeConversation.id,
       product: currentProduct(),
       mode: 'final_report',
-      message: '현재 정책 진단과 6가지 위험, 권장 정책안의 영향을 더 자세히 설명해줘.',
+      message: '현재 정책 진단, 학부모 반응 유형과 QRE 값, 6가지 위험을 더 자세히 설명해줘.',
       [compatStateKey]: buildApiCompatibleState(),
       clientGuidance: [
-        '자세한 분석은 현재 정책 진단과 학교 대응 위험 검토에 바로 쓸 수 있게 작성한다.',
-        '내부 계산은 드러내지 않고 현재 정책의 강점과 빈틈, 6가지 위험점수, 권장 정책안, 정책 보완 전후 위험 변화를 포함한다.',
-        '사용자에게 보이는 본문에는 QRE, Logit-QRE, λ, 효용, 페르소나, 선택 성향, 행동 유형, 과잉양보, 과소대응, 취약점, 이관을 쓰지 않는다.',
-        '사용자에게 보이는 결과는 현재 정책 진단, 정책의 강점과 빈틈, 학교 대응 위험 6가지, 권장 정책안, 예상 위험 변화로만 구성한다.',
+        '자세한 분석은 현재 정책 진단, 학부모 반응 유형, QRE λ와 학교 대응 위험 검토에 바로 쓸 수 있게 작성한다.',
+        '학부모 유형은 현재 기록에 근거한 계산용 추정임을 밝히고 성격이나 신분을 단정하지 않는다.',
+        'QRE λ는 정확한 값과 함께, 높을수록 효과가 있다고 느끼는 요구를 일관되게 반복할 가능성이 커진다는 쉬운 설명을 붙인다.',
+        '본문 설명은 간결하게 유지하되 calculation_log에는 실제 효용·확률·기여도·수식을 생략하지 않는다.',
         '학부모를 평가하거나 공격하지 않고 교육활동 침해 여부를 단정하지 않는다.',
         '이전 제품의 놀이형 훈련 어휘를 쓰지 않는다.',
         '법률 판단, 책임 인정, 행정 처분 결론은 단정하지 않는다.',
-      ].join('\n'),
+        hasAdminResearchAccess() ? ADMIN_CALCULATION_LOG_GUIDANCE : '',
+      ].filter(Boolean).join('\n'),
     });
     if (data?.error) throw new Error(data.error);
-    committedUsage = commitUsageAfterRequest(data, usageBefore, FINAL_REPORT_COST);
+    committedUsage = commitUsageAfterRequest(data, usageBefore, requestCost);
     reconcileUsageSoon(committedUsage.used);
 
     const assistantMessage = sanitizeProductLanguage(
@@ -2029,7 +3802,7 @@ async function requestFinalReport() {
 
     showToast('자세한 분석을 정리했습니다.', 'ready');
   } catch (error) {
-    if (error?.usage) committedUsage = commitUsageAfterRequest(error, usageBefore, error?.cost ?? FINAL_REPORT_COST);
+    if (error?.usage) committedUsage = commitUsageAfterRequest(error, usageBefore, error?.cost ?? requestCost);
     reconcileUsageSoon(committedUsage?.used ?? usageBefore.used);
     showToast(friendlyServiceError(error), 'error');
   } finally {
@@ -2143,6 +3916,7 @@ async function signOut(remote = true) {
   dom.headerMenus.forEach((menu) => { menu.open = false; });
   if (remote && supabase) await supabase.auth.signOut();
   session = null;
+  invalidateResearchAccess({ clearData: true });
   conversations = [];
   activeConversation = null;
   messages = [];
@@ -2213,7 +3987,18 @@ async function boot() {
   }
 
   client.auth.onAuthStateChange(async (event, nextSession) => {
+    const previousUserId = session?.user?.id ?? '';
+    const nextUserId = nextSession?.user?.id ?? '';
     session = nextSession;
+    if (previousUserId && nextUserId && previousUserId !== nextUserId) {
+      invalidateResearchAccess({ clearData: true });
+      conversations = [];
+      activeConversation = null;
+      messages = [];
+      resetSimulationState();
+      usageState = { tier: 'unauth', used: 0, limit: 0, period: '' };
+      workspaceView = 'calendar';
+    }
     if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
       renderAuth();
       return;
@@ -2354,6 +4139,7 @@ dom.promptSuggestions.forEach((button) => {
 });
 dom.chatInput?.addEventListener('input', resizeComposer);
 dom.chatInput?.addEventListener('keydown', (event) => {
+  if (event.isComposing) return;
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault();
     dom.chatForm?.requestSubmit();

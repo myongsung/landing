@@ -7,10 +7,10 @@
   <title>루지코지 | 교사 전용 학부모 민원 정책 위험 분석 AI</title>
   <meta name="description" content="학부모 민원과 교육분쟁 상황에서 현재 학교 정책의 빈틈과 대응 위험을 분석하고, 위험을 낮추는 권장 정책안을 제시하는 교사 전용 AI 도구입니다." />
   <link rel="stylesheet" href="app.css?v=20260715-1" />
-  <link rel="stylesheet" href="memo.css?v=20260718-3" />
+  <link rel="stylesheet" href="memo.css?v=20260720-9" />
   <link rel="stylesheet" href="landing-editorial.css?v=20260714-5" />
   <script src="supabase-config.js"></script>
-  <script type="module" src="app.js?v=20260718-3"></script>
+  <script type="module" src="app.js?v=20260720-9"></script>
 </head>
 
 <body data-view="landing" data-authenticated="false">
@@ -365,34 +365,35 @@
                 <textarea rows="5" maxlength="4000" placeholder="예: 반복 민원이나 온라인 공개 언급이 있으면 연락 내용을 보존하고 관리자에게 공유합니다." data-policy-document></textarea>
               </label>
 
-              <div class="analysis-pipeline-preview simple-analysis-flow" aria-label="AI가 정리하는 순서"><span><b>1</b>현재 정책 확인</span><i></i><span><b>2</b>정책 빈틈 진단</span><i></i><span><b>3</b>6가지 위험 계산</span></div>
+              <div class="analysis-pipeline-preview simple-analysis-flow" aria-label="AI가 정리하는 순서"><span><b>1</b>현재 정책 확인</span><i></i><span><b>2</b>학부모 유형·QRE 추정</span><i></i><span><b>3</b>6가지 위험 계산</span></div>
               <div class="form-action-area"><div><p id="form-feedback" data-form-feedback>상황 기록과 현재 정책을 입력해 주세요.</p><small>학생·학부모의 이름, 연락처 등 개인정보는 적지 마세요.</small></div><button class="primary-button large" type="button" aria-describedby="form-feedback" data-run-simulation>정책 위험 분석하기</button></div>
             </form>
           </section>
 
           <section class="workspace-view workspace-results" data-workspace-results hidden aria-label="기록 분석 결과">
-            <header class="results-toolbar"><div><span data-result-status>정책 위험 분석</span><h2 id="analysis-result-title">정책 진단과 위험도</h2></div><div><button class="ghost-button" type="button" data-results-calendar>달력으로</button><button class="ghost-button" type="button" data-edit-policy>정책 고치기</button></div></header>
+            <header class="results-toolbar"><div><span data-result-status role="status" aria-live="polite">AI 추정 결과</span><h2 id="analysis-result-title" tabindex="-1">정책과 위험 한눈에 보기</h2></div><div><button class="ghost-button" type="button" data-results-calendar>달력으로</button><button class="ghost-button" type="button" data-edit-policy>기록 고치기</button></div></header>
             <section class="analysis-loading-screen" data-analysis-loading hidden role="status" aria-live="polite" aria-atomic="true">
               <div class="analysis-loading-mark" aria-hidden="true"><i></i><i></i><i></i></div>
               <span>루지코지가 읽고 있어요</span>
-              <h2>현재 정책의 빈틈과 학교 대응 위험을 계산하고 있습니다.</h2>
-              <p>분석이 끝날 때까지 임시 점수는 보여드리지 않습니다.</p>
+              <h2>정책, 학부모 반응 유형과 위험도를 함께 살펴보고 있습니다.</h2>
+              <p>분석이 끝나면 확인된 값만 한 화면에 보여드립니다.</p>
               <ol aria-label="정리 진행 단계">
                 <li><b>1</b><div><strong>현재 정책 확인</strong><small>입력한 정책에서 실제 기준 문장만 확인합니다.</small></div><i aria-hidden="true"></i></li>
-                <li><b>2</b><div><strong>정책 빈틈 진단</strong><small>사실 확인, 관리자 공유, 처리 기한 등 안전장치를 살펴봅니다.</small></div><i aria-hidden="true"></i></li>
-                <li><b>3</b><div><strong>학교 대응 위험 계산</strong><small>현재 정책과 권장 정책안의 위험을 같은 기준으로 비교합니다.</small></div><i aria-hidden="true"></i></li>
+                <li><b>2</b><div><strong>학부모 반응 유형 추정</strong><small>현재 기록을 바탕으로 유형과 QRE 값을 계산합니다.</small></div><i aria-hidden="true"></i></li>
+                <li><b>3</b><div><strong>학교 대응 위험 계산</strong><small>정책과 예상 반응을 함께 보고 6가지 위험을 계산합니다.</small></div><i aria-hidden="true"></i></li>
               </ol>
             </section>
 
-            <section class="analysis-result-content unified-analysis-card" data-analysis-content aria-labelledby="analysis-result-title">
+            <section class="analysis-result-content unified-analysis-card compact-analysis-card" data-analysis-content aria-labelledby="analysis-result-title">
               <div class="analysis-overview-grid">
-                <section class="unified-analysis-section policy-analysis-section" aria-labelledby="policy-pane-title"><header class="unified-pane-head"><span>01 · 입력한 정책만 근거로 분석</span><h3 id="policy-pane-title">현재 정책 진단</h3><p>정책에 실제로 적힌 안전장치와 빠진 기준을 구분합니다.</p></header><div id="console-policy" data-policy-assessment aria-live="polite"></div></section>
-                <section class="unified-analysis-section risk-analysis-section" aria-labelledby="risk-pane-title"><header class="unified-pane-head"><span>02 · 현재 정책 기준 · 높을수록 위험</span><h3 id="risk-pane-title">학교 대응 위험 6가지</h3><p>권장 정책안의 예상 점수와 현재 점수를 함께 비교합니다.</p></header><div id="console-dashboard" data-simulation-hud aria-live="polite"></div></section>
+                <section class="unified-analysis-section policy-analysis-section" aria-labelledby="policy-pane-title"><header class="unified-pane-head"><span>01</span><div><h3 id="policy-pane-title">현재 정책 진단</h3><p>입력한 정책에서 확인되는 기준과 가장 큰 빈틈입니다.</p></div></header><div id="console-policy" data-policy-assessment></div></section>
+                <section class="unified-analysis-section persona-analysis-section" aria-labelledby="persona-pane-title"><header class="unified-pane-head"><span>02</span><div><h3 id="persona-pane-title">학부모 유형과 QRE</h3><p>현재 기록에서 예상되는 반응 방식과 요구의 일관성입니다.</p></div></header><div data-persona-assessment></div></section>
+                <section class="unified-analysis-section risk-analysis-section" aria-labelledby="risk-pane-title"><header class="unified-pane-head"><span>03</span><div><h3 id="risk-pane-title">추정 위험도</h3><p>정책·상황 기록·예상 반응을 함께 본 AI 참고값입니다.</p></div></header><div id="console-dashboard" data-simulation-hud></div><section class="calculation-basis" aria-labelledby="calculation-basis-title"><header class="calculation-basis-heading"><div><span>엔진 판단 흐름</span><h3 id="calculation-basis-title">입력한 기록이 위험 점수가 되기까지</h3></div><p>상황·정책 입력 → 학부모 유형·QRE 판단 → 위험도 계산의 3단계를 그대로 보여드립니다.</p></header><div data-calculation-basis></div></section></section>
               </div>
 
               <section class="followup-disclosure" aria-labelledby="followup-title">
-                <header class="followup-heading"><span>03 · 추가 분석</span><div><h3 id="followup-title">정책과 위험도 더 살펴보기</h3><p>궁금한 정책 빈틈이나 위험 점수만 이어서 물어보세요.</p></div></header>
-                <section class="analysis-log"><div class="prompt-suggestions" aria-label="추가 질문 예시"><button type="button" data-prompt-suggestion="현재 정책의 가장 큰 빈틈만 쉽게 설명해줘.">가장 큰 정책 빈틈</button><button type="button" data-prompt-suggestion="권장 정책안을 더 짧고 명확하게 다시 써줘.">정책안 다듬기</button><button type="button" data-prompt-suggestion="6가지 위험 점수의 차이를 쉽게 설명해줘.">위험도 쉽게 설명</button></div><div class="message-list" data-message-list aria-live="polite"></div><form class="composer" data-chat-form><textarea data-chat-input rows="1" maxlength="2600" aria-label="추가 질문" placeholder="예: 왜 정책 위반 위험이 높은지 설명해줘"></textarea><button type="submit" aria-label="추가 질문 보내기" data-send-button>보내기</button></form></section>
+                <header class="followup-heading"><span>04</span><div><h3 id="followup-title">추가로 물어보기</h3><p>유형, QRE 또는 위험 점수에서 궁금한 부분만 이어서 물어보세요.</p></div></header>
+                <section class="analysis-log"><div class="prompt-suggestions" aria-label="추가 질문 예시"><button type="button" data-prompt-suggestion="왜 이 학부모 유형으로 추정했는지 쉽게 설명해줘.">왜 이 유형인가요?</button><button type="button" data-prompt-suggestion="이번 기록의 QRE 값이 무엇을 뜻하는지 쉽게 설명해줘.">QRE 값의 뜻</button><button type="button" data-prompt-suggestion="가장 높은 위험 점수의 근거를 알려줘.">가장 큰 위험의 근거</button></div><div class="message-list" data-message-list aria-live="polite"></div><form class="composer" data-chat-form><textarea data-chat-input rows="1" maxlength="2600" aria-label="추가 질문" placeholder="궁금한 점을 짧게 물어보세요"></textarea><button type="submit" aria-label="추가 질문 보내기" data-send-button>보내기</button></form></section>
               </section>
             </section>
           </section>
