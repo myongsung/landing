@@ -307,6 +307,19 @@ body[data-view="chat"] > .site-footer { display: none; }
 .results-toolbar { align-items: center; padding: 0 0 24px; border-bottom: 1px solid #e3e7ed; }
 .results-toolbar > div:last-child { display: flex; gap: 7px; }
 .results-toolbar .ghost-button { min-height: 38px; padding: 0 13px; font-size: 10px; }
+.record-source-card { margin-top: 22px; overflow: hidden; border: 1px solid #dbe2ec; border-radius: 13px; background: #fff; box-shadow: 0 8px 24px rgba(30,42,66,.035); }
+.record-source-card[hidden] { display: none; }
+.record-source-card > header { display: flex; gap: 24px; align-items: flex-start; justify-content: space-between; padding: 19px 21px 17px; border-bottom: 1px solid #e8ebf0; background: #fbfcfe; }
+.record-source-card > header span { color: var(--memo-accent); font-size: 10px; font-weight: 820; letter-spacing: .08em; }
+.record-source-card > header h3 { margin: 5px 0 0; color: #202b3f; font-size: 18px; letter-spacing: -.025em; }
+.record-source-card > header p { margin: 5px 0 0; color: #687386; font-size: 12px; line-height: 1.55; }
+.record-source-card > header small { flex: 0 0 auto; margin-top: 2px; color: #687386; font-size: 12px; font-weight: 720; }
+.record-source-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.record-source-grid article { min-width: 0; padding: 19px 21px 21px; }
+.record-source-grid article + article { border-left: 1px solid #e8ebf0; }
+.record-source-grid article > span { color: #4c5a70; font-size: 12px; font-weight: 820; }
+.record-source-grid article > p { max-height: 176px; margin: 9px 0 0; overflow-y: auto; color: #263349; font-size: 14px; line-height: 1.72; overflow-wrap: anywhere; white-space: pre-wrap; scrollbar-color: #c8d1df transparent; scrollbar-width: thin; }
+.record-source-card + .unified-analysis-card { margin-top: 14px; }
 .analysis-loading-screen { display: grid; justify-items: center; min-height: 570px; padding: 82px 24px 70px; text-align: center; }
 .analysis-loading-mark { position: relative; display: flex; gap: 6px; align-items: center; justify-content: center; width: 54px; height: 54px; margin-bottom: 19px; border: 1px solid #dce3f2; border-radius: 17px; background: #f6f8ff; box-shadow: 0 12px 32px rgba(47,91,234,.08); }
 .analysis-loading-mark i { width: 5px; height: 5px; border-radius: 50%; background: var(--memo-accent); animation: analysis-dot 1.25s ease-in-out infinite; }
@@ -344,14 +357,11 @@ body[data-view="chat"] > .site-footer { display: none; }
 .policy-diagnosis-card { padding: 17px 18px; border: 1px solid #dfe5ee; border-radius: 11px; background: #f8fafc; }
 .policy-diagnosis-card[data-status="missing"] { border-color: #ead9bd; background: #fffaf1; }
 .policy-diagnosis-card > span,
-.policy-key-points span,
-.policy-source-line > span { color: #5f6d80; font-size: 12px; font-weight: 800; }
+.policy-key-points span { color: #5f6d80; font-size: 12px; font-weight: 800; }
 .policy-diagnosis-card > p { margin: 7px 0 0; color: #28364c; font-size: 15px; font-weight: 690; line-height: 1.65; }
 .policy-key-points { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; margin-top: 11px; }
 .policy-key-points > div { padding: 14px; border: 1px solid #e5e9ef; border-radius: 10px; }
 .policy-key-points p { margin: 7px 0 0; color: #4b596e; font-size: 13px; line-height: 1.58; }
-.policy-source-line { margin-top: 15px; padding-top: 14px; border-top: 1px solid #edf0f4; }
-.policy-source-line p { margin: 6px 0 0; color: #687386; font-size: 12.5px; line-height: 1.6; }
 .persona-summary-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); overflow: hidden; border: 1px solid #dfe5ee; border-radius: 11px; background: #fbfcfe; }
 .persona-summary-grid > section { min-width: 0; padding: 17px; }
 .persona-summary-grid > section + section { border-left: 1px solid #e4e8ef; }
@@ -1300,6 +1310,11 @@ body[data-view="chat"] > .site-footer { display: none; }
 .memo-app .results-toolbar > div > span { font-size: var(--workspace-micro); }
 .memo-app .workspace-title h2,
 .memo-app .results-toolbar h2 { font-size: 27px; }
+.memo-app .record-source-card > header span,
+.memo-app .record-source-card > header small,
+.memo-app .record-source-grid article > span { font-size: var(--workspace-micro); }
+.memo-app .record-source-card > header p { font-size: var(--workspace-meta); }
+.memo-app .record-source-grid article > p { font-size: var(--workspace-body); }
 .memo-app .workspace-title p { color: #687386; font-size: var(--workspace-control); line-height: 1.65; }
 .memo-app .input-progress { width: 220px; }
 .memo-app .input-progress strong { color: #687386; font-size: var(--workspace-micro); }
@@ -1337,7 +1352,6 @@ body[data-view="chat"] > .site-footer { display: none; }
 .memo-app .unified-pane-head p { color: #5f6d80; font-size: var(--workspace-meta); }
 .memo-app .policy-diagnosis-card > span,
 .memo-app .policy-key-points span,
-.memo-app .policy-source-line > span,
 .memo-app .persona-summary-grid span,
 .memo-app .compact-overall-score span,
 .memo-app .compact-risk-summary > div:last-child > span { font-size: var(--workspace-micro); }
@@ -1346,7 +1360,6 @@ body[data-view="chat"] > .site-footer { display: none; }
 .memo-app .persona-summary-grid p,
 .memo-app .compact-risk-summary p,
 .memo-app .compact-risk-grid span { font-size: var(--workspace-meta); }
-.memo-app .policy-source-line p,
 .memo-app .persona-disclaimer { font-size: var(--workspace-micro); }
 .memo-app .result-actions .primary-button,
 .memo-app .result-actions .ghost-button { font-size: var(--workspace-meta); }
@@ -1391,6 +1404,12 @@ body[data-view="chat"] > .site-footer { display: none; }
 
 @media (max-width: 680px) {
   .memo-app .workspace-results { width: calc(100% - 32px); }
+  .record-source-card > header { display: block; padding: 17px 18px 15px; }
+  .record-source-card > header small { display: block; margin-top: 9px; }
+  .record-source-grid { grid-template-columns: 1fr; }
+  .record-source-grid article { padding: 17px 18px 19px; }
+  .record-source-grid article + article { border-top: 1px solid #e8ebf0; border-left: 0; }
+  .record-source-grid article > p { max-height: 210px; }
   .unified-analysis-card { border-radius: 13px; }
   .unified-analysis-section { padding: 20px; }
   .policy-key-points,
@@ -1487,7 +1506,6 @@ body[data-view="chat"] > .site-footer { display: none; }
   .memo-app .analysis-pipeline-preview span { font-size: var(--workspace-micro); }
   .policy-risk-impact strong { font-size: 18px; }
   .policy-diagnosis-card,
-  .policy-source-line,
   .persona-summary-grid,
   .compact-risk-summary { overflow-wrap: anywhere; }
   .admin-access-note { display: block; }

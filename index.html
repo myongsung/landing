@@ -7,10 +7,10 @@
   <title>루지코지 | 교사 전용 학부모 민원 정책 위험 분석 AI</title>
   <meta name="description" content="학부모 민원과 교육분쟁 상황에서 현재 학교 정책의 빈틈과 대응 위험을 분석하고, 위험을 낮추는 권장 정책안을 제시하는 교사 전용 AI 도구입니다." />
   <link rel="stylesheet" href="app.css?v=20260715-1" />
-  <link rel="stylesheet" href="memo.css?v=20260721-10" />
+  <link rel="stylesheet" href="memo.css?v=20260721-11" />
   <link rel="stylesheet" href="landing-editorial.css?v=20260714-5" />
   <script src="supabase-config.js"></script>
-  <script type="module" src="app.js?v=20260721-10"></script>
+  <script type="module" src="app.js?v=20260721-11"></script>
 </head>
 
 <body data-view="landing" data-authenticated="false">
@@ -372,6 +372,16 @@
 
           <section class="workspace-view workspace-results" data-workspace-results hidden aria-label="기록 분석 결과">
             <header class="results-toolbar"><div><span data-result-status role="status" aria-live="polite">AI 추정 결과</span><h2 id="analysis-result-title" tabindex="-1">정책과 위험 한눈에 보기</h2></div><div><button class="ghost-button" type="button" data-results-calendar>달력으로</button><button class="ghost-button" type="button" data-edit-policy>기록 고치기</button></div></header>
+            <section class="record-source-card" data-record-source-card aria-labelledby="record-source-title" hidden>
+              <header>
+                <div><span>내가 작성한 기록</span><h3 id="record-source-title">분석에 사용한 정책과 메모</h3><p>AI가 줄이거나 바꾸지 않은 입력 원문입니다.</p></div>
+                <small data-record-source-date></small>
+              </header>
+              <div class="record-source-grid">
+                <article><span>현재 정책·학교 기준</span><p data-record-source-policy></p></article>
+                <article><span>상황 메모</span><p data-record-source-memo></p></article>
+              </div>
+            </section>
             <section class="analysis-loading-screen" data-analysis-loading hidden role="status" aria-live="polite" aria-atomic="true">
               <div class="analysis-loading-mark" aria-hidden="true"><i></i><i></i><i></i></div>
               <span>루지코지가 읽고 있어요</span>

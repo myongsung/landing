@@ -64,6 +64,7 @@ const dom = {
   chatHistoryCloseButtons: document.querySelectorAll('[data-chat-history-close]'),
   conversationList: document.querySelector('[data-conversation-list]'),
   messageList: document.querySelector('[data-message-list]'),
+  todayLabel: document.querySelector('[data-today-label]'),
   chatTitle: document.querySelector('[data-chat-title]'),
   chatForm: document.querySelector('[data-chat-form]'),
   chatInput: document.querySelector('[data-chat-input]'),
@@ -98,6 +99,10 @@ const dom = {
   resultsCalendar: document.querySelector('[data-results-calendar]'),
   editPolicy: document.querySelector('[data-edit-policy]'),
   resultStatus: document.querySelector('[data-result-status]'),
+  recordSourceCard: document.querySelector('[data-record-source-card]'),
+  recordSourceDate: document.querySelector('[data-record-source-date]'),
+  recordSourcePolicy: document.querySelector('[data-record-source-policy]'),
+  recordSourceMemo: document.querySelector('[data-record-source-memo]'),
   analysisResultTitle: document.querySelector('#analysis-result-title'),
   analysisLoading: document.querySelector('[data-analysis-loading]'),
   analysisContent: document.querySelector('[data-analysis-content]'),
@@ -2751,12 +2756,30 @@ function renderCalculationBasis() {
   `;
 }
 
+function renderRecordSource() {
+  const policy = String(simulationState.policyDocument || '').trim();
+  const memo = String(simulationState.incidentConditions || '').trim();
+  const recordDate = simulationState.recordDate || (activeConversation ? conversationDateKey(activeConversation) : selectedCalendarDate);
+  const todayKey = toDateKey(new Date());
+
+  if (dom.todayLabel) {
+    dom.todayLabel.textContent = recordDate && recordDate !== todayKey
+      ? `${formatCalendarDate(recordDate)} 학교 기록`
+      : '오늘의 학교 기록';
+  }
+  if (!dom.recordSourceCard) return;
+
+  dom.recordSourceCard.hidden = !policy && !memo;
+  if (dom.recordSourceDate) dom.recordSourceDate.textContent = recordDate ? formatCalendarDate(recordDate) : '';
+  if (dom.recordSourcePolicy) dom.recordSourcePolicy.textContent = policy || '입력된 정책·학교 기준이 없습니다.';
+  if (dom.recordSourceMemo) dom.recordSourceMemo.textContent = memo || '입력된 상황 메모가 없습니다.';
+}
+
 function renderPolicyAssessment() {
   if (!dom.policyAssessment) return;
   const verifiedPolicy = String(simulationState.verifiedPolicyText || '').trim();
   const strengths = Array.isArray(simulationState.policyStrengths) ? simulationState.policyStrengths : [];
   const gaps = Array.isArray(simulationState.vulnerabilities) ? simulationState.vulnerabilities : [];
-  const policyPreview = verifiedPolicy.length > 280 ? `${compactText(verifiedPolicy, 280)}…` : verifiedPolicy;
   const strengthText = strengths.length
     ? strengths.slice(0, 2).map((item) => sanitizeProductLanguage(item)).join(' · ')
     : '정책에서 명확히 확인된 강점이 없습니다.';
@@ -2773,7 +2796,6 @@ function renderPolicyAssessment() {
       <div><span>확인된 강점</span><p>${escapeHtml(strengthText)}</p></div>
       <div><span>가장 먼저 보완</span><p>${escapeHtml(gapText)}</p></div>
     </div>
-    <div class="policy-source-line"><span>분석한 현재 정책</span><p>${escapeHtml(sanitizeProductLanguage(policyPreview || '현재 정책 문장을 확인하지 못했습니다.'))}</p></div>
   `;
 }
 
@@ -2870,6 +2892,7 @@ function renderSimulationHud() {
 }
 
 function renderAnalysisPanels() {
+  renderRecordSource();
   renderPolicyAssessment();
   renderPersonaAssessment();
   renderSimulationHud();
