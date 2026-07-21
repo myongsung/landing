@@ -3116,6 +3116,9 @@ function friendlyServiceError(error) {
   const message = sanitizeProductLanguage(String(error?.message || error || ''));
   if (/Authentication required|JWT|401/i.test(message)) return '로그인이 풀렸습니다. 다시 로그인해 주세요.';
   if (/limit|quota|usage|credit|한도|크레딧/i.test(message)) return '이번 달 AI 이용 포인트를 확인해 주세요.';
+  if (/case analysis|roosycozy_case_analysis|empty required explanation|returned invalid JSON/i.test(message)) {
+    return 'AI가 분석 내용을 완성하지 못했습니다. 입력한 내용은 유지되어 있으니 다시 분석해 주세요.';
+  }
   if (/timeout|지연|aborted|network/i.test(message)) return '분석이 지연되고 있습니다. 잠시 뒤 다시 시도해 주세요.';
   if (/Failed to send a request|FunctionsHttpError|Edge Function|fetch/i.test(message)) {
     return 'AI 분석 결과를 받아오지 못했습니다. 잠시 뒤 다시 시도해 주세요.';
