@@ -389,6 +389,15 @@ body[data-view="chat"] > .site-footer { display: none; }
 .compact-overall-score b { display: block; margin-top: 7px; color: #59667a; font-size: 12px; }
 .compact-risk-summary h4 { margin: 6px 0 0; color: #263248; font-size: 17px; line-height: 1.45; }
 .compact-risk-summary p { margin: 6px 0 0; color: #5f6d80; font-size: 13px; line-height: 1.55; }
+.risk-coaching-card { margin-top: 13px; padding: 19px 20px; border: 1px solid #cfe3da; border-radius: 11px; background: #f5faf8; }
+.risk-coaching-card > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.risk-coaching-card > header span { color: #216b55; font-size: 12px; font-weight: 820; }
+.risk-coaching-card > header b { padding: 4px 8px; border: 1px solid #c9ded5; border-radius: 99px; background: #fff; color: #477165; font-size: 11px; font-weight: 760; }
+.risk-coaching-card > h4 { margin: 10px 0 0; color: #203c34; font-size: 17px; line-height: 1.5; }
+.risk-coaching-card > p { margin: 7px 0 0; color: #50685f; font-size: 13px; line-height: 1.65; }
+.risk-coaching-card > div { margin-top: 13px; padding: 13px 14px; border-radius: 9px; background: #fff; }
+.risk-coaching-card > div span { display: block; color: #5a7168; font-size: 11px; font-weight: 780; }
+.risk-coaching-card > div strong { display: block; margin-top: 6px; color: #2f4b42; font-size: 13px; font-weight: 650; line-height: 1.65; }
 .compact-risk-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 24px; margin: 17px 0 0; padding: 0; list-style: none; }
 .compact-risk-grid li { padding: 13px 0; border-top: 1px solid #edf0f4; }
 .compact-risk-grid li > div { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
@@ -1261,10 +1270,10 @@ body[data-view="chat"] > .site-footer { display: none; }
 /* Workspace legibility scale */
 .memo-app {
   grid-template-columns: 276px minmax(0, 1fr);
-  --workspace-micro: 12px;
-  --workspace-meta: 13px;
-  --workspace-control: 14px;
-  --workspace-body: 15px;
+  --workspace-micro: 13px;
+  --workspace-meta: 14px;
+  --workspace-control: 15px;
+  --workspace-body: 16px;
 }
 .memo-app .app-brand strong { font-size: 17px; }
 .memo-app .app-brand small { font-size: var(--workspace-micro); letter-spacing: .08em; }
@@ -1359,6 +1368,8 @@ body[data-view="chat"] > .site-footer { display: none; }
 .memo-app .policy-key-points p,
 .memo-app .persona-summary-grid p,
 .memo-app .compact-risk-summary p,
+.memo-app .risk-coaching-card > p,
+.memo-app .risk-coaching-card > div strong,
 .memo-app .compact-risk-grid span { font-size: var(--workspace-meta); }
 .memo-app .persona-disclaimer { font-size: var(--workspace-micro); }
 .memo-app .result-actions .primary-button,

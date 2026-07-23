@@ -23,6 +23,7 @@ const dom = {
   headerMenus: document.querySelectorAll('.site-header details'),
   mobileSiteMenu: document.querySelector('[data-mobile-site-menu]'),
   landingView: document.querySelector('[data-landing-view]'),
+  heroMotion: document.querySelector('[data-hero-motion]'),
   chatView: document.querySelector('[data-chat-view]'),
   authOpenButtons: document.querySelectorAll('[data-auth-open], [data-start-chat]'),
   authPanel: document.querySelector('[data-auth-panel]'),
@@ -366,20 +367,20 @@ function policyDecisionSummary() {
     };
   }
   const title = risk >= 70
-    ? '현재 정책에는 위험을 막기 위한 기준이 더 필요합니다'
+    ? '지금 대응 기준에는 꼭 보완해야 할 부분이 있어요'
     : risk >= 45
-      ? '현재 정책에서 보완할 기준이 확인됐습니다'
-      : '현재 정책의 주요 안전장치가 비교적 잘 갖춰져 있습니다';
+      ? '대응 기준을 조금 더 분명하게 적어야 해요'
+      : '중요한 대응 기준이 비교적 잘 갖춰져 있어요';
   const detail = priority
     ? `가장 높은 항목은 ‘${priority.label}’이며 현재 ${priority.value}점입니다. ${priority.help}`
-    : '입력한 정책과 상황에서 높은 위험 항목을 찾지 못했습니다.';
+    : '입력한 대응 기준과 상황에서 높은 위험 항목을 찾지 못했습니다.';
   return { title, detail, tone: metricTone(risk), priority };
 }
 
 function requiredInputStatus() {
   const fields = [
-    { key: 'incidentConditions', label: '상황 기록', element: dom.incidentConditions },
-    { key: 'policyDocument', label: '현재 정책', element: dom.policyDocument },
+    { key: 'incidentConditions', label: '선생님의 기록', element: dom.incidentConditions },
+    { key: 'policyDocument', label: '학교 대응 기준', element: dom.policyDocument },
   ];
   const missing = fields.filter((field) => !String(field.element?.value ?? simulationState[field.key] ?? '').trim());
   return { fields, missing, complete: fields.length - missing.length };
@@ -390,7 +391,7 @@ function renderInputGuidance() {
   if (dom.formFeedback) {
     dom.formFeedback.textContent = status.missing.length
       ? `${status.missing.map((item) => item.label).join(', ')}을 입력해 주세요.`
-      : '준비되었습니다. 학부모 유형·QRE와 6가지 위험을 함께 계산합니다.';
+      : '준비됐어요. 기록을 바탕으로 위험도와 보완할 기준을 살펴볼게요.';
     dom.formFeedback.dataset.ready = status.missing.length ? 'false' : 'true';
   }
 }
@@ -450,8 +451,8 @@ function sanitizeProductLanguage(value) {
     [/roosycozy/gi, '루지코지'],
     [/(?:민원인|고객|소비자)/g, '학부모'],
     [/상대방/g, '학부모'],
-    [/상대의 다음 행동/g, '정책 위험 변화'],
-    [/상대의 다음 반응/g, '정책 위험 변화'],
+    [/상대의 다음 행동/g, '학교 대응 위험 변화'],
+    [/상대의 다음 반응/g, '학교 대응 위험 변화'],
     [/상대에게/g, '학부모에게'],
     [/상대 요구/g, '학부모 요구'],
     [/상대 주장/g, '학부모 주장'],
@@ -459,14 +460,14 @@ function sanitizeProductLanguage(value) {
     [/상대가/g, '학부모가'],
     [/상대의/g, '학부모의'],
     [/상대를/g, '학부모를'],
-    [/QRE\s*행동\s*일관성/gi, 'QRE 요구 일관성'],
-    [/QRE\s*기반/gi, 'QRE 분석을 바탕으로'],
+    [/QRE\s*행동\s*일관성/gi, '요구가 이어지는 정도(QRE)'],
+    [/QRE\s*기반/gi, '요구 흐름 계산(QRE)을 바탕으로'],
     [/Logit-QRE/gi, 'QRE'],
-    [/lambda_QRE/gi, 'QRE λ'],
-    [/QRE\s*페르소나/gi, '학부모 반응 유형'],
-    [/QRE\s*Engine/gi, 'QRE 분석'],
-    [new RegExp(['ROOSY', '-X ', 'Surv', 'ival'].join(''), 'g'), '루지코지 정책 위험 예측 모델'],
-    [new RegExp(['ROOSY', '-X'].join(''), 'g'), '정책 위험 예측 모델'],
+    [/lambda_QRE/gi, 'QRE 값'],
+    [/QRE\s*페르소나/gi, '예상 학부모 반응'],
+    [/QRE\s*Engine/gi, '반응 흐름 계산(QRE)'],
+    [new RegExp(['ROOSY', '-X ', 'Surv', 'ival'].join(''), 'g'), '루지코지 반응·위험 계산 모델'],
+    [new RegExp(['ROOSY', '-X'].join(''), 'g'), '반응·위험 계산 모델'],
     [new RegExp(['AI 민원 ', '생존', '모드'].join(''), 'g'), '민원 대응 미리보기'],
     [new RegExp(['생존', ' 시뮬레이션'].join(''), 'g'), '조심할 점 확인'],
     [new RegExp(['생존', '모드'].join(''), 'g'), '조심할 점 확인'],
@@ -492,9 +493,19 @@ function sanitizeProductLanguage(value) {
     [/관리자 검토 필요/g, '관리자에게 공유할 필요성'],
     [/관리자와 함께 볼 필요/g, '관리자에게 공유할 필요성'],
     [/주장 근거의 타당성/g, '주장과 요구의 확인 정도'],
-    [/권장 정책안/g, '학교 규정에 반영할 문장'],
-    [/대안 정책/g, '보완한 학교 규정'],
-    [/정책 비교/g, '학교 규정을 보완했을 때'],
+    [/현재 정책 진단/g, '현재 대응 기준 점검'],
+    [/정책 진단/g, '대응 기준 점검'],
+    [/정책 위험 분석/g, '학교 대응 위험 분석'],
+    [/정책 위험/g, '학교 대응 위험'],
+    [/정책의 빈틈/g, '대응 기준에서 빠진 부분'],
+    [/정책 안전장치/g, '대응 안전장치'],
+    [/정책 문장/g, '대응 기준 원문'],
+    [/정책 초안/g, '대응 기준 초안'],
+    [/정책 근거/g, '대응 기준 근거'],
+    [/권장 정책 적용/g, '보완 기준 적용'],
+    [/권장 정책안/g, '보완 기준'],
+    [/대안 정책/g, '보완한 대응 기준'],
+    [/정책 비교/g, '대응 기준을 보완했을 때'],
     [/취약 조항/g, '학교 규정에서 확인할 부분'],
     [/현재 규정의 취약점/g, '학교 규정에서 확인할 부분'],
     [/증빙 요건/g, '확인 자료 기준'],
@@ -519,7 +530,7 @@ function sanitizeProductLanguage(value) {
     [/시뮬레이션/g, '미리 보기'],
     [/효용/g, '내부 위험 계산값'],
     [/전액 환불/g, '생활지도 철회'],
-    [/환불 정책/g, '학교 규정'],
+    [/환불 정책/g, '학교 대응 기준'],
     [/환불/g, '조치 철회'],
     [/금전 보상/g, '추가 조치'],
     [/추가 보상/g, '담임 교체·추가 조치'],
@@ -527,7 +538,7 @@ function sanitizeProductLanguage(value) {
     [/처리 기준/g, '학교 대응 기준'],
     [/학교·기관 기준/g, '학교 규정'],
     [/기관 기준/g, '학교 규정'],
-    [/정책/g, '학교 규정'],
+    [/정책/g, '대응 기준'],
   ];
   return replacements.reduce((text, [pattern, replacement]) => text.replace(pattern, replacement), String(value ?? ''));
 }
@@ -664,17 +675,17 @@ function renderWorkspaceState() {
   });
   if (dom.resultStatus) {
     dom.resultStatus.textContent = analysisPhase === 'loading'
-      ? '정책·학부모 유형·위험도를 분석하는 중'
+      ? '선생님의 기록과 학교 기준을 살펴보는 중'
       : analysisPhase === 'refreshing'
         ? '추가 질문을 반영하는 중'
-        : 'AI 추정 결과';
+        : '분석이 끝났어요';
   }
 }
 
 function setWorkspaceView(nextView, { focus = false, force = false } = {}) {
   const requested = ['calendar', 'results'].includes(nextView) ? nextView : 'input';
   if (requested === 'results' && !force && analysisPhase !== 'loading' && !isSending && !hasAnalysisResult()) {
-    showToast('아직 정책 위험 분석 결과가 없습니다. 새 상황을 먼저 적어 주세요.', 'error');
+    showToast('아직 점검 결과가 없습니다. 새 기록을 먼저 적어 주세요.', 'error');
     return;
   }
   workspaceView = requested;
@@ -712,7 +723,7 @@ function renderCalendarAgenda() {
   dom.calendarAgenda.innerHTML = records.map((conversation) => `
     <button class="agenda-record" type="button" data-agenda-record="${escapeHtml(conversation.id)}">
       <i aria-hidden="true" data-tone="${conversation.status === 'action_required' ? 'danger' : 'default'}"></i>
-      <span><strong>${escapeHtml(sanitizeProductLanguage(conversation.title || '제목 없는 기록'))}</strong><small>${escapeHtml(formatDate(conversation.updated_at || conversation.created_at))} · ${conversation.status === 'action_required' ? '다시 확인 필요' : conversationIsAnalyzed(conversation) ? '위험 분석 완료' : '기록만 저장됨'}</small></span>
+      <span><strong>${escapeHtml(sanitizeProductLanguage(conversation.title || '제목 없는 기록'))}</strong><small>${escapeHtml(formatDate(conversation.updated_at || conversation.created_at))} · ${conversation.status === 'action_required' ? '다시 확인 필요' : conversationIsAnalyzed(conversation) ? '점검 완료' : '기록만 저장됨'}</small></span>
       <span aria-hidden="true">›</span>
     </button>
   `).join('');
@@ -1009,8 +1020,8 @@ function renderAuth() {
   if (dom.authPanel) dom.authPanel.hidden = signedIn;
   if (dom.userPanel) dom.userPanel.hidden = !signedIn;
   dom.userEmails.forEach((element) => { element.textContent = session?.user?.email ?? ''; });
-  if (dom.headerCtaLabel) dom.headerCtaLabel.textContent = signedIn ? '새 학부모 민원' : '정책 위험 분석';
-  if (dom.headerCtaLabelShort) dom.headerCtaLabelShort.textContent = signedIn ? '새 기록' : '시작';
+  if (dom.headerCtaLabel) dom.headerCtaLabel.textContent = signedIn ? '새 기록' : '위험도와 코칭 보기';
+  if (dom.headerCtaLabelShort) dom.headerCtaLabelShort.textContent = signedIn ? '새 기록' : '점검';
   if (dom.sidebarUserEmail) dom.sidebarUserEmail.textContent = session?.user?.email ?? '';
   renderUsage();
 }
@@ -1829,7 +1840,7 @@ function riskMetricRows() {
       label: '사실을 더 확인할 필요',
       technicalLabel: '사실 확인',
       value: clampMetric(100 - simulationState.claimValidity),
-      help: factCheckReason || '정책에 학생 진술, 교사 관찰, 상담·연락 기록을 확인하는 기준이 필요한 정도입니다.',
+      help: factCheckReason || '현재 대응 기준에 학생 진술, 교사 관찰, 상담·연락 기록을 확인하는 내용이 필요한 정도입니다.',
       reasonSource: factCheckReason ? 'analysis' : 'definition',
     },
     {
@@ -1837,7 +1848,7 @@ function riskMetricRows() {
       label: '민원 압박에 흔들릴 위험',
       technicalLabel: '압박 영향',
       value: simulationState.manipulationRisk,
-      help: manipulationReason || '정책이 반복 항의·공개 언급과 사실 판단을 분리하지 못할 위험입니다.',
+      help: manipulationReason || '현재 대응 기준이 반복 항의·공개 언급과 사실 판단을 분리하지 못할 위험입니다.',
       reasonSource: manipulationReason ? 'analysis' : 'definition',
     },
     {
@@ -1845,7 +1856,7 @@ function riskMetricRows() {
       label: '확인 전에 약속할 위험',
       technicalLabel: '성급한 약속',
       value: simulationState.overConcessionRisk,
-      help: overConcessionReason || '정책에 사실 확인 전 사과·지도 철회·담임 교체를 제한하는 기준이 부족한 정도입니다.',
+      help: overConcessionReason || '현재 대응 기준에 사실 확인 전 사과·지도 철회·담임 교체를 제한하는 내용이 부족한 정도입니다.',
       reasonSource: overConcessionReason ? 'analysis' : 'definition',
     },
     {
@@ -1853,7 +1864,7 @@ function riskMetricRows() {
       label: '필요한 대응을 놓칠 위험',
       technicalLabel: '대응 누락',
       value: simulationState.underResponseRisk,
-      help: underResponseReason || '정책에 근거 있는 문제 제기와 학생 보호 필요를 검토하는 기준이 부족한 정도입니다.',
+      help: underResponseReason || '현재 대응 기준에 근거 있는 문제 제기와 학생 보호 필요를 검토하는 내용이 부족한 정도입니다.',
       reasonSource: underResponseReason ? 'analysis' : 'definition',
     },
     {
@@ -1869,7 +1880,7 @@ function riskMetricRows() {
       label: '관리자에게 공유할 필요',
       technicalLabel: '관리자 공유',
       value: simulationState.handoffNeed,
-      help: handoffReason || '정책에 교장·교감·부장교사와 공유할 조건을 구체적으로 둘 필요가 있는 정도입니다.',
+      help: handoffReason || '현재 대응 기준에 교장·교감·부장교사와 공유할 조건을 구체적으로 둘 필요가 있는 정도입니다.',
       reasonSource: handoffReason ? 'analysis' : 'definition',
     },
   ];
@@ -1952,11 +1963,11 @@ function isUsefulBasisValue(value) {
 function decisionTraceSourceLabel(value) {
   const source = String(value ?? '').trim();
   const labels = {
-    situation_record: '상황 기록',
-    incident_conditions: '상황 기록',
-    record: '상황 기록',
-    policy_document: '정책 문장',
-    policy: '정책 문장',
+    situation_record: '선생님의 기록',
+    incident_conditions: '선생님의 기록',
+    record: '선생님의 기록',
+    policy_document: '대응 기준 원문',
+    policy: '대응 기준 원문',
     structured_input: '보조 정보',
     input: '보조 정보',
     server_evidence: '서버 근거',
@@ -1978,7 +1989,7 @@ function decisionTraceTargetLabel(value) {
   if (/qre/i.test(target)) return 'QRE';
   if (/risk|score|fact.?check|manipulation|concession|response|violation|escalation|handoff|위험/i.test(target)) return '위험';
   if (/input|assessment|입력/i.test(target)) return '입력';
-  if (/policy|정책|규정/i.test(target)) return '정책';
+  if (/policy|정책|규정|대응\s*기준/i.test(target)) return '대응 기준';
   if (!target || /common|공통/i.test(target)) return '공통';
   return compactTraceText(sanitizeProductLanguage(target), 14);
 }
@@ -2030,7 +2041,7 @@ function buildDecisionTrace() {
     );
   } else if (/아직.*(?:확인|검토).*전|미확인|사실관계.*불명확|증거.*부족|기록.*(?:없|부족)|진술.*(?:다름|불일치)/.test(cueText)) {
     addStep(
-      '상황 기록',
+      '선생님의 기록',
       '사실·기록이 아직 확인되지 않았다고 적혀 있음',
       '현재 정보만으로 사실관계를 확정하기 어려움',
       '사실 확인 필요와 확인 전 약속 위험을 높이는 방향',
@@ -2040,7 +2051,7 @@ function buildDecisionTrace() {
 
   if (/공식\s*사과|사과\s*(?:요구|요청)|책임\s*인정/.test(cueText)) {
     addStep(
-      '상황 기록',
+      '선생님의 기록',
       '공식 사과 또는 책임 인정 요구가 기록됨',
       '결과뿐 아니라 감정적 인정·책임 확인을 원하는 신호',
       '학부모 유형 분류와 확인 전 약속 위험에 반영',
@@ -2050,7 +2061,7 @@ function buildDecisionTrace() {
 
   if (/반복|계속|재차|세\s*차례|여러\s*번|수차례/.test(cueText)) {
     addStep(
-      '상황 기록',
+      '선생님의 기록',
       '같거나 비슷한 요구가 반복되었다고 적혀 있음',
       '효과가 있다고 느낀 요구를 이어갈 수 있는 반복성 신호',
       'QRE λ와 민원 압박 위험 판단에 반영',
@@ -2060,7 +2071,7 @@ function buildDecisionTrace() {
 
   if (/교육청|온라인|공개|커뮤니티|언론|게시|신고/.test(cueText)) {
     addStep(
-      '상황 기록',
+      '선생님의 기록',
       '교육청·온라인 공개 등 외부 채널이 언급됨',
       '사실 판단과 분리해 살펴야 하는 외부 압박 신호',
       '민원 압박 위험과 관리자 공유 필요를 높이는 방향',
@@ -2070,7 +2081,7 @@ function buildDecisionTrace() {
 
   if (/담임\s*교체|교사\s*교체|생활지도\s*철회|지도\s*철회/.test(cueText)) {
     addStep(
-      '상황 기록',
+      '선생님의 기록',
       '담임 교체 또는 생활지도 철회 요구가 기록됨',
       '확인 전에 학교 조치를 바꾸도록 요구하는 신호',
       '확인 전 약속 위험과 관리자 공유 필요에 반영',
@@ -2085,18 +2096,18 @@ function buildDecisionTrace() {
   ].filter(([, value]) => value === false).map(([label]) => label);
   if (missingSafeguards.length) {
     addStep(
-      '정책 문장',
-      `정책에서 ${missingSafeguards.join('·')} 기준을 확인하지 못함`,
-      '민원 상황에서 단독 판단을 막는 정책 안전장치가 부족함',
+      '대응 기준 원문',
+      `대응 기준에서 ${missingSafeguards.join('·')} 내용을 확인하지 못함`,
+      '민원 상황에서 단독 판단을 막는 대응 안전장치가 부족함',
       '학교 기준 위험과 관리자 공유 필요를 높이는 방향',
       'policyViolationRisk'
     );
   } else if (steps.length < 4 && simulationState.vulnerabilities?.length) {
     addStep(
-      '정책 진단',
+      '대응 기준 점검',
       sanitizeProductLanguage(simulationState.vulnerabilities[0]),
-      '현재 정책에서 보완이 필요한 기준으로 분류됨',
-      '관련 위험 점수의 정책 근거로 연결',
+      '현재 대응 기준에서 보완이 필요한 부분으로 분류됨',
+      '관련 위험 점수의 대응 기준 근거로 연결',
       'policyViolationRisk'
     );
   }
@@ -2429,9 +2440,9 @@ const ADMIN_RESEARCH_FEATURE_LABELS = {
   claim_severity: '주장 신호 강도',
   pressure: '압박 신호 강도',
   constraint_sensitivity: '학교 기준 민감도',
-  policy_ambiguity: '정책 안전장치 공백',
-  policy_flexibility: '정책 재량·수용 여지',
-  policy_restraint: '정책 보호장치 강도',
+  policy_ambiguity: '대응 안전장치 공백',
+  policy_flexibility: '대응 기준의 재량·수용 여지',
+  policy_restraint: '대응 안전장치 강도',
   response_under: '현재 대응 누락 신호',
   actor_strategic: '유형 기반 전략성',
   qre_pressure: '압박 행동 확률',
@@ -2574,12 +2585,13 @@ function renderCalculationBasis() {
     server_overall: '서버가 계산한 종합 위험',
     server_deterministic_scoring: '서버 고정식으로 계산',
     server_deterministic_audit_log: '서버 공개 계산 장부로 계산',
-    policy_balance: '서버 정책 균형 점수에서 환산',
+    policy_balance: '서버 대응 기준 균형 점수에서 환산',
     weighted_fallback: '화면 임시 계산 · 서버 계산 로그 아님',
   };
   let sourceLabel = sourceLabels[simulationState.overallRiskSource]
     || sanitizeProductLanguage(simulationState.overallRiskSource)
     || '계산 출처가 응답에 포함되지 않음';
+  if (!researchAccess) sourceLabel = '선생님의 기록과 학교 기준을 함께 살펴본 결과';
   if (researchAccess && calculationLog.risk.overall.terms.length) {
     sourceLabel = `${calculationLog.risk.overall.method || '서버 관리자 계산 장부'} · ${calculationNumber(calculationLog.risk.overall.rawScore)} → ${calculationNumber(calculationLog.risk.overall.finalScore)}`;
   }
@@ -2588,6 +2600,14 @@ function renderCalculationBasis() {
   const traceSteps = trace.steps ?? [];
   const actorIsClose = ranked.length > 1 && Number(ranked[0][1]) - Number(ranked[1][1]) < ACTOR_HOLD_MARGIN;
   const selectedActor = actorIsClose ? '판단 보류' : normalizeActorType(simulationState.actorType) || ranked[0]?.[0] || '판단 보류';
+  const selectedActorFriendly = {
+    정당형: '근거를 중심으로 말하는 반응',
+    오해형: '설명이 먼저 필요한 반응',
+    감정형: '감정 확인을 중요하게 여기는 반응',
+    기회주의형: '예외 가능성을 계속 살피는 반응',
+    적대형: '압박이 커질 수 있는 반응',
+    '판단 보류': '한 가지 반응으로 보기 어려워요',
+  }[selectedActor] || '반응 흐름 확인 필요';
   const selectedActorProbability = ranked.find(([type]) => type === selectedActor)?.[1] ?? null;
   const runnerUp = ranked[1];
   const allRiskMetrics = riskMetricRows();
@@ -2595,7 +2615,7 @@ function renderCalculationBasis() {
   const highestRisk = [...metrics].sort((a, b) => b.value - a.value)[0];
   const traceStatus = trace.source === 'server'
     ? `서버가 반환한 구조화 근거 ${traceSteps.length}개${trace.traceVersion ? ` · ${trace.traceVersion}` : ''}`
-    : '현재 응답의 기록 문구와 정책 안전장치만 연결한 부분 근거';
+    : '현재 응답의 기록 문구와 대응 안전장치만 연결한 부분 근거';
   const qreLabel = lambda === 0.5
     ? '요구 방식이 자주 바뀔 수 있음'
     : lambda === 1.5
@@ -2605,8 +2625,8 @@ function renderCalculationBasis() {
         : '일관성 값 확인 필요';
   const overallRisk = simulationState.hasOverallRiskData ? criticalRiskScore() : null;
   const uniqueStageValues = (values, limit = 2) => [...new Set(values.map((value) => compactTraceText(value, 90)).filter(Boolean))].slice(0, limit);
-  const situationTraceSteps = traceSteps.filter((step) => !/정책/.test(decisionTraceSourceLabel(step.source)));
-  const policyTraceSteps = traceSteps.filter((step) => /정책/.test(decisionTraceSourceLabel(step.source)));
+  const situationTraceSteps = traceSteps.filter((step) => !/정책|대응\s*기준/.test(decisionTraceSourceLabel(step.source)));
+  const policyTraceSteps = traceSteps.filter((step) => /정책|대응\s*기준/.test(decisionTraceSourceLabel(step.source)));
   const situationStageValues = uniqueStageValues([
     ...basisInputs.filter(([label]) => label !== '규칙 제약').map(([label, value]) => `${label} · ${basisValueText(value)}`),
     ...situationTraceSteps.map((step) => step.evidence),
@@ -2628,6 +2648,8 @@ function renderCalculationBasis() {
   const qreBasis = qreStep
     ? `${compactTraceText(qreStep.evidence, 48)} → ${compactTraceText(qreStep.interpretation, 62)}`
     : lambda === null ? 'QRE 계산값이 제공되지 않음' : '서버가 반환한 요구 선택 일관성 값';
+  const teacherPersonaBasis = `분석 유형 · ${selectedActor}${selectedActorProbability === null ? '' : ` · 가능성 ${formatBasisPercent(Number(selectedActorProbability) * 100)}%`}`;
+  const teacherQreBasis = '같은 요구가 얼마나 꾸준히 이어질지 기록을 바탕으로 살펴본 값이에요.';
   const highestRiskBasis = highestRisk
     ? compactTraceText(sanitizeProductLanguage(highestRisk.help), 105)
     : '확인된 위험 점수가 없어 계산 결과를 연결하지 않음';
@@ -2656,7 +2678,7 @@ function renderCalculationBasis() {
   const calculationRunMeta = [
     ['계산 ID', calculationLog.run.id],
     ['모델', researchModelAlias],
-    ['엔진', calculationLog.run.engineVersion],
+    ['분석 버전', calculationLog.run.engineVersion],
     ['점수·가중치', scoreAndWeightVersions],
   ].filter(([, value]) => value !== null && value !== undefined && value !== '');
   const calculationPersonaQreStatus = calculationLog.persona.status === 'complete' && calculationLog.qre.status === 'complete'
@@ -2668,39 +2690,39 @@ function renderCalculationBasis() {
     ? calculationLog.hasLog
       ? `입력 ${calculationStageLabel(calculationLog.input.status)} · 유형·QRE ${calculationStageLabel(calculationPersonaQreStatus)} · 위험 ${calculationStageLabel(calculationLog.risk.status)}`
       : `${traceStatus} · 이 기록의 관리자 계산 장부는 미제공`
-    : '입력 확인 · 유형·QRE 추정 · 학교 대응 위험 6가지 계산';
+    : '기록 확인 · 반응 흐름 살펴보기 · 학교 대응 위험 6가지 계산';
 
   dom.calculationBasis.innerHTML = `
-    <section class="engine-decision-flow" aria-label="정책 위험 분석 3단계">
+    <section class="engine-decision-flow" aria-label="학교 대응 위험 분석 3단계">
       <div class="engine-flow-grid" role="list">
         <section class="engine-flow-stage" role="listitem">
-          <header class="engine-stage-head"><b>01</b><div><span>입력 확인</span><h4>상황·현재 정책</h4></div></header>
-          <p class="engine-stage-description">기록 속 요구와 정보 상태, 정책의 안전장치를 정리합니다.</p>
+          <header class="engine-stage-head"><b>01</b><div><span>기록 확인</span><h4>선생님의 기록·학교 기준</h4></div></header>
+          <p class="engine-stage-description">기록 속 학부모 요구와 학교에서 따르는 대응 기준을 나누어 봐요.</p>
           <div class="engine-stage-results">
             <div><span>상황</span><strong>${escapeHtml(sanitizeProductLanguage(situationStageValues.join(' · ') || '상황 기록이 입력됨'))}</strong></div>
-            <div><span>정책</span><strong>${escapeHtml(sanitizeProductLanguage(policyStageValues[0] || (simulationState.verifiedPolicyText ? '현재 정책 문장이 입력됨' : '정책 입력 확인 필요')))}</strong></div>
+            <div><span>대응 기준</span><strong>${escapeHtml(sanitizeProductLanguage(policyStageValues[0] || (simulationState.verifiedPolicyText ? '현재 대응 기준이 입력됨' : '대응 기준 입력 확인 필요')))}</strong></div>
           </div>
         </section>
-        <div class="engine-flow-link" aria-hidden="true"><span>분류·추정</span><i>→</i></div>
+        <div class="engine-flow-link" aria-hidden="true"><span>반응 살펴보기</span><i>→</i></div>
         <section class="engine-flow-stage is-core" role="listitem">
-          <header class="engine-stage-head"><b>02</b><div><span>반응 모델</span><h4>학부모 유형·QRE</h4></div></header>
-          <p class="engine-stage-description">가능성이 높은 반응 유형과 요구 선택의 일관성을 계산합니다.</p>
+          <header class="engine-stage-head"><b>02</b><div><span>반응 흐름</span><h4>예상되는 요구 흐름</h4></div></header>
+          <p class="engine-stage-description">어떤 요구가 얼마나 꾸준히 이어질지 QRE로 살펴봐요.</p>
           <div class="engine-stage-results">
-            <div><span>학부모 유형</span><strong>${escapeHtml(selectedActor)}${selectedActorProbability === null ? '<b>—</b>' : `<b>${formatBasisPercent(Number(selectedActorProbability) * 100)}%</b>`}</strong><small>${escapeHtml(sanitizeProductLanguage(personaBasis))}${runnerUp && topMargin !== null ? ` · 1·2위 차이 ${formatBasisPercent(topMargin)}%p` : ''}</small></div>
-            <div><span>요구 일관성</span><strong>${escapeHtml(qreLabel)}<b>${lambda === null ? 'λ —' : `λ ${lambda.toFixed(1)}`}</b></strong><small>${escapeHtml(sanitizeProductLanguage(qreBasis))}</small></div>
+            <div><span>기록에서 보인 반응</span><strong>${escapeHtml(researchAccess ? selectedActor : selectedActorFriendly)}${researchAccess && selectedActorProbability !== null ? `<b>${formatBasisPercent(Number(selectedActorProbability) * 100)}%</b>` : ''}</strong><small>${escapeHtml(sanitizeProductLanguage(researchAccess ? personaBasis : teacherPersonaBasis))}${researchAccess && runnerUp && topMargin !== null ? ` · 1·2위 차이 ${formatBasisPercent(topMargin)}%p` : ''}</small></div>
+            <div><span>요구가 이어지는 정도</span><strong>${escapeHtml(qreLabel)}<b>${lambda === null ? 'QRE —' : `QRE ${lambda.toFixed(1)}`}</b></strong><small>${escapeHtml(sanitizeProductLanguage(researchAccess ? qreBasis : teacherQreBasis))}</small></div>
           </div>
         </section>
-        <div class="engine-flow-link" aria-hidden="true"><span>위험 계산</span><i>→</i></div>
+        <div class="engine-flow-link" aria-hidden="true"><span>위험 살펴보기</span><i>→</i></div>
         <section class="engine-flow-stage" role="listitem">
-          <header class="engine-stage-head"><b>03</b><div><span>정책 위험</span><h4>6가지 위험도 계산</h4></div></header>
-          <p class="engine-stage-description">예상 반응이 현재 정책을 만났을 때의 위험을 계산합니다.</p>
+          <header class="engine-stage-head"><b>03</b><div><span>위험도</span><h4>학교 대응 위험 6가지</h4></div></header>
+          <p class="engine-stage-description">이 반응에 현재 대응 기준을 적용했을 때 조심할 점을 살펴봐요.</p>
           <div class="engine-stage-results">
-            <div><span>종합 위험</span><strong>${overallRisk === null ? '확인 필요' : `${overallRisk}<b>/100 · ${metricStatusLabel(overallRisk)}</b>`}</strong><small>${escapeHtml(sourceLabel)}</small></div>
+            <div><span>전체 위험도</span><strong>${overallRisk === null ? '확인 필요' : `${overallRisk}<b>/100 · ${metricStatusLabel(overallRisk)}</b>`}</strong><small>${escapeHtml(sourceLabel)}</small></div>
             <div><span>가장 높은 위험</span><strong>${highestRisk ? `${escapeHtml(highestRisk.label)}<b>${highestRisk.value}점</b>` : '점수 확인 필요'}</strong><small>${escapeHtml(highestRiskBasis)}</small></div>
           </div>
         </section>
       </div>
-      <p class="engine-flow-status"><span>${researchAccess ? calculationLog.hasLog ? 'ADMIN 계산 장부' : 'ADMIN 부분 기록' : '분석 흐름'}</span>${escapeHtml(calculationFlowStatus)} · 입력 → 유형·QRE → 위험 계산 순서로 저장합니다.</p>
+      <p class="engine-flow-status"><span>${researchAccess ? calculationLog.hasLog ? 'ADMIN 계산 장부' : 'ADMIN 부분 기록' : '판단 순서'}</span>${escapeHtml(calculationFlowStatus)} · 기록 → 반응 흐름 → 위험도의 순서로 살펴봤어요.</p>
     </section>
 
     ${researchAccess ? `
@@ -2713,9 +2735,9 @@ function renderCalculationBasis() {
       </section>
       <ol class="research-three-step calculation-ledger" aria-label="관리자 서버 계산 장부 3단계">
         <li>
-          <header class="research-step-head"><b>01</b><div><span>상황·정책 입력</span><h4>핵심 입력 변수</h4><p>위험 계산에 직접 쓰인 상황·정책 값만 봅니다.</p></div><i data-status="${calculationLog.input.status}">${calculationStageLabel(calculationLog.input.status)}</i></header>
+          <header class="research-step-head"><b>01</b><div><span>상황·대응 기준 입력</span><h4>핵심 입력 변수</h4><p>위험 계산에 직접 쓰인 상황·대응 기준 값만 봅니다.</p></div><i data-status="${calculationLog.input.status}">${calculationStageLabel(calculationLog.input.status)}</i></header>
           <div class="research-step-body">
-            ${researchFeatures.length ? `<div class="research-compact-table-wrap"><table class="research-compact-table research-input-table"><thead><tr><th>핵심 변수</th><th>계산값</th><th>판단 근거</th></tr></thead><tbody>${researchFeatures.map((feature) => `<tr data-missing="${feature.missing}"><th><span>${feature.key.startsWith('policy_') ? '정책' : feature.key.startsWith('response_') ? '대응' : '상황'}</span><strong>${escapeHtml(sanitizeProductLanguage(ADMIN_RESEARCH_FEATURE_LABELS[feature.key] || feature.label))}</strong><code>${escapeHtml(feature.key || '—')}</code></th><td><b>${escapeHtml(calculationValue(feature.encodedValue))}</b></td><td><p>${escapeHtml(sanitizeProductLanguage(adminResearchFeatureEvidence(feature)))}</p>${feature.source ? `<small>${escapeHtml(adminResearchSourceLabel(feature.source))}</small>` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="calculation-log-empty"><strong>핵심 입력값이 없습니다.</strong><p>이 기록에는 서버 입력 벡터가 저장되지 않았습니다.</p></div>'}
+            ${researchFeatures.length ? `<div class="research-compact-table-wrap"><table class="research-compact-table research-input-table"><thead><tr><th>핵심 변수</th><th>계산값</th><th>판단 근거</th></tr></thead><tbody>${researchFeatures.map((feature) => `<tr data-missing="${feature.missing}"><th><span>${feature.key.startsWith('policy_') ? '대응 기준' : feature.key.startsWith('response_') ? '대응' : '상황'}</span><strong>${escapeHtml(sanitizeProductLanguage(ADMIN_RESEARCH_FEATURE_LABELS[feature.key] || feature.label))}</strong><code>${escapeHtml(feature.key || '—')}</code></th><td><b>${escapeHtml(calculationValue(feature.encodedValue))}</b></td><td><p>${escapeHtml(sanitizeProductLanguage(adminResearchFeatureEvidence(feature)))}</p>${feature.source ? `<small>${escapeHtml(adminResearchSourceLabel(feature.source))}</small>` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="calculation-log-empty"><strong>핵심 입력값이 없습니다.</strong><p>이 기록에는 서버 입력 벡터가 저장되지 않았습니다.</p></div>'}
           </div>
         </li>
         <li>
@@ -2736,14 +2758,14 @@ function renderCalculationBasis() {
           </div>
         </li>
         <li>
-          <header class="research-step-head"><b>03</b><div><span>정책 위험 계산</span><h4>6가지 위험·기여도</h4><p>점수와 종합 위험을 실제로 끌어올린 요인을 봅니다.</p></div><i data-status="${calculationLog.risk.status}">${calculationStageLabel(calculationLog.risk.status)}</i></header>
+          <header class="research-step-head"><b>03</b><div><span>학교 대응 위험 계산</span><h4>6가지 위험·기여도</h4><p>점수와 종합 위험을 실제로 끌어올린 요인을 봅니다.</p></div><i data-status="${calculationLog.risk.status}">${calculationStageLabel(calculationLog.risk.status)}</i></header>
           <div class="research-step-body">
             ${calculationLog.risk.metrics.length ? `<div class="research-compact-table-wrap"><table class="research-compact-table research-risk-table"><thead><tr><th>위험</th><th>점수</th><th>가중치</th><th>종합 기여</th><th>주요 원인</th></tr></thead><tbody>${calculationLog.risk.metrics.map((metric) => { const topTerms = adminResearchTopTerms(metric.terms); return `<tr><th>${escapeHtml(sanitizeProductLanguage(metric.label))}</th><td><b>${escapeHtml(calculationValue(metric.finalScore))}</b></td><td>${escapeHtml(calculationValue(metric.overallWeight))}</td><td>${escapeHtml(calculationValue(metric.overallContribution))}</td><td>${topTerms.length ? topTerms.map((term) => `<span>${escapeHtml(sanitizeProductLanguage(term.name))} <b>${escapeHtml(adminResearchSignedNumber(term.contribution))}</b></span>`).join('') : '—'}</td></tr>`; }).join('')}</tbody></table></div>` : '<div class="calculation-log-empty"><strong>위험별 기여 계산이 없습니다.</strong><p>6개 위험의 점수와 종합 기여값이 필요합니다.</p></div>'}
             <section class="research-overall-summary">
               <div><span>종합 위험</span><strong>${escapeHtml(calculationValue(calculationLog.risk.overall.finalScore))}<small>/100</small></strong></div>
               <p>Σ(위험 점수 × 가중치) = <b>${escapeHtml(calculationValue(calculationLog.risk.overall.rawScore))}</b> → ${escapeHtml(calculationValue(calculationLog.risk.overall.finalScore))}</p>
             </section>
-            ${policyComparison.metrics.length ? `<section class="research-policy-comparison"><header><div><span>정책 초안 비교</span><h5>변화가 큰 위험 ${policyComparisonHighlights.length}개</h5></div><small>${escapeHtml(policyComparison.status || '모의 계산')}</small></header><div class="research-policy-total"><span>종합 위험</span><b>${escapeHtml(calculationValue(policyComparison.currentOverall))}</b><i>→</i><strong>${escapeHtml(calculationValue(policyComparison.proposedOverall))}</strong><em data-delta="${policyComparison.overallDelta === null ? 'none' : policyComparison.overallDelta < 0 ? 'down' : policyComparison.overallDelta > 0 ? 'up' : 'same'}">${policyComparison.overallDelta === null ? '—' : adminResearchSignedNumber(policyComparison.overallDelta)}</em></div><ul>${policyComparisonHighlights.map((metric) => `<li><span>${escapeHtml(sanitizeProductLanguage(metric.label))}</span><b>${escapeHtml(calculationValue(metric.currentScore))} → ${escapeHtml(calculationValue(metric.proposedScore))}</b><em data-delta="${metric.delta < 0 ? 'down' : metric.delta > 0 ? 'up' : 'same'}">${escapeHtml(adminResearchSignedNumber(metric.delta))}</em></li>`).join('')}</ul></section>` : ''}
+            ${policyComparison.metrics.length ? `<section class="research-policy-comparison"><header><div><span>보완 기준 비교</span><h5>변화가 큰 위험 ${policyComparisonHighlights.length}개</h5></div><small>${escapeHtml(policyComparison.status || '모의 계산')}</small></header><div class="research-policy-total"><span>종합 위험</span><b>${escapeHtml(calculationValue(policyComparison.currentOverall))}</b><i>→</i><strong>${escapeHtml(calculationValue(policyComparison.proposedOverall))}</strong><em data-delta="${policyComparison.overallDelta === null ? 'none' : policyComparison.overallDelta < 0 ? 'down' : policyComparison.overallDelta > 0 ? 'up' : 'same'}">${policyComparison.overallDelta === null ? '—' : adminResearchSignedNumber(policyComparison.overallDelta)}</em></div><ul>${policyComparisonHighlights.map((metric) => `<li><span>${escapeHtml(sanitizeProductLanguage(metric.label))}</span><b>${escapeHtml(calculationValue(metric.currentScore))} → ${escapeHtml(calculationValue(metric.proposedScore))}</b><em data-delta="${metric.delta < 0 ? 'down' : metric.delta > 0 ? 'up' : 'same'}">${escapeHtml(adminResearchSignedNumber(metric.delta))}</em></li>`).join('')}</ul></section>` : ''}
           </div>
         </li>
       </ol>
@@ -2752,7 +2774,7 @@ function renderCalculationBasis() {
     </details>
     <p class="basis-disclaimer">화면에서 생략한 원시 JSON과 중간 계산값은 보호된 서버 원본 로그에 그대로 남습니다.</p>
     </aside>
-    ` : '<p class="admin-access-note"><span>교사용 핵심 화면</span>복잡한 계산 장부는 관리자 연구 계정에서만 별도로 표시됩니다.</p>'}
+    ` : '<p class="admin-access-note"><span>간단히 보기</span>세부 계산값은 연구 계정에서만 보여요.</p>'}
   `;
 }
 
@@ -2771,7 +2793,7 @@ function renderRecordSource() {
 
   dom.recordSourceCard.hidden = !policy && !memo;
   if (dom.recordSourceDate) dom.recordSourceDate.textContent = recordDate ? formatCalendarDate(recordDate) : '';
-  if (dom.recordSourcePolicy) dom.recordSourcePolicy.textContent = policy || '입력된 정책·학교 기준이 없습니다.';
+  if (dom.recordSourcePolicy) dom.recordSourcePolicy.textContent = policy || '입력된 대응 기준이 없습니다.';
   if (dom.recordSourceMemo) dom.recordSourceMemo.textContent = memo || '입력된 상황 메모가 없습니다.';
 }
 
@@ -2782,19 +2804,19 @@ function renderPolicyAssessment() {
   const gaps = Array.isArray(simulationState.vulnerabilities) ? simulationState.vulnerabilities : [];
   const strengthText = strengths.length
     ? strengths.slice(0, 2).map((item) => sanitizeProductLanguage(item)).join(' · ')
-    : '정책에서 명확히 확인된 강점이 없습니다.';
+    : '현재 기록에서는 뚜렷하게 확인된 부분이 없습니다.';
   const gapText = gaps.length
     ? gaps.slice(0, 2).map((item) => sanitizeProductLanguage(item)).join(' · ')
-    : '추가로 확인된 큰 빈틈이 없습니다.';
+    : '지금 확인된 큰 빠진 부분은 없습니다.';
 
   dom.policyAssessment.innerHTML = `
     <section class="policy-diagnosis-card" data-status="${verifiedPolicy ? 'provided' : 'missing'}">
-      <span>진단</span>
-      <p>${escapeHtml(sanitizeProductLanguage(simulationState.policySummary || '현재 정책의 기준과 빠진 부분을 확인했습니다.'))}</p>
+      <span>한눈에 보기</span>
+      <p>${escapeHtml(sanitizeProductLanguage(simulationState.policySummary || '학교 대응 기준에서 잘 갖춰진 부분과 빠진 부분을 살펴봤어요.'))}</p>
     </section>
     <div class="policy-key-points">
-      <div><span>확인된 강점</span><p>${escapeHtml(strengthText)}</p></div>
-      <div><span>가장 먼저 보완</span><p>${escapeHtml(gapText)}</p></div>
+      <div><span>잘 갖춰진 부분</span><p>${escapeHtml(strengthText)}</p></div>
+      <div><span>먼저 보완할 부분</span><p>${escapeHtml(gapText)}</p></div>
     </div>
   `;
 }
@@ -2832,17 +2854,17 @@ function renderPersonaAssessment() {
   dom.personaAssessment.innerHTML = `
     <div class="persona-summary-grid">
       <section class="persona-type-card">
-        <span>추정 학부모 유형</span>
-        <strong>${escapeHtml(actorType)}<small>${escapeHtml(actorMeta.label)}</small></strong>
+        <span>기록에서 보인 반응 경향</span>
+        <strong>${escapeHtml(actorMeta.label)}<small>분석 유형 · ${escapeHtml(actorType)}</small></strong>
         <p>${escapeHtml(personaDescription)}</p>
       </section>
       <section class="qre-summary-card">
-        <span>QRE λ <b>${lambda === null ? '—' : lambda.toFixed(1)}</b></span>
+        <span>요구가 이어지는 정도 <b>QRE ${lambda === null ? '—' : lambda.toFixed(1)}</b></span>
         <strong>${escapeHtml(qreMeta.label)}</strong>
         <p>${escapeHtml(qreMeta.description)}</p>
       </section>
     </div>
-    <p class="persona-disclaimer">QRE λ는 어떤 요구를 얼마나 일관되게 고를지 나타내는 값입니다. 성격 진단이 아니라 현재 기록을 바탕으로 한 계산용 추정입니다.</p>
+    <p class="persona-disclaimer">QRE는 같은 요구가 얼마나 꾸준히 이어질지 계산한 값이에요. 사람의 성격을 판단하는 점수는 아닙니다.</p>
   `;
 }
 
@@ -2851,8 +2873,8 @@ function renderSimulationHud() {
   if (!String(simulationState.verifiedPolicyText || '').trim()) {
     dom.simulationHud.innerHTML = `
       <section class="risk-unavailable-card">
-        <span>위험도를 추정하지 못했습니다</span>
-        <p>정책·학교 기준 입력란에 실제로 적용 중인 문장을 붙여 넣고 다시 분석해 주세요.</p>
+        <span>아직 위험도를 보여드릴 수 없어요</span>
+        <p>학교 대응 기준에 실제로 적용 중인 문장을 붙여 넣고 다시 점검해 주세요.</p>
       </section>
     `;
     return;
@@ -2863,30 +2885,45 @@ function renderSimulationHud() {
   const overallRisk = simulationState.hasOverallRiskData ? criticalRiskScore() : null;
   const headline = simulationState.analysisHeadline || summary.title;
   const highestRisk = [...availableMetrics].sort((a, b) => b.value - a.value)[0];
+  const recommendation = compactText(
+    sanitizeProductLanguage(
+      simulationState.recommendation
+      || highestRisk?.help
+      || '기록 확인, 관리자 공유, 답변 기한이 대응 기준에 분명하게 적혀 있는지 살펴보세요.'
+    ),
+    650
+  );
+  const alternativePolicy = compactText(sanitizeProductLanguage(simulationState.alternativePolicy || ''), 850);
   dom.simulationHud.innerHTML = `
     <div class="compact-risk-summary" data-tone="${overallRisk === null ? 'neutral' : metricTone(overallRisk)}">
       <div class="compact-overall-score">
-        <span>종합 추정 위험</span>
+        <span>전체 위험도</span>
         <strong>${overallRisk === null ? '—' : overallRisk}${overallRisk === null ? '' : '<small>/100</small>'}</strong>
         <b>${overallRisk === null ? '확인 필요' : metricStatusLabel(overallRisk)}</b>
       </div>
       <div>
-        <span>AI 추정치 · 참고용</span>
+        <span>선생님의 기록을 바탕으로 한 참고 결과</span>
         <h4>${escapeHtml(sanitizeProductLanguage(headline))}</h4>
-        <p>${highestRisk ? `가장 높은 항목은 ‘${escapeHtml(highestRisk.label)}’ ${escapeHtml(highestRisk.value)}점입니다.` : '위험 점수를 확인하지 못했습니다.'}</p>
+        <p>${highestRisk ? `가장 조심할 부분은 ‘${escapeHtml(highestRisk.label)}’이며 ${escapeHtml(highestRisk.value)}점이에요.` : '위험 점수를 확인하지 못했어요.'}</p>
       </div>
     </div>
+    <section class="risk-coaching-card">
+      <header><span>루지코지 쉬운 코칭</span><b>대응 기준 보완</b></header>
+      <h4>${escapeHtml(summary.title)}</h4>
+      <p>${escapeHtml(recommendation)}</p>
+      ${alternativePolicy ? `<div><span>기준을 이렇게 보완해 보세요</span><strong>${escapeHtml(alternativePolicy)}</strong></div>` : ''}
+    </section>
     <section aria-label="학교 대응 위험 6가지 점수">
       <ul class="compact-risk-grid">
         ${metrics.map((item) => `
           <li data-tone="${item.available ? metricTone(item.value) : 'neutral'}" data-available="${item.available}">
             <div><span>${escapeHtml(item.label)}</span><strong>${item.available ? escapeHtml(item.value) : '—'}</strong></div>
             <i${item.available ? ` role="progressbar" aria-label="${escapeHtml(item.label)}" aria-describedby="risk-reason-${escapeHtml(item.key)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${escapeHtml(item.value)}" aria-valuetext="${metricStatusLabel(item.value)} ${escapeHtml(item.value)}점" style="--value: ${escapeHtml(item.value)}%"` : ' aria-hidden="true"'}></i>
-            <small id="risk-reason-${escapeHtml(item.key)}"><b>${item.reasonSource === 'analysis' ? '사례 근거' : '지표 정의'}</b>${escapeHtml(sanitizeProductLanguage(item.help))}</small>
+            <small id="risk-reason-${escapeHtml(item.key)}"><b>${item.reasonSource === 'analysis' ? '이 기록에서 본 근거' : '이 점수의 뜻'}</b>${escapeHtml(sanitizeProductLanguage(item.help))}</small>
           </li>
         `).join('')}
       </ul>
-      ${availableMetrics.length < metrics.length ? '<p class="risk-missing-note">응답에서 확인되지 않은 점수는 임의로 0점 처리하지 않고 —로 표시했습니다.</p>' : ''}
+      ${availableMetrics.length < metrics.length ? '<p class="risk-missing-note">아직 확인하지 못한 항목은 —로 표시했어요.</p>' : ''}
     </section>
   `;
 }
@@ -2921,7 +2958,7 @@ function renderConversations() {
     button.className = 'conversation-select';
     button.innerHTML = `
       <strong>${escapeHtml(sanitizeProductLanguage(conversation.title || '새 기록'))}</strong>
-      <span>${formatDate(conversation.saved_at || conversation.created_at)} · 위험 분석 완료</span>
+      <span>${formatDate(conversation.saved_at || conversation.created_at)} · 점검 완료</span>
     `;
     button.addEventListener('click', () => selectConversation(conversation.id));
 
@@ -2956,7 +2993,7 @@ function renderMessages() {
   if (!visibleMessages.length) {
     const empty = document.createElement('p');
     empty.className = 'followup-empty';
-    empty.textContent = '결과에서 이해되지 않는 부분만 짧게 물어보세요.';
+    empty.textContent = '위험 점수나 보완할 기준이 어려우면 편하게 물어보세요.';
     dom.messageList.append(empty);
   }
 
@@ -2977,7 +3014,7 @@ function renderMessages() {
     loading.innerHTML = `
       <span class="role">AI가 추가로 확인하고 있어요</span>
       <div class="loading-copy">
-        <span>정책 확인 → 학부모 유형·QRE 추정 → 위험 계산</span>
+        <span>기록 확인 → 위험도 살펴보기 → 쉬운 설명 정리</span>
         <i></i><i></i><i></i>
       </div>
     `;
@@ -3001,7 +3038,7 @@ function renderSendState() {
   const maxCycles = simulationState.isComplete || analysisRequestCount() >= MAX_ANALYSIS_CYCLES;
   dom.sendButton.disabled = isSending || !session?.user || noCredits || maxCycles;
   dom.sendButton.textContent = isSending
-    ? '정책 위험 분석 중'
+    ? '답변을 정리하고 있어요'
     : maxCycles
       ? '추가 질문을 모두 사용했어요'
       : noCredits
@@ -3011,10 +3048,10 @@ function renderSendState() {
   if (dom.runSimulation) {
     dom.runSimulation.disabled = isSending || !session?.user || noCredits;
     dom.runSimulation.textContent = isSending
-      ? '정책과 위험 계산 중...'
+      ? '기록을 살펴보고 있어요...'
       : noCredits
         ? '이번 달 AI 이용량을 확인해 주세요'
-        : '정책 위험 분석하기';
+        : '내 기록 점검하기';
   }
 }
 
@@ -3043,13 +3080,13 @@ function createPolicyReportPanel() {
   const hasVerifiedPolicy = Boolean(String(simulationState.verifiedPolicyText || '').trim());
   panel.innerHTML = `
     <span class="section-kicker">정리가 끝났어요</span>
-    <h2>정책과 위험 한눈에 보기</h2>
+    <h2>이 기록의 위험도와 코칭</h2>
     <div class="result-tags">
-      ${hasVerifiedPolicy ? `<span>현재 정책 위험 ${criticalRiskScore()}/100</span>` : '<span>현재 정책 확인 필요</span>'}
-      ${hasVerifiedPolicy && simulationState.hasAlternativeRiskData ? `<span>권장안 예상 위험 ${simulationState.alternativePolicyRisks.overallRisk}/100</span>` : ''}
-      ${hasVerifiedPolicy ? `<span>정책 안전장치 ${scoreGrade(simulationState.policyBalanceScore)}등급</span><span>관리자에게 공유할 필요 ${simulationState.handoffNeed}/100</span>` : ''}
+      ${hasVerifiedPolicy ? `<span>현재 위험도 ${criticalRiskScore()}/100</span>` : '<span>학교 대응 기준 확인 필요</span>'}
+      ${hasVerifiedPolicy && simulationState.hasAlternativeRiskData ? `<span>보완하면 예상 위험 ${simulationState.alternativePolicyRisks.overallRisk}/100</span>` : ''}
+      ${hasVerifiedPolicy ? `<span>관리자 공유 필요 ${simulationState.handoffNeed}/100</span>` : ''}
     </div>
-    <p>${analysisRequestCount()}/${simulationState.maxCycles}회 분석을 바탕으로 현재 정책의 빈틈, 권장 정책안과 위험 변화를 정리했습니다.</p>
+    <p>선생님의 기록을 바탕으로 조심할 점, 위험도와 보완할 기준을 정리했어요.</p>
     <div class="result-actions">
       <button class="primary-button" type="button" data-new-simulation>새 기록</button>
       <button class="ghost-button" type="button" data-final-report ${canRequestDetail ? '' : 'disabled'}>
@@ -3144,7 +3181,7 @@ function friendlyServiceError(error) {
   }
   if (/timeout|지연|aborted|network/i.test(message)) return '분석이 지연되고 있습니다. 잠시 뒤 다시 시도해 주세요.';
   if (/Failed to send a request|FunctionsHttpError|Edge Function|fetch/i.test(message)) {
-    return 'AI 분석 결과를 받아오지 못했습니다. 잠시 뒤 다시 시도해 주세요.';
+    return '점검 결과를 받아오지 못했어요. 잠시 뒤 다시 시도해 주세요.';
   }
   return message || '내용을 정리하는 중 문제가 생겼습니다.';
 }
@@ -3154,7 +3191,7 @@ async function invokeReportChat(payload) {
   const result = await withTimeout(
     supabase.functions.invoke('report-chat', { body: payload }),
     105000,
-    '정책 위험 분석이 지연되고 있습니다. 잠시 뒤 다시 시도해 주세요.'
+    '기록 점검이 조금 늦어지고 있어요. 잠시 뒤 다시 시도해 주세요.'
   );
   if (!result.error) return result;
 
@@ -3552,13 +3589,13 @@ function buildPolicyAnalysisRequest(extraText = '') {
     '[상황 기록]',
     simulationState.incidentConditions,
     '',
-    '[현재 적용 중인 정책·학교 기준]',
+    '[현재 적용 중인 학교 대응 기준]',
     simulationState.policyDocument || '입력하지 않음',
     '',
     '[요청]',
     extraText || (hasAdminResearchAccess()
-      ? '현재 정책을 진단하고, 학부모 반응 유형과 QRE λ를 추정한 뒤 학교 대응 위험 6가지를 계산해줘. 유형과 QRE는 쉬운 한국어 설명을 함께 쓰고, 실제 입력값·효용·확률·가중치·기여도를 구조화된 calculation_log로 함께 반환해줘.'
-      : '현재 정책을 진단하고, 학부모 반응 유형과 QRE λ를 추정한 뒤 학교 대응 위험 6가지를 쉬운 한국어로 정리해줘.'),
+      ? '현재 대응 기준을 점검하고, 학부모 반응 유형과 QRE λ를 추정한 뒤 학교 대응 위험 6가지를 계산해줘. 유형과 QRE는 쉬운 한국어 설명을 함께 쓰고, 실제 입력값·효용·확률·가중치·기여도를 구조화된 calculation_log로 함께 반환해줘.'
+      : '현재 대응 기준을 점검하고, 학부모 반응 유형과 QRE λ를 추정한 뒤 학교 대응 위험 6가지를 쉬운 한국어로 정리해줘.'),
   ].join('\n');
   return compactText(request, MAX_POLICY_ANALYSIS_CHARS);
 }
@@ -3567,7 +3604,7 @@ async function runPolicySimulation() {
   if (!session?.user) {
     pendingNewSimulation = false;
     setAuthModal(true);
-    showToast('로그인하면 현재 정책과 학교 대응 위험을 분석할 수 있습니다.', 'error');
+    showToast('로그인하면 기록의 위험도와 코칭을 확인할 수 있어요.', 'error');
     return;
   }
   syncSimulationStateFromInputs();
@@ -3592,7 +3629,7 @@ async function sendMessage(message, { generatedFromInput = false } = {}) {
 
   if (!session?.user) {
     setAuthModal(true);
-    showToast('로그인하면 현재 정책과 학교 대응 위험을 분석할 수 있습니다.', 'error');
+    showToast('로그인하면 기록의 위험도와 코칭을 확인할 수 있어요.', 'error');
     return;
   }
 
@@ -3604,7 +3641,7 @@ async function sendMessage(message, { generatedFromInput = false } = {}) {
   syncSimulationStateFromInputs();
 
   if (!simulationState.incidentConditions) {
-    showToast('상황 기록을 먼저 적어 주세요.', 'error');
+    showToast('무슨 일이 있었는지 먼저 적어 주세요.', 'error');
     dom.incidentConditions?.focus();
     return;
   }
@@ -3654,7 +3691,7 @@ async function sendMessage(message, { generatedFromInput = false } = {}) {
       message: text,
       [compatStateKey]: requestState,
       clientGuidance: [
-        '구조화된 결과에 claim_type, evidence_state, pressure_state, rule_constraint, score_version과 정책 flags를 가능한 범위에서 포함한다.',
+        '구조화된 결과에 claim_type, evidence_state, pressure_state, rule_constraint, score_version과 대응 기준 관련 flags를 가능한 범위에서 포함한다.',
         '위험 6개에는 각 항목의 짧고 검증 가능한 risk_reasons를 포함한다.',
         'decision_trace는 일반 사용자용 근거 요약으로 input_assessment → persona_qre → risk_scoring 순서를 유지한다.',
         hasAdminResearchAccess() ? ADMIN_CALCULATION_LOG_GUIDANCE : '',
@@ -3670,7 +3707,7 @@ async function sendMessage(message, { generatedFromInput = false } = {}) {
       data?.assistant_message ??
       data?.message ??
       data?.reply ??
-      '현재 정책과 학교 대응 위험을 분석했습니다.'
+      '위험도와 코칭을 정리했어요.'
     );
 
     const rawConfirmedState = data?.simulation_state ?? data?.simulationState ?? data?.game_state ?? data?.[compatStateKey];
@@ -3733,7 +3770,7 @@ async function sendMessage(message, { generatedFromInput = false } = {}) {
     }
 
     syncPolicyInputsFromState();
-    showToast('현재 정책과 학교 대응 위험을 분석했습니다.', 'ready');
+    showToast('위험도와 코칭을 정리했어요.', 'ready');
   } catch (error) {
     if (error?.usage) committedUsage = commitUsageAfterRequest(error, usageBefore, error?.cost ?? 1);
     reconcileUsageSoon(committedUsage?.used ?? usageBefore.used);
@@ -3782,10 +3819,10 @@ async function requestFinalReport() {
       conversationId: activeConversation.id,
       product: currentProduct(),
       mode: 'final_report',
-      message: '현재 정책 진단, 학부모 반응 유형과 QRE 값, 6가지 위험을 더 자세히 설명해줘.',
+      message: '현재 대응 기준 점검, 학부모 반응 유형과 QRE 값, 6가지 위험을 더 자세히 설명해줘.',
       [compatStateKey]: buildApiCompatibleState(),
       clientGuidance: [
-        '자세한 분석은 현재 정책 진단, 학부모 반응 유형, QRE λ와 학교 대응 위험 검토에 바로 쓸 수 있게 작성한다.',
+        '자세한 분석은 현재 대응 기준 점검, 학부모 반응 유형, QRE λ와 학교 대응 위험 검토에 바로 쓸 수 있게 작성한다.',
         '학부모 유형은 현재 기록에 근거한 계산용 추정임을 밝히고 성격이나 신분을 단정하지 않는다.',
         'QRE λ는 정확한 값과 함께, 높을수록 효과가 있다고 느끼는 요구를 일관되게 반복할 가능성이 커진다는 쉬운 설명을 붙인다.',
         '본문 설명은 간결하게 유지하되 calculation_log에는 실제 효용·확률·기여도·수식을 생략하지 않는다.',
@@ -4085,6 +4122,51 @@ function syncHeaderScroll() {
 
 window.addEventListener('scroll', syncHeaderScroll, { passive: true });
 syncHeaderScroll();
+
+function setupHeroMotion() {
+  const stage = dom.heroMotion;
+  if (!stage) return;
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let pointerFrame = 0;
+  let pointerPosition = null;
+
+  const reset = () => {
+    pointerPosition = null;
+    stage.style.setProperty('--hero-card-x', '0px');
+    stage.style.setProperty('--hero-card-y', '0px');
+    stage.style.setProperty('--hero-tilt-x', '0deg');
+    stage.style.setProperty('--hero-tilt-y', '0deg');
+    stage.style.setProperty('--hero-geo-x', '0px');
+    stage.style.setProperty('--hero-geo-y', '0px');
+  };
+
+  const applyPointerPosition = () => {
+    pointerFrame = 0;
+    if (!pointerPosition || reducedMotion.matches || !finePointer.matches) return reset();
+    const rect = stage.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const x = Math.max(-1, Math.min(1, ((pointerPosition.x - rect.left) / rect.width - .5) * 2));
+    const y = Math.max(-1, Math.min(1, ((pointerPosition.y - rect.top) / rect.height - .5) * 2));
+    stage.style.setProperty('--hero-card-x', `${(x * 3).toFixed(2)}px`);
+    stage.style.setProperty('--hero-card-y', `${(y * 3).toFixed(2)}px`);
+    stage.style.setProperty('--hero-tilt-x', `${(-y * .9).toFixed(2)}deg`);
+    stage.style.setProperty('--hero-tilt-y', `${(x * 1.1).toFixed(2)}deg`);
+    stage.style.setProperty('--hero-geo-x', `${(-x * 7).toFixed(2)}px`);
+    stage.style.setProperty('--hero-geo-y', `${(-y * 7).toFixed(2)}px`);
+  };
+
+  stage.addEventListener('pointermove', (event) => {
+    if (reducedMotion.matches || !finePointer.matches) return;
+    pointerPosition = { x: event.clientX, y: event.clientY };
+    if (!pointerFrame) pointerFrame = window.requestAnimationFrame(applyPointerPosition);
+  }, { passive: true });
+  stage.addEventListener('pointerleave', reset, { passive: true });
+  reducedMotion.addEventListener?.('change', reset);
+  finePointer.addEventListener?.('change', reset);
+}
+
+setupHeroMotion();
 
 dom.homeLinks.forEach((link) => link.addEventListener('click', (event) => {
   event.preventDefault();

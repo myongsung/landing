@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#ffffff" />
-  <title>루지코지 | 교사 전용 학부모 민원 정책 위험 분석 AI</title>
-  <meta name="description" content="학부모 민원과 교육분쟁 상황에서 현재 학교 정책의 빈틈과 대응 위험을 분석하고, 위험을 낮추는 권장 정책안을 제시하는 교사 전용 AI 도구입니다." />
+  <title>루지코지 | 선생님을 지켜줄 악성 민원 백신</title>
+  <meta name="description" content="학부모 민원 기록을 적으면 현재 대응 기준의 위험도와 쉬운 코칭을 보여주는 교사 전용 AI 도구입니다." />
   <link rel="stylesheet" href="app.css?v=20260715-1" />
-  <link rel="stylesheet" href="memo.css?v=20260721-11" />
-  <link rel="stylesheet" href="landing-editorial.css?v=20260714-5" />
+  <link rel="stylesheet" href="memo.css?v=20260723-1" />
+  <link rel="stylesheet" href="landing-editorial.css?v=20260723-2" />
   <script src="supabase-config.js"></script>
-  <script type="module" src="app.js?v=20260721-11"></script>
+  <script type="module" src="app.js?v=20260723-3"></script>
 </head>
 
 <body data-view="landing" data-authenticated="false">
@@ -21,7 +21,7 @@
         <span class="brand-mark"><img src="assets/brand/roosycozy-rc-logo.png" alt="" width="28" height="28" /></span>
         <span class="brand-copy">
           <span class="brand-name"><strong>루지코지</strong></span>
-          <small>학부모 민원 정책 위험 분석</small>
+          <small>선생님의 기록·위험도·코칭</small>
         </span>
       </a>
 
@@ -44,16 +44,16 @@
           </div>
         </details>
         <button class="primary-button header-cta" type="button" data-start-chat data-reset-simulation data-auth-mode-target="signup" data-header-cta>
-          <span class="header-cta-full" data-header-cta-label>정책 위험 분석</span>
-          <span class="header-cta-short" data-header-cta-label-short>시작</span>
+          <span class="header-cta-full" data-header-cta-label>위험도와 코칭 보기</span>
+          <span class="header-cta-short" data-header-cta-label-short>점검</span>
         </button>
         <details class="mobile-site-menu" data-mobile-site-menu>
           <summary aria-label="전체 메뉴 열기"><span>메뉴</span><i aria-hidden="true"><b></b><b></b><b></b></i></summary>
           <div class="mobile-menu-panel">
             <header><span>루지코지 둘러보기</span><strong>필요한 곳으로 바로 가세요.</strong></header>
             <nav aria-label="모바일 주요 메뉴">
-              <a href="#engine"><span>01</span><div><strong>정책 위험 분석</strong><small>현재 정책의 빈틈과 위험 계산 과정을 봅니다.</small></div><i aria-hidden="true">→</i></a>
-              <a href="#records"><span>02</span><div><strong>정책 위험 기록</strong><small>날짜별 정책과 위험도를 다시 봅니다.</small></div><i aria-hidden="true">→</i></a>
+              <a href="#engine"><span>01</span><div><strong>위험도와 코칭</strong><small>기록을 적으면 조심할 점과 보완할 기준을 알려드려요.</small></div><i aria-hidden="true">→</i></a>
+              <a href="#records"><span>02</span><div><strong>내 기록 달력</strong><small>날짜별 기록과 분석 결과를 다시 볼 수 있어요.</small></div><i aria-hidden="true">→</i></a>
               <a href="#licenses"><span>03</span><div><strong>교사 이용권</strong><small>기본·교사·PRO 이용량을 확인합니다.</small></div><i aria-hidden="true">→</i></a>
               <a href="#faq"><span>04</span><div><strong>자주 묻는 질문</strong><small>서비스 범위와 기록 원칙을 확인합니다.</small></div><i aria-hidden="true">→</i></a>
             </nav>
@@ -75,65 +75,58 @@
     <section class="landing-view" data-landing-view>
       <section class="memo-hero roosy-hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <span class="section-kicker">교사 전용 · 학부모 민원 정책 위험 분석</span>
-          <h1 id="hero-title">학부모 민원 앞에서, 정책의 빈틈과 위험을 먼저 보세요.</h1>
-          <p>민원 상황과 현재 학교 정책을 입력하세요. 루지코지가 정책에 빠진 기준, 학교 대응 위험 6가지와 위험을 낮추는 권장 정책안을 한 번에 분석합니다.</p>
+          <span class="section-kicker vaccine-kicker">교사 전용 · 학부모 민원 대응</span>
+          <h1 id="hero-title"><span>선생님을 지켜줄</span><br /><em>악성 민원 백신</em></h1>
+          <p>학부모와 나눈 내용을 적어 주세요. 루지코지가 현재 대응 기준에서 조심할 점을 찾고, 위험도와 보완할 기준을 쉬운 말로 정리해 드려요.</p>
           <div class="hero-actions">
-            <button class="primary-button large" type="button" data-start-chat data-reset-simulation data-auth-mode-target="signup">정책 위험 분석하기</button>
-            <a class="ghost-button large" href="#engine">작동 방식 보기</a>
+            <button class="primary-button large" type="button" data-start-chat data-reset-simulation data-auth-mode-target="signup">내 기록 점검하기</button>
+            <a class="ghost-button large" href="#engine">어떻게 도와주나요?</a>
           </div>
-          <p class="hero-assurance">현재 정책 진단 · 위험 6가지 · 권장 정책안</p>
+          <ol class="hero-assurance" aria-label="루지코지 이용 순서">
+            <li><b>01</b><span>내 기록 적기</span></li>
+            <li><b>02</b><span>위험도 확인</span></li>
+            <li><b>03</b><span>쉬운 코칭 받기</span></li>
+          </ol>
         </div>
 
-        <figure class="qre-engine-preview" aria-label="루지코지 정책 위험 분석 예시">
-          <header class="engine-preview-head">
-            <div><i aria-hidden="true"></i><strong>정책 위험 분석</strong><small>사례 2026-0714</small></div>
-            <span><i aria-hidden="true"></i>분석 완료</span>
-          </header>
-          <div class="engine-inputs" aria-label="정책 위험 분석에 사용한 정보">
-            <span><small>학교 규정</small>생활지도 기록 후 학부모 안내</span>
-            <span><small>학부모 요구</small>지도 철회 · 공식 사과</span>
-            <span><small>현재 상황</small>반복 항의 · 교장 면담 요청</span>
-          </div>
-          <div class="engine-stage-grid">
-            <div class="engine-node persona-node">
-              <header><span>01 · 현재 정책 진단</span><b>보완 필요</b></header>
-              <div class="engine-persona-lead"><div><strong>사실 확인 기준이 모호함</strong><small>현재 정책에서 가장 큰 빈틈</small></div><b>42</b></div>
-              <div class="engine-bars" aria-label="현재 정책 안전장치 점수">
-                <span><small>사실·기록 확인</small><i><em style="width:35%"></em></i><b>35</b></span>
-                <span><small>관리자 공유 기준</small><i><em style="width:62%"></em></i><b>62</b></span>
-                <span><small>처리 기한</small><i><em style="width:18%"></em></i><b>18</b></span>
+        <div class="hero-engine-stage" data-hero-motion>
+          <div class="hero-geometry" aria-hidden="true"><span></span><span></span><span></span><i></i><i></i><i></i></div>
+          <figure class="qre-engine-preview simple-coaching-preview" aria-label="선생님의 기록, 대응 기준 위험도와 코칭 예시">
+            <header class="engine-preview-head">
+              <div><i aria-hidden="true"></i><strong>루지코지 한눈에 보기</strong><small>오늘의 학교 기록</small></div>
+              <span><i aria-hidden="true"></i>코칭 준비 완료</span>
+            </header>
+            <div class="preview-simple-flow">
+              <section class="preview-record-card">
+                <header><span><b>01</b> 선생님의 기록</span><small>그대로 적어도 괜찮아요</small></header>
+                <blockquote>“생활지도 철회와 공식 사과를 요구하며, 교장 면담도 요청했습니다.”</blockquote>
+                <div><small>현재 대응 기준</small><strong>관련 기록을 확인한 뒤 관리자에게 공유</strong></div>
+              </section>
+              <div class="preview-simple-grid">
+                <section class="preview-risk-card">
+                  <header><span><b>02</b> 대응 기준 위험도</span><small>높을수록 조심</small></header>
+                  <div class="preview-risk-score"><strong>68</strong><span>/100</span><b>주의</b></div>
+                  <i aria-hidden="true"><em style="width:68%"></em></i>
+                  <p><span>가장 조심할 점</span><strong>확인 전에 답을 약속할 위험</strong></p>
+                </section>
+                <section class="preview-coaching-card">
+                  <header><span><b>03</b> 쉬운 코칭</span><small>교사의 언어로</small></header>
+                  <h3>바로 답하기보다,<br />기록 확인이 먼저예요.</h3>
+                  <p>학생 진술과 생활지도 기록을 확인한 뒤 관리자와 함께 답변 기준을 정하세요.</p>
+                  <p class="preview-coaching-path">기록 확인 <i aria-hidden="true">→</i> 관리자 공유 <i aria-hidden="true">→</i> 답변 기한 안내</p>
+                </section>
               </div>
             </div>
-            <div class="engine-node behavior-node">
-              <header><span>02 · 핵심 위험</span><b>100점 기준</b></header>
-              <p class="behavior-basis">현재 정책을 적용했을 때의 위험</p>
-              <div class="behavior-list" aria-label="학교 대응 위험 점수">
-                <span><i style="--probability:82%"></i><small>확인 전 약속 위험</small><b>82</b></span>
-                <span><i style="--probability:68%"></i><small>학교 기준 이탈 위험</small><b>68</b></span>
-                <span><i style="--probability:71%"></i><small>관리자 공유 필요</small><b>71</b></span>
-              </div>
-            </div>
-            <div class="engine-node risk-node">
-              <header><span>03 · 정책 전후 위험</span><b>학교 기준 반영</b></header>
-              <div class="engine-risk-compare">
-                <div><small>현재 정책</small><strong>82</strong><span>종합 위험</span></div>
-                <i aria-hidden="true">→</i>
-                <div class="is-revised"><small>권장 정책안</small><strong>49</strong><span>예상 위험</span></div>
-                <b><small>위험</small>−33</b>
-              </div>
-            </div>
-          </div>
-          <footer><span>권장 정책안</span><strong>사실·기록 확인 후 관리자 검토를 거쳐 정책상 답변 기한 안에 처리합니다.</strong></footer>
-          <figcaption class="product-preview-caption">예시 화면 · 정책 진단과 위험 점수는 입력 내용과 학교 기준에 따라 달라지며, 위험 점수는 100점 기준입니다.</figcaption>
-        </figure>
+            <figcaption class="product-preview-caption">예시 화면 · 루지코지는 선생님을 대신해 판단하지 않고, 기록과 대응 기준에서 조심할 점을 쉬운 말로 정리합니다.</figcaption>
+          </figure>
+        </div>
       </section>
 
       <section class="difference-section" aria-labelledby="difference-title">
         <header>
-          <span class="section-kicker">일반 기록과 다른 점</span>
-          <h2 id="difference-title">기록을 보관하는 데서 멈추지 않습니다.</h2>
-          <p>현재 정책의 강점과 빈틈을 찾고, 같은 상황에서 발생할 수 있는 위험을 숫자로 비교합니다.</p>
+          <span class="section-kicker">기록만 남기는 앱이 아니에요</span>
+          <h2 id="difference-title">기록을 남기면, 조심할 점과 보완할 기준이 보입니다.</h2>
+          <p>선생님이 적은 내용에서 놓치기 쉬운 부분을 찾아 위험도와 쉬운 코칭으로 정리해 드려요.</p>
         </header>
         <div class="difference-compare" aria-label="일반 기록 앱과 루지코지 비교">
           <div>
@@ -141,50 +134,50 @@
             <ul><li><i aria-hidden="true">01</i>학부모 연락 내용을 적음</li><li><i aria-hidden="true">02</i>날짜별로 보관</li><li><i aria-hidden="true">03</i>필요할 때 다시 찾음</li></ul>
           </div>
           <div class="is-roosy">
-            <span>루지코지 · 정책 위험 분석</span>
-            <ul><li><i aria-hidden="true">01</i>현재 정책의 실제 기준을 확인</li><li><i aria-hidden="true">02</i>정책의 강점과 빈틈을 진단</li><li><i aria-hidden="true">03</i>6가지 위험과 권장 정책안을 비교</li></ul>
+            <span>루지코지 · 위험도와 코칭</span>
+            <ul><li><i aria-hidden="true">01</i>선생님의 기록을 차분히 정리</li><li><i aria-hidden="true">02</i>현재 대응 기준의 위험도를 계산</li><li><i aria-hidden="true">03</i>보완할 기준을 쉬운 말로 코칭</li></ul>
           </div>
         </div>
       </section>
 
       <section class="memo-workflow engine-workflow" id="engine" aria-labelledby="workflow-title">
         <header>
-          <span class="section-kicker">작동 방식</span>
-          <h2 id="workflow-title">상황과 정책을 적으면, 정책의 빈틈과 위험이 보입니다.</h2>
-          <p>학부모 민원 상황과 현재 적용 중인 학교 정책을 그대로 적으면 됩니다.</p>
-          <p class="engine-principle">사람을 평가하지 않고, 정책이 위험을 얼마나 막아주는지만 분석합니다.</p>
+          <span class="section-kicker">딱 3단계면 충분해요</span>
+          <h2 id="workflow-title">적고, 확인하고, 더 안전한 기준을 만드세요.</h2>
+          <p>어려운 말은 루지코지가 풀어드려요. 선생님은 있었던 일과 학교의 대응 기준만 적으면 됩니다.</p>
+          <p class="engine-principle">학부모를 악성으로 단정하지 않아요. 현재 기록에서 보이는 반응과 대응 기준의 위험만 살펴봅니다.</p>
         </header>
         <ol>
-          <li><span>01</span><div><strong>현재 정책 문장만 확인해요</strong><p>사건 기록과 정책 문장을 분리하고, 실제 정책에 적힌 기준만 점수에 반영합니다.</p><small>현재 정책 · 적용 기준 · 처리 절차</small></div></li>
-          <li><span>02</span><div><strong>정책의 강점과 빈틈을 진단해요</strong><p>사실 확인, 관리자 공유, 처리 기한, 개인정보 보호 기준이 갖춰졌는지 확인합니다.</p><small>사실 확인 · 승인 기준 · 처리 기한 · 개인정보</small></div></li>
-          <li><span>03</span><div><strong>위험과 권장 정책안을 비교해요</strong><p>현재 정책과 권장 정책안을 같은 6가지 위험 기준으로 계산해 차이를 보여줍니다.</p><small>현재 위험 · 권장안 위험 · 예상 변화</small></div></li>
+          <li><span>01</span><div><strong>선생님의 기록을 적어요</strong><p>무슨 일이 있었는지와 학부모의 요구를 평소 메모하듯 적어 주세요.</p><small>상황 · 학부모 요구 · 현재 대응 기준</small></div></li>
+          <li><span>02</span><div><strong>반응과 위험을 함께 살펴봐요</strong><p>어떤 요구가 이어질지와 현재 기준에서 생길 수 있는 위험을 계산해요.</p><small>요구가 이어질 가능성 · 조심할 점 · 학교 대응 위험</small></div></li>
+          <li><span>03</span><div><strong>쉬운 코칭을 받아요</strong><p>놓친 기준과 보완할 문장을 선생님이 바로 이해할 수 있게 정리해 드려요.</p><small>조심할 점 · 보완 기준 · 예상 변화</small></div></li>
         </ol>
       </section>
 
       <section class="policy-impact" id="impact" aria-labelledby="impact-title">
         <div class="policy-impact-copy">
-          <span class="section-kicker">기준이 바뀌면 위험도 바뀝니다</span>
-          <h2 id="impact-title">같은 민원도 학교 기준에 따라 대응 위험은 달라집니다.</h2>
-          <p>현재 정책과 빈틈을 보완한 권장 정책안을 같은 기준으로 계산해 위험 변화를 비교합니다.</p>
+          <span class="section-kicker">대응 기준 코칭</span>
+          <h2 id="impact-title">무엇이 빠졌는지 알면, 혼자 판단할 일이 줄어듭니다.</h2>
+          <p>현재 기준과 보완한 기준의 위험 차이를 쉬운 점수로 비교해 드려요.</p>
         </div>
         <figure class="impact-console impact-ledger" aria-label="학교 대응 기준을 확인하기 전과 뒤의 영향 비교 예시">
-          <header><span>적용한 기준</span><b>예상 영향</b></header>
-          <article class="impact-current"><div><span>현재 정책</span><strong>학부모 항의가 오면 담임이 재량으로 처리</strong></div><b>종합 위험 82</b></article>
-          <article class="impact-revised"><div><span>권장 정책안</span><strong>사실·기록 확인 후 관리자 승인과 처리 기한 적용</strong></div><b>종합 위험 49</b></article>
-          <footer><span>의미</span><strong>정책 안전장치가 구체적일수록 확인 전 약속과 기준 이탈 위험이 줄어듭니다.</strong></footer>
+          <header><span>대응 기준</span><b>학교 대응 위험도</b></header>
+          <article class="impact-current"><div><span>현재 대응 기준</span><strong>학부모 항의가 오면 담임이 상황에 따라 답함</strong></div><b>전체 위험도 82</b></article>
+          <article class="impact-revised"><div><span>보완한 대응 기준</span><strong>사실·기록을 확인하고 관리자와 답변 내용·기한을 정함</strong></div><b>전체 위험도 49</b></article>
+          <footer><span>쉬운 코칭</span><strong>기록 확인, 관리자 공유, 답변 기한이 분명할수록 혼자 성급하게 약속할 위험이 줄어요.</strong></footer>
           <figcaption class="product-preview-caption">예시 비교 · 실제 영향은 입력 내용과 학교 기준에 따라 달라집니다.</figcaption>
         </figure>
       </section>
 
       <section class="record-showcase" id="records" aria-labelledby="record-title">
         <div class="record-showcase-copy">
-          <span class="section-kicker">기록은 판단 근거가 됩니다</span>
-          <h2 id="record-title">정책과 위험도는 날짜별 기록으로 이어집니다.</h2>
-          <p>민원 상황, 적용한 학교 정책과 분석된 위험도를 날짜별로 연결해 보관합니다.</p>
+          <span class="section-kicker">오늘의 기록이 선생님을 지켜요</span>
+          <h2 id="record-title">학부모 연락과 점검 결과를 달력에 차곡차곡 남기세요.</h2>
+          <p>선생님의 기록, 대응 기준, 위험도와 코칭을 날짜별로 함께 보관해요.</p>
           <dl>
             <div><dt>언제</dt><dd>연락 일시</dd></div>
             <div><dt>무엇을</dt><dd>사실과 요구</dd></div>
-            <div><dt>결과</dt><dd>정책과 위험도</dd></div>
+            <div><dt>결과</dt><dd>위험도와 쉬운 코칭</dd></div>
           </dl>
         </div>
         <figure class="calendar-product-preview record-calendar-preview" aria-label="루지코지 달력 기록 화면 미리보기">
@@ -204,7 +197,7 @@
               <span>7월 14일 · 기록 2개</span>
               <article><i data-tone="warn"></i><div><strong>생활지도 철회 요구</strong><p>공식 사과 반복 요구 · 관리자 공유 필요</p></div><b>82</b></article>
               <article><i data-tone="safe"></i><div><strong>학생 진술 확인</strong><p>생활지도 기록 있음 · 위험 낮음</p></div><b>28</b></article>
-              <div class="preview-insight"><span>정책 진단</span><strong>사실 확인 기준과 관리자 공유 기한을 정책에 더 명확히 적어야 합니다.</strong></div>
+              <div class="preview-insight"><span>루지코지 코칭</span><strong>기록 확인과 관리자 공유 시점을 대응 기준에 더 분명하게 적어 보세요.</strong></div>
             </aside>
           </div>
           <figcaption class="product-preview-caption is-light">예시 기록 화면 · 표시된 위험 점수는 100점 기준이며 실제 결과는 입력 내용에 따라 달라집니다.</figcaption>
@@ -224,7 +217,7 @@
             <p>개별 학부모 민원을 가끔 정리해 보고 싶은 교사에게 알맞습니다.</p>
             <ul class="license-points">
               <li>회원가입 후 바로 이용</li>
-              <li>학부모 민원 달력 저장과 정책 위험 분석</li>
+              <li>학부모 민원 달력 저장과 위험도·코칭</li>
             </ul>
             <button class="license-action license-action-basic" type="button" data-auth-open data-reset-simulation data-auth-mode-target="signup">기본으로 시작하기</button>
           </article>
@@ -244,7 +237,7 @@
           <article class="license-card license-pro">
             <header><div><span>학교 업무 집중</span><h3>교사 PRO</h3></div><b>이메일 문의</b></header>
             <div class="license-quota"><strong>500</strong><div><span>AI 이용 포인트</span><small>매달 새로 제공</small></div></div>
-            <p>여러 민원의 정책 빈틈과 위험 변화를 자주 비교하는 교사에게 알맞습니다.</p>
+            <p>여러 민원의 위험도와 보완할 기준을 자주 살펴보는 교사에게 알맞습니다.</p>
             <div class="license-contact">
               <span>문의 방법</span>
               <strong>이메일로 PRO 이용권 문의</strong>
@@ -254,19 +247,19 @@
           </article>
         </div>
 
-        <p class="license-footnote">기본 분석은 1포인트, 자세한 정책 위험 분석은 3포인트를 사용합니다. 포인트는 매달 새로 제공되며, 교사와 교사 PRO는 신청 내용을 확인한 뒤 적용됩니다.</p>
+        <p class="license-footnote">기본 점검은 1포인트, 자세한 점검은 3포인트를 사용합니다. 포인트는 매달 새로 제공되며, 교사와 교사 PRO는 신청 내용을 확인한 뒤 적용됩니다.</p>
       </section>
 
       <section class="faq-section" id="faq" aria-labelledby="faq-title">
         <header>
           <span class="section-kicker">서비스 원칙</span>
           <h2 id="faq-title">판단을 대신하지 않고, 판단할 근거를 정리합니다.</h2>
-          <p>루지코지는 학부모를 평가하거나 법률적 결론을 내리는 서비스가 아닙니다.</p>
+          <p>루지코지는 학부모의 성격·선악을 확정하거나 법률적 결론을 내리는 서비스가 아닙니다.</p>
         </header>
         <div class="faq-list">
           <details><summary>누가 이용하는 서비스인가요?</summary><p>초·중·고 현직 교사가 학부모 민원, 생활지도 이의 제기, 교육분쟁 상황을 정리할 때 사용하는 서비스입니다.</p></details>
-          <details><summary>법률 자문을 제공하나요?</summary><p>아닙니다. 현재 정책의 빈틈과 위험을 검토하도록 돕는 참고 도구이며, 최종 정책 판단은 학교와 관련 기준에 따라야 합니다.</p></details>
-          <details><summary>학부모를 부정적으로 판단하나요?</summary><p>아닙니다. 상황 예측은 위험 계산에만 내부적으로 사용하며, 화면에서는 사람을 평가하지 않고 정책과 위험만 보여줍니다.</p></details>
+          <details><summary>법률 자문을 제공하나요?</summary><p>아니요. 선생님의 기록과 학교 대응 기준에서 조심할 점을 찾아주는 참고 도구예요. 최종 판단은 학교 규정과 관련 절차에 따라야 합니다.</p></details>
+          <details><summary>‘악성 민원 백신’은 학부모를 악성으로 분류한다는 뜻인가요?</summary><p>아닙니다. 반복 압박이나 공개 위협처럼 대응을 어렵게 만드는 행동 신호와, 이를 막지 못하는 대응 기준의 빈틈을 미리 살핀다는 비유입니다. 학부모 개인의 성격이나 의도를 확정하지 않습니다.</p></details>
           <details><summary>어떤 내용을 입력하면 되나요?</summary><p>이름을 제외한 사실관계, 학부모의 주장과 요구, 학생 상황, 이미 남긴 기록과 확인할 학교 규정을 적으면 됩니다.</p></details>
           <details><summary>교육활동 침해 여부를 확정해 주나요?</summary><p>확정하지 않습니다. 교육활동 침해가 우려되는 신호와 관리자 공유 필요성을 정리하며, 학교와 교육청의 정식 절차를 대신하지 않습니다.</p></details>
           <details><summary>내 기록이 관리자에게 자동으로 전송되나요?</summary><p>아닙니다. 관리자에게 공유할 내용을 정리할 뿐, 사용자의 확인 없이 학교나 외부 기관으로 전송하지 않습니다.</p></details>
@@ -275,28 +268,28 @@
 
       <section class="privacy-band" id="privacy">
         <div><span class="section-kicker">기록할 때 주의할 점</span><h2>개인정보는 빼고 사실과 경과만 적으세요.</h2></div>
-        <p>학생·학부모의 이름이나 연락처는 입력하지 마세요. 루지코지는 사람을 평가하지 않고, 학교 정책의 빈틈과 대응 위험만 분석합니다.</p>
+        <p>학생·학부모의 이름이나 연락처는 입력하지 마세요. 루지코지는 사람을 단정하지 않고, 적어 주신 내용과 대응 기준에서 조심할 점만 살펴봐요.</p>
       </section>
 
       <section class="landing-cta" aria-label="기록 분석 시작">
-        <div><span>루지코지 · 교사 전용</span><h2>현재 정책이 이 상황을 안전하게 막아주는지 확인해 보세요.</h2><p>정책의 강점과 빈틈, 위험 6가지와 권장 정책안을 한 화면에서 비교합니다.</p></div>
-        <button class="primary-button large" type="button" data-start-chat data-reset-simulation data-auth-mode-target="signup">정책 위험 분석하기</button>
+        <div><span>선생님을 지켜줄 악성 민원 백신</span><h2>혼자 판단하기 전에, 기록부터 남겨 보세요.</h2><p>루지코지가 조심할 점과 보완할 기준을 선생님의 언어로 정리해 드려요.</p></div>
+        <button class="primary-button large" type="button" data-start-chat data-reset-simulation data-auth-mode-target="signup">민원 기록 시작하기</button>
       </section>
     </section>
 
     <section class="chat-view memo-app" data-chat-view hidden aria-label="루지코지 기록 관리">
       <aside class="chat-sidebar record-sidebar" data-chat-sidebar aria-label="기록 탐색">
         <div class="chat-sidebar-head">
-          <a class="app-brand" href="#top" aria-label="루지코지 홈" data-home-link><img src="assets/brand/roosycozy-rc-logo.png" alt="" width="28" height="28" /><span><strong>루지코지</strong><small>교사 전용 정책 위험 분석</small></span></a>
+          <a class="app-brand" href="#top" aria-label="루지코지 홈" data-home-link><img src="assets/brand/roosycozy-rc-logo.png" alt="" width="28" height="28" /><span><strong>루지코지</strong><small>기록·위험도·코칭</small></span></a>
           <button class="drawer-close" type="button" data-chat-history-close aria-label="기록 메뉴 닫기">닫기</button>
         </div>
 
-        <button class="primary-button new-record-button" type="button" data-new-chat><span>＋</span> 새 학부모 민원</button>
+        <button class="primary-button new-record-button" type="button" data-new-chat><span>＋</span> 새 기록</button>
 
         <nav class="record-navigation" aria-label="기록 메뉴">
           <button type="button" aria-current="page" data-workspace-tab="calendar"><span aria-hidden="true">▦</span>달력</button>
-          <button type="button" data-workspace-tab="input" data-new-record-nav><span aria-hidden="true">✎</span>새 학부모 민원</button>
-          <button type="button" data-workspace-tab="results"><span aria-hidden="true">◌</span>정책 위험 분석</button>
+          <button type="button" data-workspace-tab="input" data-new-record-nav><span aria-hidden="true">✎</span>기록하기</button>
+          <button type="button" data-workspace-tab="results"><span aria-hidden="true">◌</span>분석 결과</button>
         </nav>
 
         <div class="sidebar-records-head"><span>최근 기록</span><b data-record-count>0</b></div>
@@ -311,15 +304,15 @@
       <section class="chat-panel record-panel">
         <header class="chat-panel-header record-topbar">
           <button class="history-button" type="button" data-chat-history-toggle aria-expanded="false" aria-label="기록 메뉴 열기">메뉴</button>
-          <div><span data-today-label>오늘의 학교 기록</span><h1 data-chat-title>정책 위험 기록</h1></div>
-          <div class="chat-header-actions"><button class="ghost-button" type="button" data-back-home>서비스 소개</button><button class="primary-button compact" type="button" data-new-chat>＋ 새 학부모 민원</button></div>
+          <div><span data-today-label>오늘의 학교 기록</span><h1 data-chat-title>내 학교 기록</h1></div>
+          <div class="chat-header-actions"><button class="ghost-button" type="button" data-back-home>서비스 소개</button><button class="primary-button compact" type="button" data-new-chat>＋ 새 기록</button></div>
         </header>
 
         <div class="workspace-shell record-workspace">
           <nav class="workspace-tabs mobile-workspace-tabs" aria-label="기록 화면" role="tablist">
             <button type="button" role="tab" aria-selected="true" data-workspace-tab="calendar">달력</button>
-            <button type="button" role="tab" aria-selected="false" data-workspace-tab="input">학부모 민원</button>
-            <button type="button" role="tab" aria-selected="false" data-workspace-tab="results">정책 위험</button>
+            <button type="button" role="tab" aria-selected="false" data-workspace-tab="input">기록하기</button>
+            <button type="button" role="tab" aria-selected="false" data-workspace-tab="results">분석 결과</button>
           </nav>
 
           <section class="workspace-view calendar-workspace" data-workspace-calendar aria-label="기록 달력">
@@ -329,7 +322,7 @@
             </header>
             <div class="calendar-summary" aria-label="이번 달 기록 요약">
               <div><span>이번 달 기록</span><strong data-month-records>0</strong></div>
-              <div><span>위험 분석 완료</span><strong data-month-analyzed>0</strong></div>
+              <div><span>점검 완료</span><strong data-month-analyzed>0</strong></div>
             </div>
             <div class="calendar-content">
               <div class="calendar-board">
@@ -346,7 +339,7 @@
           <section class="workspace-view workspace-input" data-workspace-input hidden aria-label="새 기록 작성">
             <form class="policy-input-form memo-input-form simple-record-form" id="console-input" data-policy-input-form>
               <header class="workspace-title">
-                <div><span>정책 위험 분석</span><h2>상황과 현재 정책을 적어 주세요.</h2><p>루지코지가 현재 정책의 빈틈과 학교 대응 위험 6가지를 같은 기준으로 계산합니다.</p></div>
+                <div><span>민원 기록 점검</span><h2>무슨 일이 있었는지 편하게 적어 주세요.</h2><p>선생님의 기록과 학교의 대응 기준을 함께 보고, 위험도와 보완할 기준을 쉬운 말로 정리해 드려요.</p></div>
               </header>
 
               <div class="record-meta-grid">
@@ -355,55 +348,55 @@
               </div>
 
               <label class="field-group memo-primary-field record-note-field">
-                <span class="field-label">상황 기록 <em>필수</em></span>
-                <small class="field-help">무슨 일이 있었는지, 학부모가 무엇을 요구했는지, 지금까지 어떻게 답했는지를 한 번에 적어도 됩니다.</small>
+                <span class="field-label">무슨 일이 있었나요? <em>필수</em></span>
+                <small class="field-help">학부모가 한 말과 요구, 지금까지 선생님이 답한 내용을 평소 메모하듯 적어 주세요.</small>
                 <textarea rows="10" maxlength="5000" placeholder="예: 수업 방해 행동을 지도한 뒤 학부모에게 안내했습니다. 학부모는 생활지도 철회와 공식 사과를 세 차례 요구했고, 교장 면담과 온라인 공개를 언급했습니다. 학생 진술과 교사 기록은 아직 관리자 확인 전입니다." data-incident-conditions></textarea>
               </label>
               <label class="field-group memo-primary-field optional-policy-field">
-                <span class="field-label">현재 적용 중인 정책·학교 기준 <em>필수</em></span>
-                <small class="field-help">실제로 적용 중인 규정이나 내부 기준 문장을 그대로 붙여 넣어 주세요.</small>
+                <span class="field-label">학교에서는 어떻게 대응하기로 되어 있나요? <em>필수</em></span>
+                <small class="field-help">학교 규정, 업무 안내 또는 관리자와 정한 대응 기준을 그대로 붙여 넣어 주세요.</small>
                 <textarea rows="5" maxlength="4000" placeholder="예: 반복 민원이나 온라인 공개 언급이 있으면 연락 내용을 보존하고 관리자에게 공유합니다." data-policy-document></textarea>
               </label>
 
-              <div class="analysis-pipeline-preview simple-analysis-flow" aria-label="AI가 정리하는 순서"><span><b>1</b>현재 정책 확인</span><i></i><span><b>2</b>학부모 유형·QRE 추정</span><i></i><span><b>3</b>6가지 위험 계산</span></div>
-              <div class="form-action-area"><div><p id="form-feedback" data-form-feedback>상황 기록과 현재 정책을 입력해 주세요.</p><small>학생·학부모의 이름, 연락처 등 개인정보는 적지 마세요.</small></div><button class="primary-button large" type="button" aria-describedby="form-feedback" data-run-simulation>정책 위험 분석하기</button></div>
+              <div class="analysis-pipeline-preview simple-analysis-flow" aria-label="AI가 정리하는 순서"><span><b>1</b>기록 정리</span><i></i><span><b>2</b>위험도 확인</span><i></i><span><b>3</b>기준 코칭</span></div>
+              <div class="form-action-area"><div><p id="form-feedback" data-form-feedback>두 내용을 적으면 바로 점검할 수 있어요.</p><small>학생·학부모의 이름, 연락처 등 개인정보는 적지 마세요.</small></div><button class="primary-button large" type="button" aria-describedby="form-feedback" data-run-simulation>내 기록 점검하기</button></div>
             </form>
           </section>
 
           <section class="workspace-view workspace-results" data-workspace-results hidden aria-label="기록 분석 결과">
-            <header class="results-toolbar"><div><span data-result-status role="status" aria-live="polite">AI 추정 결과</span><h2 id="analysis-result-title" tabindex="-1">정책과 위험 한눈에 보기</h2></div><div><button class="ghost-button" type="button" data-results-calendar>달력으로</button><button class="ghost-button" type="button" data-edit-policy>기록 고치기</button></div></header>
+            <header class="results-toolbar"><div><span data-result-status role="status" aria-live="polite">루지코지 점검 결과</span><h2 id="analysis-result-title" tabindex="-1">이 기록의 위험도와 코칭</h2></div><div><button class="ghost-button" type="button" data-results-calendar>달력으로</button><button class="ghost-button" type="button" data-edit-policy>기록 고치기</button></div></header>
             <section class="record-source-card" data-record-source-card aria-labelledby="record-source-title" hidden>
               <header>
-                <div><span>내가 작성한 기록</span><h3 id="record-source-title">분석에 사용한 정책과 메모</h3><p>AI가 줄이거나 바꾸지 않은 입력 원문입니다.</p></div>
+                <div><span>선생님이 작성한 기록</span><h3 id="record-source-title">점검에 사용한 내용</h3><p>선생님이 적은 내용을 줄이거나 바꾸지 않고 그대로 보여드려요.</p></div>
                 <small data-record-source-date></small>
               </header>
               <div class="record-source-grid">
-                <article><span>현재 정책·학교 기준</span><p data-record-source-policy></p></article>
-                <article><span>상황 메모</span><p data-record-source-memo></p></article>
+                <article><span>학교에서 따르는 대응 기준</span><p data-record-source-policy></p></article>
+                <article><span>선생님의 기록</span><p data-record-source-memo></p></article>
               </div>
             </section>
             <section class="analysis-loading-screen" data-analysis-loading hidden role="status" aria-live="polite" aria-atomic="true">
               <div class="analysis-loading-mark" aria-hidden="true"><i></i><i></i><i></i></div>
-              <span>루지코지가 읽고 있어요</span>
-              <h2>정책, 학부모 반응 유형과 위험도를 함께 살펴보고 있습니다.</h2>
-              <p>분석이 끝나면 확인된 값만 한 화면에 보여드립니다.</p>
+              <span>루지코지가 차분히 살펴보고 있어요</span>
+              <h2>선생님의 기록과 학교 대응 기준을 함께 읽고 있어요.</h2>
+              <p>곧 위험도와 쉬운 코칭을 한 화면에 보여드릴게요.</p>
               <ol aria-label="정리 진행 단계">
-                <li><b>1</b><div><strong>현재 정책 확인</strong><small>입력한 정책에서 실제 기준 문장만 확인합니다.</small></div><i aria-hidden="true"></i></li>
-                <li><b>2</b><div><strong>학부모 반응 유형 추정</strong><small>현재 기록을 바탕으로 유형과 QRE 값을 계산합니다.</small></div><i aria-hidden="true"></i></li>
-                <li><b>3</b><div><strong>학교 대응 위험 계산</strong><small>정책과 예상 반응을 함께 보고 6가지 위험을 계산합니다.</small></div><i aria-hidden="true"></i></li>
+                <li><b>1</b><div><strong>기록 정리</strong><small>무슨 일이 있었는지와 학교 기준을 나누어 봐요.</small></div><i aria-hidden="true"></i></li>
+                <li><b>2</b><div><strong>반응과 위험 확인</strong><small>어떤 요구가 이어질지와 조심할 점을 살펴봐요.</small></div><i aria-hidden="true"></i></li>
+                <li><b>3</b><div><strong>기준 코칭</strong><small>보완할 기준을 선생님의 언어로 정리해요.</small></div><i aria-hidden="true"></i></li>
               </ol>
             </section>
 
             <section class="analysis-result-content unified-analysis-card compact-analysis-card" data-analysis-content aria-labelledby="analysis-result-title">
               <div class="analysis-overview-grid">
-                <section class="unified-analysis-section policy-analysis-section" aria-labelledby="policy-pane-title"><header class="unified-pane-head"><span>01</span><div><h3 id="policy-pane-title">현재 정책 진단</h3><p>입력한 정책에서 확인되는 기준과 가장 큰 빈틈입니다.</p></div></header><div id="console-policy" data-policy-assessment></div></section>
-                <section class="unified-analysis-section persona-analysis-section" aria-labelledby="persona-pane-title"><header class="unified-pane-head"><span>02</span><div><h3 id="persona-pane-title">학부모 유형과 QRE</h3><p>현재 기록에서 예상되는 반응 방식과 요구의 일관성입니다.</p></div></header><div data-persona-assessment></div></section>
-                <section class="unified-analysis-section risk-analysis-section" aria-labelledby="risk-pane-title"><header class="unified-pane-head"><span>03</span><div><h3 id="risk-pane-title">추정 위험도</h3><p>정책·상황 기록·예상 반응을 함께 본 AI 참고값입니다.</p></div></header><div id="console-dashboard" data-simulation-hud></div><section class="calculation-basis" aria-labelledby="calculation-basis-title"><header class="calculation-basis-heading"><div><span>엔진 판단 흐름</span><h3 id="calculation-basis-title">입력한 기록이 위험 점수가 되기까지</h3></div><p>상황·정책 입력 → 학부모 유형·QRE 판단 → 위험도 계산의 3단계를 그대로 보여드립니다.</p></header><div data-calculation-basis></div></section></section>
+                <section class="unified-analysis-section policy-analysis-section" aria-labelledby="policy-pane-title"><header class="unified-pane-head"><span>01</span><div><h3 id="policy-pane-title">대응 기준에서 빠진 점</h3><p>현재 기준에서 잘 갖춰진 부분과 먼저 보완할 부분이에요.</p></div></header><div id="console-policy" data-policy-assessment></div></section>
+                <section class="unified-analysis-section persona-analysis-section" aria-labelledby="persona-pane-title"><header class="unified-pane-head"><span>02</span><div><h3 id="persona-pane-title">학부모 반응 흐름</h3><p>어떤 요구가 반복되거나 커질 가능성이 있는지 보여드려요.</p></div></header><div data-persona-assessment></div></section>
+                <section class="unified-analysis-section risk-analysis-section" aria-labelledby="risk-pane-title"><header class="unified-pane-head"><span>03</span><div><h3 id="risk-pane-title">학교 대응 위험과 코칭</h3><p>조심할 점과 보완할 기준을 한눈에 확인하세요.</p></div></header><div id="console-dashboard" data-simulation-hud></div><section class="calculation-basis" aria-labelledby="calculation-basis-title"><header class="calculation-basis-heading"><div><span>이 결과가 나온 까닭</span><h3 id="calculation-basis-title">어떤 내용을 보고 판단했나요?</h3></div><p>기록·대응 기준 → 반응 흐름 → 위험도의 순서로 근거를 보여드려요.</p></header><div data-calculation-basis></div></section></section>
               </div>
 
               <section class="followup-disclosure" aria-labelledby="followup-title">
-                <header class="followup-heading"><span>04</span><div><h3 id="followup-title">추가로 물어보기</h3><p>유형, QRE 또는 위험 점수에서 궁금한 부분만 이어서 물어보세요.</p></div></header>
-                <section class="analysis-log"><div class="prompt-suggestions" aria-label="추가 질문 예시"><button type="button" data-prompt-suggestion="왜 이 학부모 유형으로 추정했는지 쉽게 설명해줘.">왜 이 유형인가요?</button><button type="button" data-prompt-suggestion="이번 기록의 QRE 값이 무엇을 뜻하는지 쉽게 설명해줘.">QRE 값의 뜻</button><button type="button" data-prompt-suggestion="가장 높은 위험 점수의 근거를 알려줘.">가장 큰 위험의 근거</button></div><div class="message-list" data-message-list aria-live="polite"></div><form class="composer" data-chat-form><textarea data-chat-input rows="1" maxlength="2600" aria-label="추가 질문" placeholder="궁금한 점을 짧게 물어보세요"></textarea><button type="submit" aria-label="추가 질문 보내기" data-send-button>보내기</button></form></section>
+                <header class="followup-heading"><span>04</span><div><h3 id="followup-title">쉬운 말로 더 물어보기</h3><p>이해하기 어려운 부분이 있다면 짧게 물어보세요.</p></div></header>
+                <section class="analysis-log"><div class="prompt-suggestions" aria-label="추가 질문 예시"><button type="button" data-prompt-suggestion="왜 이 학부모 유형으로 추정했는지 쉽게 설명해줘.">왜 이런 반응인가요?</button><button type="button" data-prompt-suggestion="이번 기록의 QRE 값이 무엇을 뜻하는지 쉬운 말로 설명해줘.">요구가 이어질 가능성</button><button type="button" data-prompt-suggestion="가장 높은 위험 점수의 근거를 알려줘.">가장 조심할 점</button></div><div class="message-list" data-message-list aria-live="polite"></div><form class="composer" data-chat-form><textarea data-chat-input rows="1" maxlength="2600" aria-label="추가 질문" placeholder="궁금한 점을 짧게 물어보세요"></textarea><button type="submit" aria-label="추가 질문 보내기" data-send-button>보내기</button></form></section>
               </section>
             </section>
           </section>
@@ -420,7 +413,7 @@
       <div><span class="section-kicker">루지코지</span><h2 id="auth-title">기록 시작</h2></div>
       <button type="button" data-auth-close>닫기</button>
     </header>
-    <p class="auth-intro">로그인하면 학부모 민원 메모와 정책 위험 분석이 달력에 저장되어 나중에 다시 확인할 수 있습니다.</p>
+    <p class="auth-intro">로그인하면 선생님의 기록, 위험도와 코칭이 달력에 저장되어 나중에 다시 볼 수 있어요.</p>
     <button class="google-button" type="button" data-sign-in-google>Google 계정으로 계속</button>
     <div class="auth-divider">또는 이메일로 시작하기</div>
     <div class="auth-tabs" role="tablist">
@@ -451,18 +444,18 @@
       <article data-legal-content="privacy">
         <p class="legal-date">시행일: 2026년 7월 13일</p>
         <section><h3>1. 처리하는 정보</h3><p>이메일, 로그인 정보, 이용권 종류, AI 이용 포인트 사용량, 저장된 대화·자세한 분석·생성 시각, 오류 및 보안 기록을 처리할 수 있습니다.</p></section>
-        <section><h3>2. 이용 목적</h3><p>계정과 로그인 제공, 월별 이용 포인트 관리, 저장된 결과 조회, AI 정책 위험 분석, 서비스 점검과 부정 이용 방지에 사용합니다.</p></section>
-        <section><h3>3. AI 처리</h3><p>제출한 학교 규정과 상황 내용은 정책과 위험을 분석하기 위해 AI API로 전송될 수 있습니다. 주민등록번호, 연락처, 주소, 실명 등 불필요한 개인정보는 입력하지 마세요.</p></section>
+        <section><h3>2. 이용 목적</h3><p>계정과 로그인 제공, 월별 이용 포인트 관리, 저장된 결과 조회, AI 학교 대응 위험 분석, 서비스 점검과 부정 이용 방지에 사용합니다.</p></section>
+        <section><h3>3. AI 처리</h3><p>제출한 학교 규정과 상황 내용은 대응 기준과 위험을 분석하기 위해 AI API로 전송될 수 있습니다. 주민등록번호, 연락처, 주소, 실명 등 불필요한 개인정보는 입력하지 마세요.</p></section>
         <section><h3>4. 보관과 삭제</h3><p>분석 기록은 계정에서 다시 볼 수 있도록 저장됩니다. 사용자는 기록 삭제 기능 또는 문의 메일을 통해 삭제를 요청할 수 있습니다.</p></section>
-        <section><h3>5. 외부 서비스</h3><p>인증·데이터 저장에는 Supabase, AI 정책 위험 분석에는 OpenAI API가 사용될 수 있습니다. 서비스 제공 목적 외 개인정보를 판매하지 않습니다.</p></section>
+        <section><h3>5. 외부 서비스</h3><p>인증·데이터 저장에는 Supabase, AI 학교 대응 위험 분석에는 OpenAI API가 사용될 수 있습니다. 서비스 제공 목적 외 개인정보를 판매하지 않습니다.</p></section>
         <section><h3>6. 문의</h3><p>개인정보 열람, 정정, 삭제, 처리정지 요청은 <a href="mailto:myongsungcs@gmail.com">myongsungcs@gmail.com</a>으로 연락해 주세요.</p></section>
       </article>
       <article data-legal-content="terms" hidden>
         <p class="legal-date">시행일: 2026년 7월 13일</p>
-        <section><h3>1. 서비스 성격</h3><p>루지코지는 학부모 민원과 교육분쟁 상황에서 현재 학교 정책의 빈틈과 대응 위험을 분석하는 교사 전용 AI 도구입니다. 현재 정책, 6가지 위험과 권장 정책안을 정리하며 법률 자문, 교육활동 침해 여부의 확정, 학교의 최종 결정을 대신하지 않습니다.</p></section>
+        <section><h3>1. 서비스 성격</h3><p>루지코지는 학부모 민원과 교육분쟁 상황에서 현재 학교 대응 기준의 빈틈과 위험을 분석하는 교사 전용 AI 도구입니다. 현재 대응 기준, 6가지 위험과 보완 기준안을 정리하며 법률 자문, 교육활동 침해 여부의 확정, 학교의 최종 결정을 대신하지 않습니다.</p></section>
         <section><h3>2. 계정과 이용 포인트</h3><p>AI 기능을 이용하려면 로그인과 AI 이용 포인트가 필요합니다. 계정별 월간 포인트와 이용 범위는 서비스 화면의 안내를 따릅니다.</p></section>
         <section><h3>3. 사용자 의무</h3><p>사용자는 입력 자료를 사용할 권한이 있어야 하며 개인정보와 민감정보를 최소화해야 합니다. 불법 목적, 타인 권리 침해, 시스템 남용을 위한 사용은 제한될 수 있습니다.</p></section>
-        <section><h3>4. AI 결과의 한계</h3><p>AI가 보여주는 정책 진단, 위험 점수와 권장 정책안은 참고 자료입니다. 학교 기준을 바꾸기 전에는 관리자 확인과 필요한 경우 관련 전문가 검토가 필요합니다.</p></section>
+        <section><h3>4. AI 결과의 한계</h3><p>AI가 보여주는 대응 기준 점검, 위험 점수와 보완 기준안은 참고 자료입니다. 학교 대응 기준을 바꾸기 전에는 관리자 확인과 필요한 경우 관련 전문가 검토가 필요합니다.</p></section>
         <section><h3>5. 기록과 책임</h3><p>교사는 입력한 사실관계와 AI 결과를 학교 상황에 맞게 확인해야 합니다. 서비스는 안정적인 이용을 위해 기록 저장, 사용량 제한, 비정상 이용 차단을 수행할 수 있습니다.</p></section>
         <section><h3>6. 변경과 문의</h3><p>이용 내용이 바뀌면 서비스 화면에 안내합니다. 이용권, 포인트, 서비스 문의는 <a href="mailto:myongsungcs@gmail.com">myongsungcs@gmail.com</a>으로 연락해 주세요.</p></section>
       </article>
@@ -470,7 +463,7 @@
   </section>
 
   <footer class="site-footer">
-    <div><strong>루지코지</strong><p>교사 전용 학부모 민원 정책 위험 분석</p></div>
+    <div><strong>루지코지</strong><p>선생님의 기록·위험도·코칭</p></div>
     <div>
       <button type="button" data-legal-open="privacy">개인정보처리방침</button>
       <button type="button" data-legal-open="terms">이용약관</button>
