@@ -7,10 +7,10 @@
   <title>루지코지 | 선생님을 지켜줄 악성 민원 백신</title>
   <meta name="description" content="학부모 민원 기록을 적으면 현재 대응 기준의 위험도와 쉬운 코칭을 보여주는 교사 전용 AI 도구입니다." />
   <link rel="stylesheet" href="app.css?v=20260715-1" />
-  <link rel="stylesheet" href="memo.css?v=20260723-1" />
+  <link rel="stylesheet" href="memo.css?v=20260723-2" />
   <link rel="stylesheet" href="landing-editorial.css?v=20260723-2" />
   <script src="supabase-config.js"></script>
-  <script type="module" src="app.js?v=20260723-3"></script>
+  <script type="module" src="app.js?v=20260723-5"></script>
 </head>
 
 <body data-view="landing" data-authenticated="false">
@@ -145,12 +145,12 @@
           <span class="section-kicker">딱 3단계면 충분해요</span>
           <h2 id="workflow-title">적고, 확인하고, 더 안전한 기준을 만드세요.</h2>
           <p>어려운 말은 루지코지가 풀어드려요. 선생님은 있었던 일과 학교의 대응 기준만 적으면 됩니다.</p>
-          <p class="engine-principle">학부모를 악성으로 단정하지 않아요. 현재 기록에서 보이는 반응과 대응 기준의 위험만 살펴봅니다.</p>
+          <p class="engine-principle">학부모를 악성으로 단정하지 않아요. 선생님이 남긴 사실과 학교 대응 기준의 빈틈만 살펴봅니다.</p>
         </header>
         <ol>
           <li><span>01</span><div><strong>선생님의 기록을 적어요</strong><p>무슨 일이 있었는지와 학부모의 요구를 평소 메모하듯 적어 주세요.</p><small>상황 · 학부모 요구 · 현재 대응 기준</small></div></li>
-          <li><span>02</span><div><strong>반응과 위험을 함께 살펴봐요</strong><p>어떤 요구가 이어질지와 현재 기준에서 생길 수 있는 위험을 계산해요.</p><small>요구가 이어질 가능성 · 조심할 점 · 학교 대응 위험</small></div></li>
-          <li><span>03</span><div><strong>쉬운 코칭을 받아요</strong><p>놓친 기준과 보완할 문장을 선생님이 바로 이해할 수 있게 정리해 드려요.</p><small>조심할 점 · 보완 기준 · 예상 변화</small></div></li>
+          <li><span>02</span><div><strong>안전장치와 위험을 바로 계산해요</strong><p>기록 확인, 관리자 공유, 답변 기한처럼 빠지면 위험한 기준 6가지를 살펴봐요.</p><small>확인한 사실 · 안전장치 6가지 · 학교 대응 위험</small></div></li>
+          <li><span>03</span><div><strong>보완할 기준을 받아요</strong><p>가장 크게 빠진 기준과 바로 검토할 수 있는 문장을 쉬운 말로 정리해 드려요.</p><small>가장 큰 빈틈 · 권장 문장 · 판단 연결 근거</small></div></li>
         </ol>
       </section>
 
@@ -364,7 +364,7 @@
           </section>
 
           <section class="workspace-view workspace-results" data-workspace-results hidden aria-label="기록 분석 결과">
-            <header class="results-toolbar"><div><span data-result-status role="status" aria-live="polite">루지코지 점검 결과</span><h2 id="analysis-result-title" tabindex="-1">이 기록의 위험도와 코칭</h2></div><div><button class="ghost-button" type="button" data-results-calendar>달력으로</button><button class="ghost-button" type="button" data-edit-policy>기록 고치기</button></div></header>
+            <header class="results-toolbar"><div><span data-result-status role="status" aria-live="polite">루지코지 점검 결과</span><h2 id="analysis-result-title" tabindex="-1">이 기록의 대응 위험 예측</h2></div><div><button class="ghost-button" type="button" data-results-calendar>달력으로</button><button class="ghost-button" type="button" data-edit-policy>기록 고치기</button></div></header>
             <section class="record-source-card" data-record-source-card aria-labelledby="record-source-title" hidden>
               <header>
                 <div><span>선생님이 작성한 기록</span><h3 id="record-source-title">점검에 사용한 내용</h3><p>선생님이 적은 내용을 줄이거나 바꾸지 않고 그대로 보여드려요.</p></div>
@@ -379,24 +379,24 @@
               <div class="analysis-loading-mark" aria-hidden="true"><i></i><i></i><i></i></div>
               <span>루지코지가 차분히 살펴보고 있어요</span>
               <h2>선생님의 기록과 학교 대응 기준을 함께 읽고 있어요.</h2>
-              <p>곧 위험도와 쉬운 코칭을 한 화면에 보여드릴게요.</p>
+              <p>곧 확인한 사실, 안전장치와 위험을 한 화면에 보여드릴게요.</p>
               <ol aria-label="정리 진행 단계">
                 <li><b>1</b><div><strong>기록 정리</strong><small>무슨 일이 있었는지와 학교 기준을 나누어 봐요.</small></div><i aria-hidden="true"></i></li>
-                <li><b>2</b><div><strong>반응과 위험 확인</strong><small>어떤 요구가 이어질지와 조심할 점을 살펴봐요.</small></div><i aria-hidden="true"></i></li>
-                <li><b>3</b><div><strong>기준 코칭</strong><small>보완할 기준을 선생님의 언어로 정리해요.</small></div><i aria-hidden="true"></i></li>
+                <li><b>2</b><div><strong>안전장치와 위험 확인</strong><small>빠진 대응 기준과 학교 대응 위험 6가지를 바로 계산해요.</small></div><i aria-hidden="true"></i></li>
+                <li><b>3</b><div><strong>보완 기준 검증</strong><small>가장 큰 빈틈과 연결된 권장 문장을 정리해요.</small></div><i aria-hidden="true"></i></li>
               </ol>
             </section>
 
             <section class="analysis-result-content unified-analysis-card compact-analysis-card" data-analysis-content aria-labelledby="analysis-result-title">
               <div class="analysis-overview-grid">
-                <section class="unified-analysis-section policy-analysis-section" aria-labelledby="policy-pane-title"><header class="unified-pane-head"><span>01</span><div><h3 id="policy-pane-title">대응 기준에서 빠진 점</h3><p>현재 기준에서 잘 갖춰진 부분과 먼저 보완할 부분이에요.</p></div></header><div id="console-policy" data-policy-assessment></div></section>
-                <section class="unified-analysis-section persona-analysis-section" aria-labelledby="persona-pane-title"><header class="unified-pane-head"><span>02</span><div><h3 id="persona-pane-title">학부모 반응 흐름</h3><p>어떤 요구가 반복되거나 커질 가능성이 있는지 보여드려요.</p></div></header><div data-persona-assessment></div></section>
-                <section class="unified-analysis-section risk-analysis-section" aria-labelledby="risk-pane-title"><header class="unified-pane-head"><span>03</span><div><h3 id="risk-pane-title">학교 대응 위험과 코칭</h3><p>조심할 점과 보완할 기준을 한눈에 확인하세요.</p></div></header><div id="console-dashboard" data-simulation-hud></div><section class="calculation-basis" aria-labelledby="calculation-basis-title"><header class="calculation-basis-heading"><div><span>이 결과가 나온 까닭</span><h3 id="calculation-basis-title">어떤 내용을 보고 판단했나요?</h3></div><p>기록·대응 기준 → 반응 흐름 → 위험도의 순서로 근거를 보여드려요.</p></header><div data-calculation-basis></div></section></section>
+                <section class="unified-analysis-section policy-analysis-section" aria-labelledby="policy-pane-title"><header class="unified-pane-head"><span>01</span><div><h3 id="policy-pane-title">기록에서 확인한 사실</h3><p>점수에 사용한 내용과 아직 확인이 필요한 내용을 나누어 보여드려요.</p></div></header><div id="console-policy" data-policy-assessment data-facts-assessment></div></section>
+                <section class="unified-analysis-section persona-analysis-section" aria-labelledby="safeguards-pane-title"><header class="unified-pane-head"><span>02</span><div><h3 id="safeguards-pane-title">대응 안전장치 6가지</h3><p>현재 학교 대응 기준에 꼭 필요한 보호 장치가 있는지 확인했어요.</p></div></header><div data-persona-assessment data-safeguards-assessment></div></section>
+                <section class="unified-analysis-section risk-analysis-section" aria-labelledby="risk-pane-title"><header class="unified-pane-head"><span>03</span><div><h3 id="risk-pane-title">학교 대응 위험 6가지</h3><p>상황과 대응 기준을 함께 보고, 높을수록 조심해야 할 위험을 계산했어요.</p></div></header><div id="console-dashboard" data-simulation-hud data-risks-assessment></div><section class="calculation-basis" aria-labelledby="calculation-basis-title"><header class="calculation-basis-heading"><div><span>06 · 판단 근거 그래프</span><h3 id="calculation-basis-title">무엇이 어떤 위험으로 이어졌나요?</h3></div><p>확인한 사실 → 빠진 안전장치 → 위험 → 권장 문장의 연결만 보여드려요.</p></header><div data-calculation-basis data-evidence-graph></div></section></section>
               </div>
 
               <section class="followup-disclosure" aria-labelledby="followup-title">
-                <header class="followup-heading"><span>04</span><div><h3 id="followup-title">쉬운 말로 더 물어보기</h3><p>이해하기 어려운 부분이 있다면 짧게 물어보세요.</p></div></header>
-                <section class="analysis-log"><div class="prompt-suggestions" aria-label="추가 질문 예시"><button type="button" data-prompt-suggestion="왜 이 학부모 유형으로 추정했는지 쉽게 설명해줘.">왜 이런 반응인가요?</button><button type="button" data-prompt-suggestion="이번 기록의 QRE 값이 무엇을 뜻하는지 쉬운 말로 설명해줘.">요구가 이어질 가능성</button><button type="button" data-prompt-suggestion="가장 높은 위험 점수의 근거를 알려줘.">가장 조심할 점</button></div><div class="message-list" data-message-list aria-live="polite"></div><form class="composer" data-chat-form><textarea data-chat-input rows="1" maxlength="2600" aria-label="추가 질문" placeholder="궁금한 점을 짧게 물어보세요"></textarea><button type="submit" aria-label="추가 질문 보내기" data-send-button>보내기</button></form></section>
+                <header class="followup-heading"><span>07</span><div><h3 id="followup-title">쉬운 말로 더 물어보기</h3><p>이해하기 어려운 부분이 있다면 짧게 물어보세요.</p></div></header>
+                <section class="analysis-log"><div class="prompt-suggestions" aria-label="추가 질문 예시"><button type="button" data-prompt-suggestion="어떤 사실이 이 위험 점수에 연결됐는지 쉽게 설명해줘.">어떤 사실을 봤나요?</button><button type="button" data-prompt-suggestion="가장 크게 빠진 대응 기준과 그 이유를 알려줘.">가장 큰 빈틈</button><button type="button" data-prompt-suggestion="권장 문장을 넣으면 어떤 위험이 줄어드는지 알려줘.">문장을 넣으면?</button></div><div class="message-list" data-message-list aria-live="polite"></div><form class="composer" data-chat-form><textarea data-chat-input rows="1" maxlength="2600" aria-label="추가 질문" placeholder="궁금한 점을 짧게 물어보세요"></textarea><button type="submit" aria-label="추가 질문 보내기" data-send-button>보내기</button></form></section>
               </section>
             </section>
           </section>

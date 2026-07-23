@@ -139,14 +139,14 @@ const MAX_ANALYSIS_CYCLES = 5;
 const FINAL_REPORT_COST = 3;
 const compatStateKey = ['game', 'State'].join('');
 const ADMIN_CALCULATION_LOG_GUIDANCE = [
-  '관리자 연구 계정의 최상위 calculation_log에 내부 사고 독백이 아닌 재현 가능한 계산 장부를 반환한다.',
-  'calculation_log.run에는 run_id, engine_version, score_version, weights_version, seed, precision, rounding, status를 넣는다.',
-  '1단계 input.features에는 key, label, source, 마스킹한 source_excerpt, raw_value, encoded_value, encoding, missing을 실제 사용값 그대로 넣는다.',
-  '2단계 persona.candidates에는 5개 유형 각각의 모델 raw_probability와 서버 normalized probability를 넣고 selected_type, confidence, hold_margin, raw_probability_total, normalization_factor를 넣는다. 서버에 실제 투명 분류식이 없으면 base·기여항·logit을 꾸며 만들지 않는다.',
-  '2단계 qre.actions에는 분모에 들어간 모든 행동의 utility_terms(name/value/weight/contribution), utility, lambda_utility, exp_value, probability, selected를 넣고 lambda, normalizer_z, seed, sample_value를 넣는다.',
-  '3단계 risk.metrics에는 6개 위험 각각의 key, label, formula_id, formula, base, terms(feature/value/weight/contribution), raw_score, final_score, rounding을 넣는다.',
-  '3단계 risk.overall에는 method, formula, terms(metric/score/weight/contribution), raw_score, final_score, rounding을 넣어 실제 합산을 재현할 수 있게 한다.',
-  '숫자는 꾸민 문자열이 아닌 number로 반환하고 0, false, null, 음수 효용을 구분한다. 실제 계산하지 않은 항목은 만들지 말고 status를 partial로, 누락 사유를 limitations에 적는다.',
+  '관리자 연구 계정의 calculation_log에는 내부 사고 독백이 아니라 재현 가능한 직접 위험 계산 장부를 반환한다.',
+  'run에는 run_id, engine_version, score_version, weights_version, prediction_provider, explanation_kind, precision, rounding을 넣는다.',
+  'input.facts에는 원문에서 검증된 사실과 source_excerpt를, safeguards에는 고정 6개 항목의 present·partial·missing 상태를 넣는다.',
+  'risk.metrics에는 6개 위험의 key, 공개 label, formula_id, terms(feature/value/weight/contribution), raw_score, score를 넣는다.',
+  'gap_counterfactuals에는 누락 안전장치를 하나씩 보완했을 때의 종합 위험 감소폭을 넣고 biggest_gap을 하나만 고른다.',
+  'verified_recommendations에는 서버 템플릿 ID, 연결 안전장치, 연결 위험, 예상 감소폭을 넣는다.',
+  'judgment_graph에는 fact·safeguard·risk·gap·recommendation 노드와 실제 참조가 유효한 edge만 넣는다.',
+  '실제로 계산하지 않은 weight와 contribution은 null로 두며 GNN attribution을 산술 기여도로 꾸미지 않는다.',
   'source_excerpt에는 학생·학부모 개인정보를 넣지 말고 필요한 짧은 문구만 마스킹하여 반환한다.',
 ].join('\n');
 
@@ -162,6 +162,13 @@ function createDefaultSimulationState() {
     recordTitle: '',
     policyDocument: '',
     incidentConditions: '',
+    analysisSchemaVersion: 'direct-risk-v1',
+    facts: [],
+    safeguards: [],
+    riskMetrics: [],
+    biggestGap: null,
+    recommendedClauses: [],
+    evidenceGraph: null,
     actorType: '',
     actorConfidence: null,
     actorProbabilities: {},
@@ -460,12 +467,13 @@ function sanitizeProductLanguage(value) {
     [/상대가/g, '학부모가'],
     [/상대의/g, '학부모의'],
     [/상대를/g, '학부모를'],
-    [/QRE\s*행동\s*일관성/gi, '요구가 이어지는 정도(QRE)'],
-    [/QRE\s*기반/gi, '요구 흐름 계산(QRE)을 바탕으로'],
-    [/Logit-QRE/gi, 'QRE'],
-    [/lambda_QRE/gi, 'QRE 값'],
-    [/QRE\s*페르소나/gi, '예상 학부모 반응'],
-    [/QRE\s*Engine/gi, '반응 흐름 계산(QRE)'],
+    [/QRE\s*행동\s*일관성/gi, '이전 반응 계산값'],
+    [/QRE\s*기반/gi, '이전 분석을 바탕으로'],
+    [/Logit-QRE/gi, '이전 반응 계산'],
+    [/lambda_QRE/gi, '이전 반복 계수'],
+    [/QRE\s*페르소나/gi, '이전 분석 가정'],
+    [/QRE\s*Engine/gi, '이전 반응 계산'],
+    [/\bQRE\b/gi, '이전 반응 계산'],
     [new RegExp(['ROOSY', '-X ', 'Surv', 'ival'].join(''), 'g'), '루지코지 반응·위험 계산 모델'],
     [new RegExp(['ROOSY', '-X'].join(''), 'g'), '반응·위험 계산 모델'],
     [new RegExp(['AI 민원 ', '생존', '모드'].join(''), 'g'), '민원 대응 미리보기'],
@@ -1266,20 +1274,26 @@ function normalizeDecisionTrace(value) {
 
 function riskMetricLabel(key) {
   const labels = {
-    fact_check_need: '사실을 더 확인할 필요',
-    factCheckNeed: '사실을 더 확인할 필요',
-    manipulation_risk: '민원 압박에 흔들릴 위험',
-    manipulationRisk: '민원 압박에 흔들릴 위험',
-    over_concession_risk: '확인 전에 약속할 위험',
-    overConcessionRisk: '확인 전에 약속할 위험',
-    under_response_risk: '필요한 대응을 놓칠 위험',
-    underResponseRisk: '필요한 대응을 놓칠 위험',
-    policy_violation_risk: '학교 기준을 벗어날 위험',
-    policyViolationRisk: '학교 기준을 벗어날 위험',
-    escalation_need: '관리자에게 공유할 필요',
-    escalationNeed: '관리자에게 공유할 필요',
-    handoff_need: '관리자에게 공유할 필요',
-    handoffNeed: '관리자에게 공유할 필요',
+    unverified_response_risk: '확인 없이 답할 위험',
+    fact_check_need: '확인 없이 답할 위험',
+    factCheckNeed: '확인 없이 답할 위험',
+    pressure_judgment_risk: '압박에 판단이 흔들릴 위험',
+    manipulation_risk: '압박에 판단이 흔들릴 위험',
+    manipulationRisk: '압박에 판단이 흔들릴 위험',
+    premature_promise_risk: '성급히 약속할 위험',
+    over_concession_risk: '성급히 약속할 위험',
+    overConcessionRisk: '성급히 약속할 위험',
+    legitimate_issue_miss_risk: '정당한 문제를 놓칠 위험',
+    under_response_risk: '정당한 문제를 놓칠 위험',
+    underResponseRisk: '정당한 문제를 놓칠 위험',
+    school_procedure_risk: '학교 절차를 놓칠 위험',
+    policy_violation_risk: '학교 절차를 놓칠 위험',
+    policyViolationRisk: '학교 절차를 놓칠 위험',
+    solo_handling_risk: '혼자 대응하다 커질 위험',
+    escalation_need: '혼자 대응하다 커질 위험',
+    escalationNeed: '혼자 대응하다 커질 위험',
+    handoff_need: '혼자 대응하다 커질 위험',
+    handoffNeed: '혼자 대응하다 커질 위험',
   };
   return labels[key] || compactTraceText(key, 60) || '위험 점수';
 }
@@ -1520,7 +1534,78 @@ function composeSimulationPayload(primaryState, analysisState, analysisResult, e
     const key = phaseRiskKeyMap[item?.key];
     if (key) payload[key] = firstMeaningfulValue(payload[key], item?.score);
   }
-  payload.overall_risk = firstMeaningfulValue(payload.overall_risk, payload.overallRisk, phaseOverallRisk.score);
+  const directRiskSet = asObject(firstMeaningfulValue(
+    result.risks,
+    primary.risks,
+    analysis.risks,
+    analysis.risk
+  ));
+  const directRiskMetrics = Array.isArray(directRiskSet.metrics) ? directRiskSet.metrics : [];
+  const directMetricAliases = {
+    unverified_response_risk: 'fact_check_need',
+    pressure_judgment_risk: 'manipulation_risk',
+    premature_promise_risk: 'over_concession_risk',
+    legitimate_issue_miss_risk: 'under_response_risk',
+    solo_handling_risk: 'escalation_need',
+    school_procedure_risk: 'policy_violation_risk',
+  };
+  for (const item of directRiskMetrics) {
+    const canonicalKey = String(firstMeaningfulValue(item?.legacy_key, item?.legacyKey, item?.key) ?? '');
+    const legacyKey = directMetricAliases[canonicalKey] || canonicalKey;
+    if (legacyKey) payload[legacyKey] = firstMeaningfulValue(payload[legacyKey], item?.score, item?.final_score, item?.finalScore);
+  }
+  payload.analysis_schema_version = firstMeaningfulValue(
+    primary.analysis_schema_version,
+    primary.analysisSchemaVersion,
+    result.schema_version,
+    result.schemaVersion,
+    analysis.schema_version,
+    analysis.schemaVersion
+  );
+  payload.extracted_facts = firstMeaningfulValue(
+    primary.extracted_facts,
+    primary.extractedFacts,
+    result.facts,
+    analysis.facts
+  );
+  payload.policy_safeguards = firstMeaningfulValue(
+    primary.policy_safeguards,
+    primary.policySafeguards,
+    result.policy_safeguards,
+    result.policySafeguards,
+    analysis.safeguards
+  );
+  payload.risks = directRiskSet;
+  payload.largest_policy_gap = firstMeaningfulValue(
+    primary.largest_policy_gap,
+    primary.largestPolicyGap,
+    result.largest_policy_gap,
+    result.largestPolicyGap,
+    analysis.largest_policy_gap,
+    analysis.largestPolicyGap
+  );
+  payload.recommended_clauses = firstMeaningfulValue(
+    primary.recommended_clauses,
+    primary.recommendedClauses,
+    result.recommended_clauses,
+    result.recommendedClauses,
+    analysis.recommended_clauses,
+    analysis.recommendedClauses
+  );
+  payload.judgment_graph = firstMeaningfulValue(
+    primary.judgment_graph,
+    primary.judgmentGraph,
+    result.judgment_graph,
+    result.judgmentGraph,
+    analysis.judgment_graph,
+    analysis.judgmentGraph
+  );
+  payload.overall_risk = firstMeaningfulValue(
+    payload.overall_risk,
+    payload.overallRisk,
+    directRiskSet.overall,
+    phaseOverallRisk.score
+  );
   payload.decision_trace = decisionTrace;
   payload.calculation_log = calculationLog && typeof calculationLog === 'object' ? calculationLog : null;
   return payload;
@@ -1528,6 +1613,10 @@ function composeSimulationPayload(primaryState, analysisState, analysisResult, e
 
 function remapApiSimulationState(nextState = {}, isComplete = false) {
   const api = nextState && typeof nextState === 'object' ? nextState : {};
+  const incomingSchemaVersion = String(
+    api.analysis_schema_version ?? api.analysisSchemaVersion ?? simulationState.analysisSchemaVersion ?? ''
+  );
+  const isDirectRiskSchema = /policy-risk-v2|direct-risk/i.test(incomingSchemaVersion);
   const cycle = Number(api.cycle ?? api.step ?? api.turn ?? simulationState.cycle ?? 0);
   const maxCycles = Number(api.max_cycles ?? api.maxCycles ?? api.max_turns ?? api.maxTurns ?? simulationState.maxCycles ?? MAX_ANALYSIS_CYCLES);
   const legacyProceduralSafety = api.procedural_safety ?? api.proceduralSafety;
@@ -1558,15 +1647,29 @@ function remapApiSimulationState(nextState = {}, isComplete = false) {
   const qreLambda = normalizeQreLambda(api.lambda_qre ?? api.lambdaQre ?? api.qre_lambda ?? api.qreLambda ?? api.lambda)
     ?? simulationState.qreLambda;
   const directOverallRisk = numberOrNull(api.overall_risk ?? api.overallRisk);
-  const factCheckNeed = numberOrNull(api.fact_check_need ?? api.factCheckNeed);
+  const factCheckNeed = numberOrNull(
+    api.fact_check_need ?? api.factCheckNeed ?? api.unverified_response_risk ?? api.unverifiedResponseRisk
+  );
   const claimValidity = numberOrNull(api.claim_validity ?? api.claimValidity);
-  const manipulationRisk = numberOrNull(api.manipulation_risk ?? api.manipulationRisk ?? api.pressure);
-  const handoffNeed = numberOrNull(api.handoff_need ?? api.handoffNeed ?? api.escalation_need ?? api.escalationNeed ?? api.escalation_risk ?? api.escalationRisk);
-  const overConcessionRisk = numberOrNull(api.over_concession_risk ?? api.overConcessionRisk ?? api.liability_risk ?? api.liabilityRisk);
-  const underResponseRisk = numberOrNull(api.under_response_risk ?? api.underResponseRisk);
+  const manipulationRisk = numberOrNull(
+    api.manipulation_risk ?? api.manipulationRisk ?? api.pressure_judgment_risk ?? api.pressureJudgmentRisk ?? api.pressure
+  );
+  const handoffNeed = numberOrNull(
+    api.handoff_need ?? api.handoffNeed ?? api.escalation_need ?? api.escalationNeed ??
+    api.solo_handling_risk ?? api.soloHandlingRisk ?? api.escalation_risk ?? api.escalationRisk
+  );
+  const overConcessionRisk = numberOrNull(
+    api.over_concession_risk ?? api.overConcessionRisk ?? api.premature_promise_risk ??
+    api.prematurePromiseRisk ?? api.liability_risk ?? api.liabilityRisk
+  );
+  const underResponseRisk = numberOrNull(
+    api.under_response_risk ?? api.underResponseRisk ?? api.legitimate_issue_miss_risk ?? api.legitimateIssueMissRisk
+  );
   const policyViolationRisk = numberOrNull(
     api.policy_violation_risk ??
       api.policyViolationRisk ??
+      api.school_procedure_risk ??
+      api.schoolProcedureRisk ??
       (legacyProceduralSafety == null ? undefined : 100 - Number(legacyProceduralSafety))
   );
   const incomingRiskAvailability = {
@@ -1598,6 +1701,33 @@ function remapApiSimulationState(nextState = {}, isComplete = false) {
   const incomingDecisionTrace = normalizeDecisionTrace(api.decision_trace ?? api.decisionTrace);
   const rawCalculationLog = api.calculation_log ?? api.calculationLog;
   const incomingCalculationLog = rawCalculationLog && typeof rawCalculationLog === 'object' ? rawCalculationLog : null;
+  const incomingFacts = Array.isArray(api.extracted_facts ?? api.extractedFacts ?? api.facts)
+    ? (api.extracted_facts ?? api.extractedFacts ?? api.facts)
+    : isDirectRiskSchema ? [] : simulationState.facts;
+  const incomingSafeguards = Array.isArray(api.policy_safeguards ?? api.policySafeguards)
+    ? (api.policy_safeguards ?? api.policySafeguards)
+    : Array.isArray(api.current_policy_safeguards ?? api.currentPolicySafeguards)
+      ? (api.current_policy_safeguards ?? api.currentPolicySafeguards)
+      : isDirectRiskSchema ? [] : simulationState.safeguards;
+  const incomingRisks = asObject(api.risks);
+  const incomingRiskMetrics = Array.isArray(incomingRisks.metrics)
+    ? incomingRisks.metrics
+    : isDirectRiskSchema ? [] : simulationState.riskMetrics;
+  const incomingBiggestGap = firstMeaningfulValue(
+    api.largest_policy_gap,
+    api.largestPolicyGap,
+    api.biggest_gap,
+    api.biggestGap
+  );
+  const incomingRecommendations = Array.isArray(api.recommended_clauses ?? api.recommendedClauses)
+    ? (api.recommended_clauses ?? api.recommendedClauses)
+    : isDirectRiskSchema ? [] : simulationState.recommendedClauses;
+  const incomingEvidenceGraph = firstMeaningfulValue(
+    api.judgment_graph,
+    api.judgmentGraph,
+    api.evidence_graph,
+    api.evidenceGraph
+  );
   const hasRevisedRiskData = [
     revisedOverallRisk,
     revisedClaimValidity,
@@ -1613,11 +1743,22 @@ function remapApiSimulationState(nextState = {}, isComplete = false) {
     mode: 'policy_simulation',
     cycle: Math.max(0, Math.min(maxCycles, Math.round(Number.isFinite(cycle) ? cycle : 0))),
     maxCycles: Math.max(1, Math.round(Number.isFinite(maxCycles) ? maxCycles : MAX_ANALYSIS_CYCLES)),
-    actorType,
-    actorConfidence,
-    actorProbabilities,
-    personaSummary: api.persona_summary ?? api.personaSummary ?? api.summary ?? simulationState.personaSummary,
-    qreLambda,
+    analysisSchemaVersion: incomingSchemaVersion || simulationState.analysisSchemaVersion,
+    facts: incomingFacts,
+    safeguards: incomingSafeguards,
+    riskMetrics: incomingRiskMetrics,
+    biggestGap: incomingBiggestGap && typeof incomingBiggestGap === 'object'
+      ? incomingBiggestGap
+      : isDirectRiskSchema ? null : simulationState.biggestGap,
+    recommendedClauses: incomingRecommendations,
+    evidenceGraph: incomingEvidenceGraph && typeof incomingEvidenceGraph === 'object'
+      ? incomingEvidenceGraph
+      : isDirectRiskSchema ? null : simulationState.evidenceGraph,
+    actorType: isDirectRiskSchema ? '' : actorType,
+    actorConfidence: isDirectRiskSchema ? null : actorConfidence,
+    actorProbabilities: isDirectRiskSchema ? {} : actorProbabilities,
+    personaSummary: isDirectRiskSchema ? '' : api.persona_summary ?? api.personaSummary ?? api.summary ?? simulationState.personaSummary,
+    qreLambda: isDirectRiskSchema ? null : qreLambda,
     claimType: api.claim_type ?? api.claimType ?? simulationState.claimType,
     evidenceState: api.evidence_state ?? api.evidenceState ?? api.information_state ?? api.informationState ?? simulationState.evidenceState,
     pressureState: api.pressure_state ?? api.pressureState ?? api.pressure_level ?? api.pressureLevel ?? simulationState.pressureState,
@@ -1748,6 +1889,7 @@ function buildApiCompatibleState() {
   const calculationRun = asObject(asObject(simulationState.calculationLog).run);
   return {
     mode: 'policy_simulation',
+    analysis_schema_version: 'direct-risk-v1',
     cycle: simulationState.cycle,
     max_cycles: simulationState.maxCycles,
     turn: simulationState.cycle,
@@ -1755,15 +1897,13 @@ function buildApiCompatibleState() {
     overall_risk: simulationState.hasOverallRiskData ? criticalRiskScore() : null,
     policy_balance_score: simulationState.hasOverallRiskData ? simulationState.policyBalanceScore : null,
     survival_score: simulationState.hasOverallRiskData ? simulationState.policyBalanceScore : null,
-    actor_type: simulationState.actorType,
-    actor_confidence: simulationState.actorConfidence,
-    actor_probabilities: simulationState.actorProbabilities,
-    persona_summary: simulationState.personaSummary,
-    lambda_qre: simulationState.qreLambda,
-    claim_type: simulationState.claimType,
     evidence_state: simulationState.evidenceState,
-    pressure_state: simulationState.pressureState,
-    rule_constraint: simulationState.ruleConstraint,
+    extracted_facts: simulationState.facts,
+    policy_safeguards: simulationState.safeguards,
+    risks: { metrics: simulationState.riskMetrics },
+    largest_policy_gap: simulationState.biggestGap,
+    recommended_clauses: simulationState.recommendedClauses,
+    judgment_graph: simulationState.evidenceGraph,
     score_version: simulationState.scoreVersion,
     weights_version: simulationState.weightsVersion,
     risk_weights: simulationState.riskWeights,
@@ -1828,16 +1968,16 @@ function riskMetricRows() {
   const reasons = simulationState.riskReasons && typeof simulationState.riskReasons === 'object'
     ? simulationState.riskReasons
     : {};
-  const factCheckReason = riskReasonText(reasons.fact_check_need, reasons.factCheckNeed, reasons.claim_validity, reasons.claimValidity);
-  const manipulationReason = riskReasonText(reasons.manipulation_risk, reasons.manipulationRisk);
-  const overConcessionReason = riskReasonText(reasons.over_concession_risk, reasons.overConcessionRisk);
-  const underResponseReason = riskReasonText(reasons.under_response_risk, reasons.underResponseRisk);
-  const policyViolationReason = riskReasonText(reasons.policy_violation_risk, reasons.policyViolationRisk);
-  const handoffReason = riskReasonText(reasons.escalation_need, reasons.escalationNeed, reasons.handoff_need, reasons.handoffNeed);
+  const factCheckReason = riskReasonText(reasons.unverified_response_risk, reasons.unverifiedResponseRisk, reasons.fact_check_need, reasons.factCheckNeed);
+  const manipulationReason = riskReasonText(reasons.pressure_judgment_risk, reasons.pressureJudgmentRisk, reasons.manipulation_risk, reasons.manipulationRisk);
+  const overConcessionReason = riskReasonText(reasons.premature_promise_risk, reasons.prematurePromiseRisk, reasons.over_concession_risk, reasons.overConcessionRisk);
+  const underResponseReason = riskReasonText(reasons.legitimate_issue_miss_risk, reasons.legitimateIssueMissRisk, reasons.under_response_risk, reasons.underResponseRisk);
+  const policyViolationReason = riskReasonText(reasons.school_procedure_risk, reasons.schoolProcedureRisk, reasons.policy_violation_risk, reasons.policyViolationRisk);
+  const handoffReason = riskReasonText(reasons.solo_handling_risk, reasons.soloHandlingRisk, reasons.escalation_need, reasons.escalationNeed);
   const rows = [
     {
       key: 'factCheckNeed',
-      label: '사실을 더 확인할 필요',
+      label: '확인 없이 답할 위험',
       technicalLabel: '사실 확인',
       value: clampMetric(100 - simulationState.claimValidity),
       help: factCheckReason || '현재 대응 기준에 학생 진술, 교사 관찰, 상담·연락 기록을 확인하는 내용이 필요한 정도입니다.',
@@ -1845,7 +1985,7 @@ function riskMetricRows() {
     },
     {
       key: 'manipulationRisk',
-      label: '민원 압박에 흔들릴 위험',
+      label: '압박에 판단이 흔들릴 위험',
       technicalLabel: '압박 영향',
       value: simulationState.manipulationRisk,
       help: manipulationReason || '현재 대응 기준이 반복 항의·공개 언급과 사실 판단을 분리하지 못할 위험입니다.',
@@ -1853,7 +1993,7 @@ function riskMetricRows() {
     },
     {
       key: 'overConcessionRisk',
-      label: '확인 전에 약속할 위험',
+      label: '성급히 약속할 위험',
       technicalLabel: '성급한 약속',
       value: simulationState.overConcessionRisk,
       help: overConcessionReason || '현재 대응 기준에 사실 확인 전 사과·지도 철회·담임 교체를 제한하는 내용이 부족한 정도입니다.',
@@ -1861,7 +2001,7 @@ function riskMetricRows() {
     },
     {
       key: 'underResponseRisk',
-      label: '필요한 대응을 놓칠 위험',
+      label: '정당한 문제를 놓칠 위험',
       technicalLabel: '대응 누락',
       value: simulationState.underResponseRisk,
       help: underResponseReason || '현재 대응 기준에 근거 있는 문제 제기와 학생 보호 필요를 검토하는 내용이 부족한 정도입니다.',
@@ -1869,7 +2009,7 @@ function riskMetricRows() {
     },
     {
       key: 'policyViolationRisk',
-      label: '학교 기준을 벗어날 위험',
+      label: '학교 절차를 놓칠 위험',
       technicalLabel: '학교 기준',
       value: simulationState.policyViolationRisk,
       help: policyViolationReason || '사실 확인, 개인정보 보호, 생활지도 기록과 학교 절차가 충분히 정해지지 않은 정도입니다.',
@@ -1877,7 +2017,7 @@ function riskMetricRows() {
     },
     {
       key: 'handoffNeed',
-      label: '관리자에게 공유할 필요',
+      label: '혼자 대응하다 커질 위험',
       technicalLabel: '관리자 공유',
       value: simulationState.handoffNeed,
       help: handoffReason || '현재 대응 기준에 교장·교감·부장교사와 공유할 조건을 구체적으로 둘 필요가 있는 정도입니다.',
@@ -1935,12 +2075,12 @@ function policyFlagValue(source, ...keys) {
 function normalizedOverallWeights() {
   const raw = asObject(simulationState.riskWeights);
   const aliases = {
-    factCheckNeed: ['fact_check_need', 'factCheckNeed'],
-    manipulationRisk: ['manipulation_risk', 'manipulationRisk'],
-    overConcessionRisk: ['over_concession_risk', 'overConcessionRisk'],
-    underResponseRisk: ['under_response_risk', 'underResponseRisk'],
-    policyViolationRisk: ['policy_violation_risk', 'policyViolationRisk'],
-    handoffNeed: ['escalation_need', 'escalationNeed', 'handoff_need', 'handoffNeed'],
+    factCheckNeed: ['unverified_response_risk', 'unverifiedResponseRisk', 'fact_check_need', 'factCheckNeed'],
+    manipulationRisk: ['pressure_judgment_risk', 'pressureJudgmentRisk', 'manipulation_risk', 'manipulationRisk'],
+    overConcessionRisk: ['premature_promise_risk', 'prematurePromiseRisk', 'over_concession_risk', 'overConcessionRisk'],
+    underResponseRisk: ['legitimate_issue_miss_risk', 'legitimateIssueMissRisk', 'under_response_risk', 'underResponseRisk'],
+    policyViolationRisk: ['school_procedure_risk', 'schoolProcedureRisk', 'policy_violation_risk', 'policyViolationRisk'],
+    handoffNeed: ['solo_handling_risk', 'soloHandlingRisk', 'escalation_need', 'escalationNeed', 'handoff_need', 'handoffNeed'],
   };
   const fromServer = Object.fromEntries(Object.entries(aliases).map(([key, candidates]) => {
     const value = numberOrNull(firstMeaningfulValue(...candidates.map((candidate) => raw[candidate])));
@@ -2557,7 +2697,7 @@ function renderAdminResearchAppendix(calculationLog) {
   `;
 }
 
-function renderCalculationBasis() {
+function renderCalculationBasisLegacy() {
   if (!dom.calculationBasis) return;
   const researchAccess = hasAdminResearchAccess();
   const probabilities = normalizeActorProbabilities(simulationState.actorProbabilities);
@@ -2797,7 +2937,7 @@ function renderRecordSource() {
   if (dom.recordSourceMemo) dom.recordSourceMemo.textContent = memo || '입력된 상황 메모가 없습니다.';
 }
 
-function renderPolicyAssessment() {
+function renderPolicyAssessmentLegacy() {
   if (!dom.policyAssessment) return;
   const verifiedPolicy = String(simulationState.verifiedPolicyText || '').trim();
   const strengths = Array.isArray(simulationState.policyStrengths) ? simulationState.policyStrengths : [];
@@ -2821,7 +2961,7 @@ function renderPolicyAssessment() {
   `;
 }
 
-function renderPersonaAssessment() {
+function renderPersonaAssessmentLegacy() {
   if (!dom.personaAssessment) return;
   const probabilities = normalizeActorProbabilities(simulationState.actorProbabilities);
   const ranked = Object.entries(probabilities).sort((a, b) => Number(b[1]) - Number(a[1]));
@@ -2868,7 +3008,7 @@ function renderPersonaAssessment() {
   `;
 }
 
-function renderSimulationHud() {
+function renderSimulationHudLegacy() {
   if (!dom.simulationHud) return;
   if (!String(simulationState.verifiedPolicyText || '').trim()) {
     dom.simulationHud.innerHTML = `
@@ -2925,6 +3065,279 @@ function renderSimulationHud() {
       </ul>
       ${availableMetrics.length < metrics.length ? '<p class="risk-missing-note">아직 확인하지 못한 항목은 —로 표시했어요.</p>' : ''}
     </section>
+  `;
+}
+
+const DIRECT_SAFEGUARD_VIEW = [
+  { key: 'fact_record_check', label: '기록부터 확인하는가', legacy: ['evidence_required', 'evidenceRequired'] },
+  { key: 'scope_threshold', label: '언제 적용하는지 정해져 있는가', legacy: ['threshold_defined', 'thresholdDefined'] },
+  { key: 'response_deadline', label: '언제까지 답할지 정해져 있는가', legacy: ['deadline_defined', 'deadlineDefined'] },
+  { key: 'shared_decision', label: '중요한 결정을 혼자 하지 않는가', legacy: ['approval_required', 'approvalRequired', 'handoff_defined', 'handoffDefined'] },
+  { key: 'pressure_fact_separation', label: '압박과 사실 판단을 나누는가', legacy: ['pressure_separated', 'pressureSeparated'] },
+  { key: 'privacy_guard', label: '개인정보를 지키는가', legacy: ['privacy_guard', 'privacyGuard'] },
+];
+
+function directFactsForView() {
+  const facts = Array.isArray(simulationState.facts) ? simulationState.facts : [];
+  if (facts.length) {
+    return facts.slice(0, 8).map((item, index) => ({
+      id: String(item?.id || `fact-${index + 1}`),
+      category: String(item?.category || '사건'),
+      text: compactText(firstMeaningfulValue(item?.text, item?.label, item?.source_excerpt, item?.sourceExcerpt), 280),
+      certainty: item?.certainty === 'confirmed' ? 'confirmed' : 'unclear',
+      excerpt: compactText(firstMeaningfulValue(item?.source_excerpt, item?.sourceExcerpt), 180),
+    })).filter((item) => item.text);
+  }
+  const memo = compactText(simulationState.incidentConditions, 280);
+  return memo ? [{
+    id: 'legacy-record',
+    category: '상황 기록',
+    text: memo,
+    certainty: 'unclear',
+    excerpt: '',
+  }] : [];
+}
+
+function directSafeguardsForView() {
+  const supplied = Array.isArray(simulationState.safeguards) ? simulationState.safeguards : [];
+  if (supplied.length) {
+    const byKey = Object.fromEntries(supplied.map((item) => [String(item?.key || ''), item]));
+    return DIRECT_SAFEGUARD_VIEW.map((definition) => {
+      const item = byKey[definition.key] || {};
+      const numericValue = numberOrNull(item?.value);
+      const rawState = String(item?.state || '');
+      const state = ['present', 'partial', 'missing'].includes(rawState)
+        ? rawState
+        : numericValue === null ? 'missing' : numericValue >= 1 ? 'present' : numericValue > 0 ? 'partial' : 'missing';
+      return {
+        ...definition,
+        state,
+        evidence: compactText(firstMeaningfulValue(item?.evidence_excerpt, item?.evidenceExcerpt), 180),
+      };
+    });
+  }
+  const legacy = asObject(simulationState.policySafeguards);
+  return DIRECT_SAFEGUARD_VIEW.map((definition) => {
+    const values = definition.legacy
+      .filter((key) => Object.prototype.hasOwnProperty.call(legacy, key))
+      .map((key) => Boolean(legacy[key]));
+    const state = definition.key === 'shared_decision' && values.length > 1
+      ? values.every(Boolean) ? 'present' : values.some(Boolean) ? 'partial' : 'missing'
+      : values.some(Boolean) ? 'present' : 'missing';
+    return { ...definition, state, evidence: '' };
+  });
+}
+
+function directRecommendationsForView() {
+  const supplied = Array.isArray(simulationState.recommendedClauses)
+    ? simulationState.recommendedClauses
+    : [];
+  if (supplied.length) {
+    return supplied.slice(0, 3).map((item, index) => ({
+      id: String(item?.id || `recommendation-${index + 1}`),
+      text: compactText(typeof item === 'string' ? item : firstMeaningfulValue(item?.text, item?.clause), 900),
+      delta: numberOrNull(item?.expected_risk_delta ?? item?.expectedRiskDelta),
+      rationale: compactText(firstMeaningfulValue(item?.rationale, item?.reason), 260),
+      linkedRisks: Array.isArray(item?.linked_risks ?? item?.linkedRisks)
+        ? (item?.linked_risks ?? item?.linkedRisks).map(String)
+        : [],
+    })).filter((item) => item.text);
+  }
+  const legacy = compactText(simulationState.alternativePolicy, 900);
+  return legacy ? [{
+    id: 'legacy-recommendation',
+    text: legacy,
+    delta: null,
+    rationale: '',
+    linkedRisks: [],
+  }] : [];
+}
+
+function renderPolicyAssessment() {
+  if (!dom.policyAssessment) return;
+  const facts = directFactsForView();
+  const confirmedCount = facts.filter((item) => item.certainty === 'confirmed').length;
+  dom.policyAssessment.innerHTML = facts.length ? `
+    <div class="direct-fact-summary"><span>점수에 사용한 사실</span><strong>${facts.length}개</strong><small>명확 ${confirmedCount} · 확인 필요 ${facts.length - confirmedCount}</small></div>
+    <ol class="direct-fact-list">
+      ${facts.map((item) => `
+        <li data-certainty="${item.certainty}">
+          <span>${escapeHtml(item.category)}</span>
+          <p>${escapeHtml(sanitizeProductLanguage(item.text))}</p>
+          <small>${item.certainty === 'confirmed' ? '기록에 명확히 적힘' : '추가 확인이 필요함'}</small>
+        </li>
+      `).join('')}
+    </ol>
+  ` : `
+    <section class="risk-unavailable-card">
+      <span>확인한 사실이 아직 없어요</span>
+      <p>상황 기록을 저장한 뒤 다시 점검해 주세요.</p>
+    </section>
+  `;
+}
+
+function renderPersonaAssessment() {
+  if (!dom.personaAssessment) return;
+  const safeguards = directSafeguardsForView();
+  const stateLabel = { present: '있음', partial: '일부 있음', missing: '없음' };
+  dom.personaAssessment.innerHTML = `
+    <ul class="direct-safeguard-grid" aria-label="대응 안전장치 6가지">
+      ${safeguards.map((item) => `
+        <li data-state="${item.state}">
+          <i aria-hidden="true">${item.state === 'present' ? '✓' : item.state === 'partial' ? '△' : '—'}</i>
+          <div><strong>${escapeHtml(item.label)}</strong>${item.evidence ? `<small>${escapeHtml(sanitizeProductLanguage(item.evidence))}</small>` : ''}</div>
+          <b>${stateLabel[item.state]}</b>
+        </li>
+      `).join('')}
+    </ul>
+    <p class="direct-safeguard-note">사람을 분류하지 않고, 선생님이 적은 대응 기준에 이 여섯 장치가 있는지만 확인했어요.</p>
+  `;
+}
+
+function renderSimulationHud() {
+  if (!dom.simulationHud) return;
+  const metrics = riskMetricRows();
+  const availableMetrics = metrics.filter((item) => item.available);
+  const overallRisk = simulationState.hasOverallRiskData ? criticalRiskScore() : null;
+  const highestRisk = [...availableMetrics].sort((a, b) => b.value - a.value)[0];
+  const biggestGap = simulationState.biggestGap && typeof simulationState.biggestGap === 'object'
+    ? simulationState.biggestGap
+    : simulationState.vulnerabilities?.length
+      ? { label: '먼저 보완할 기준', reason: simulationState.vulnerabilities[0], counterfactual_delta: null }
+      : null;
+  const gapDelta = numberOrNull(biggestGap?.counterfactual_delta ?? biggestGap?.counterfactualDelta);
+  const recommendations = directRecommendationsForView();
+
+  dom.simulationHud.innerHTML = `
+    <div class="compact-risk-summary" data-tone="${overallRisk === null ? 'neutral' : metricTone(overallRisk)}">
+      <div class="compact-overall-score">
+        <span>전체 위험도</span>
+        <strong>${overallRisk === null ? '—' : overallRisk}${overallRisk === null ? '' : '<small>/100</small>'}</strong>
+        <b>${overallRisk === null ? '확인 필요' : metricStatusLabel(overallRisk)}</b>
+      </div>
+      <div>
+        <span>상황과 대응 기준을 함께 계산한 결과</span>
+        <h4>${highestRisk ? `${escapeHtml(highestRisk.label)}이 가장 높아요.` : '위험 점수를 확인하지 못했어요.'}</h4>
+        <p>${highestRisk ? `${escapeHtml(highestRisk.value)}점 · ${escapeHtml(sanitizeProductLanguage(highestRisk.help))}` : '상황 기록과 대응 기준을 다시 확인해 주세요.'}</p>
+      </div>
+    </div>
+    <section aria-label="학교 대응 위험 6가지 점수">
+      <ul class="compact-risk-grid">
+        ${metrics.map((item) => `
+          <li data-tone="${item.available ? metricTone(item.value) : 'neutral'}" data-available="${item.available}">
+            <div><span>${escapeHtml(item.label)}</span><strong>${item.available ? escapeHtml(item.value) : '—'}</strong></div>
+            <i${item.available ? ` role="progressbar" aria-label="${escapeHtml(item.label)}" aria-describedby="risk-reason-${escapeHtml(item.key)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${escapeHtml(item.value)}" aria-valuetext="${metricStatusLabel(item.value)} ${escapeHtml(item.value)}점" style="--value: ${escapeHtml(item.value)}%"` : ' aria-hidden="true"'}></i>
+            <small id="risk-reason-${escapeHtml(item.key)}"><b>왜 이 점수인가요?</b>${escapeHtml(sanitizeProductLanguage(item.help))}</small>
+          </li>
+        `).join('')}
+      </ul>
+    </section>
+    <section class="direct-gap-card" data-tone="${gapDelta !== null && gapDelta >= 10 ? 'warning' : 'neutral'}">
+      <header><span>04 · 가장 큰 누락 기준</span>${gapDelta === null ? '' : `<b>보완 시 전체 위험 약 ${Math.abs(gapDelta)}점 감소</b>`}</header>
+      <h4>${escapeHtml(sanitizeProductLanguage(biggestGap?.label || '큰 누락 기준을 찾지 못했어요.'))}</h4>
+      <p>${escapeHtml(sanitizeProductLanguage(biggestGap?.reason || '현재 대응 기준의 주요 안전장치를 계속 유지해 주세요.'))}</p>
+    </section>
+    <section class="direct-recommendations">
+      <header><span>05 · 검증된 권장 조항</span><small>학교에서 검토할 초안 ${recommendations.length}개</small></header>
+      ${recommendations.length ? `<ol>${recommendations.map((item) => `
+        <li><span>${String(recommendations.indexOf(item) + 1).padStart(2, '0')}</span><div><p>${escapeHtml(sanitizeProductLanguage(item.text))}</p>${item.rationale ? `<small>${escapeHtml(sanitizeProductLanguage(item.rationale))}</small>` : ''}</div>${item.delta === null ? '' : `<b>−${Math.abs(item.delta)}점 예상</b>`}</li>
+      `).join('')}</ol>` : '<p class="direct-empty-copy">현재 기준에서 추가로 권할 조항이 없습니다.</p>'}
+      <p class="direct-policy-disclaimer">권장 문장은 서버가 누락 기준과 연결해 고른 검토용 초안이며, 승인된 학교 규정이나 법률 자문은 아닙니다.</p>
+    </section>
+  `;
+}
+
+function renderCalculationBasis() {
+  if (!dom.calculationBasis) return;
+  const graph = asObject(simulationState.evidenceGraph);
+  const nodes = Array.isArray(graph.nodes) ? graph.nodes : [];
+  const nodeById = Object.fromEntries(nodes.map((node) => [String(node?.id || ''), node]));
+  const facts = directFactsForView();
+  const safeguards = directSafeguardsForView();
+  const metrics = riskMetricRows().filter((item) => item.available).sort((a, b) => b.value - a.value);
+  const recommendations = directRecommendationsForView();
+  const biggestGap = simulationState.biggestGap && typeof simulationState.biggestGap === 'object'
+    ? simulationState.biggestGap
+    : null;
+  const graphEdges = Array.isArray(graph.edges) ? graph.edges : [];
+  const graphRiskKeyByViewKey = {
+    factCheckNeed: 'unverified_response_risk',
+    manipulationRisk: 'pressure_judgment_risk',
+    overConcessionRisk: 'premature_promise_risk',
+    underResponseRisk: 'legitimate_issue_miss_risk',
+    handoffNeed: 'solo_handling_risk',
+    policyViolationRisk: 'school_procedure_risk',
+  };
+  const graphPaths = metrics.slice(0, 3).map((metric, index) => {
+    const graphRiskKey = graphRiskKeyByViewKey[metric.key] || metric.key;
+    const riskNode = nodes.find((node) =>
+      node?.type === 'risk' && (
+        String(node?.legacy_key || '') === metric.key ||
+        String(node?.key || '') === graphRiskKey
+      )
+    );
+    const supportingEdge = riskNode
+      ? graphEdges.find((edge) => String(edge?.target) === String(riskNode.id) && /^fact:/.test(String(edge?.source)))
+      : null;
+    const safeguardEdge = riskNode
+      ? graphEdges.find((edge) =>
+          String(edge?.target) === String(riskNode.id) &&
+          /^safeguard:/.test(String(edge?.source)) &&
+          edge?.relation === 'missing_increases'
+        )
+      : null;
+    const factNode = supportingEdge ? nodeById[String(supportingEdge.source)] : null;
+    const safeguardNode = safeguardEdge ? nodeById[String(safeguardEdge.source)] : null;
+    const fallbackFact = facts[index % Math.max(1, facts.length)];
+    const missingSafeguard = safeguardNode
+      ? safeguards.find((item) => item.key === safeguardNode.key)
+      : safeguards.find((item) => item.state !== 'present') || safeguards[0];
+    const linkedRecommendation = recommendations.find((item) =>
+      Array.isArray(item.linkedRisks) && item.linkedRisks.includes(graphRiskKey)
+    ) || recommendations[index] || recommendations[0];
+    return {
+      fact: compactText(firstMeaningfulValue(factNode?.label, fallbackFact?.text, '입력한 상황 기록'), 110),
+      safeguard: missingSafeguard ? `${missingSafeguard.label} · ${missingSafeguard.state === 'missing' ? '없음' : missingSafeguard.state === 'partial' ? '일부 있음' : '있음'}` : '안전장치 확인',
+      risk: `${metric.label} ${metric.value}점`,
+      recommendation: compactText(linkedRecommendation?.text || '현재 대응 기준을 유지해 주세요.', 120),
+    };
+  });
+  const calculationLog = asObject(simulationState.calculationLog);
+  const isDirectLog = /calculation-log-v2/i.test(String(calculationLog.schema_version ?? calculationLog.schemaVersion ?? ''));
+  const validation = asObject(firstMeaningfulValue(calculationLog.validation, graph.validation));
+
+  dom.calculationBasis.innerHTML = `
+    <div class="direct-graph-paths" role="list" aria-label="판단 근거 연결">
+      ${graphPaths.length ? graphPaths.map((path) => `
+        <article role="listitem">
+          <div><span>확인한 사실</span><strong>${escapeHtml(sanitizeProductLanguage(path.fact))}</strong></div>
+          <i aria-hidden="true">→</i>
+          <div><span>대응 기준</span><strong>${escapeHtml(path.safeguard)}</strong></div>
+          <i aria-hidden="true">→</i>
+          <div><span>위험</span><strong>${escapeHtml(path.risk)}</strong></div>
+          <i aria-hidden="true">→</i>
+          <div><span>권장 조항</span><strong>${escapeHtml(sanitizeProductLanguage(path.recommendation))}</strong></div>
+        </article>
+      `).join('') : '<p class="direct-empty-copy">연결 근거를 확인하지 못했어요.</p>'}
+    </div>
+    <p class="basis-disclaimer">이 그래프는 공개 가능한 입력 단서와 점수 연결만 보여주며, AI의 내부 사고 과정은 표시하지 않습니다.</p>
+    ${hasAdminResearchAccess() ? `
+      <details class="direct-research-ledger" open>
+        <summary><span>관리자 연구 데이터</span><small>${isDirectLog ? '직접 위험 계산 v2' : '부분 기록'}</small></summary>
+        <div class="direct-research-summary">
+          <span>사실 <b>${facts.length}</b></span>
+          <span>안전장치 <b>${safeguards.length}/6</b></span>
+          <span>위험 <b>${metrics.length}/6</b></span>
+          <span>노드 <b>${nodes.length}</b></span>
+          <span>연결 <b>${graphEdges.length}</b></span>
+        </div>
+        <div class="direct-research-tables">
+          <section><h5>안전장치 상태</h5><table><tbody>${safeguards.map((item) => `<tr><th>${escapeHtml(item.label)}</th><td>${item.state}</td></tr>`).join('')}</tbody></table></section>
+          <section><h5>위험 점수</h5><table><tbody>${metrics.map((item) => `<tr><th>${escapeHtml(item.label)}</th><td>${item.value}</td></tr>`).join('')}</tbody></table></section>
+        </div>
+        <p>${biggestGap ? `가장 큰 누락 · ${escapeHtml(sanitizeProductLanguage(biggestGap.label || biggestGap.reason || '—'))}` : '큰 누락 기준 없음'} · 그래프 참조 ${validation.valid_edge_references === false ? '확인 필요' : '정상'}</p>
+      </details>
+    ` : '<p class="admin-access-note"><span>간단히 보기</span>공식·특징값·그래프 원시는 연구 계정에서만 보여요.</p>'}
   `;
 }
 
@@ -3080,13 +3493,13 @@ function createPolicyReportPanel() {
   const hasVerifiedPolicy = Boolean(String(simulationState.verifiedPolicyText || '').trim());
   panel.innerHTML = `
     <span class="section-kicker">정리가 끝났어요</span>
-    <h2>이 기록의 위험도와 코칭</h2>
+    <h2>이 기록의 대응 위험 예측</h2>
     <div class="result-tags">
       ${hasVerifiedPolicy ? `<span>현재 위험도 ${criticalRiskScore()}/100</span>` : '<span>학교 대응 기준 확인 필요</span>'}
       ${hasVerifiedPolicy && simulationState.hasAlternativeRiskData ? `<span>보완하면 예상 위험 ${simulationState.alternativePolicyRisks.overallRisk}/100</span>` : ''}
-      ${hasVerifiedPolicy ? `<span>관리자 공유 필요 ${simulationState.handoffNeed}/100</span>` : ''}
+      ${hasVerifiedPolicy ? `<span>혼자 대응하다 커질 위험 ${simulationState.handoffNeed}/100</span>` : ''}
     </div>
-    <p>선생님의 기록을 바탕으로 조심할 점, 위험도와 보완할 기준을 정리했어요.</p>
+    <p>확인한 사실, 안전장치 6가지와 보완할 기준을 한 번에 정리했어요.</p>
     <div class="result-actions">
       <button class="primary-button" type="button" data-new-simulation>새 기록</button>
       <button class="ghost-button" type="button" data-final-report ${canRequestDetail ? '' : 'disabled'}>
@@ -3594,8 +4007,8 @@ function buildPolicyAnalysisRequest(extraText = '') {
     '',
     '[요청]',
     extraText || (hasAdminResearchAccess()
-      ? '현재 대응 기준을 점검하고, 학부모 반응 유형과 QRE λ를 추정한 뒤 학교 대응 위험 6가지를 계산해줘. 유형과 QRE는 쉬운 한국어 설명을 함께 쓰고, 실제 입력값·효용·확률·가중치·기여도를 구조화된 calculation_log로 함께 반환해줘.'
-      : '현재 대응 기준을 점검하고, 학부모 반응 유형과 QRE λ를 추정한 뒤 학교 대응 위험 6가지를 쉬운 한국어로 정리해줘.'),
+      ? '학부모 유형이나 QRE를 추정하지 말고 상황 기록과 대응 기준에서 바로 위험을 계산해줘. 확인한 사실, 안전장치 6가지, 위험 6가지, 가장 큰 누락 기준, 검증된 권장 조항 1~3개, 판단 근거 그래프와 재현 가능한 calculation_log를 반환해줘.'
+      : '학부모 유형이나 QRE를 추정하지 말고 상황 기록과 대응 기준에서 바로 위험을 계산해줘. 확인한 사실, 안전장치 6가지, 위험 6가지, 가장 큰 누락 기준, 권장 조항 1~3개와 판단 연결 근거를 쉬운 한국어로 정리해줘.'),
   ].join('\n');
   return compactText(request, MAX_POLICY_ANALYSIS_CHARS);
 }
@@ -3691,9 +4104,10 @@ async function sendMessage(message, { generatedFromInput = false } = {}) {
       message: text,
       [compatStateKey]: requestState,
       clientGuidance: [
-        '구조화된 결과에 claim_type, evidence_state, pressure_state, rule_constraint, score_version과 대응 기준 관련 flags를 가능한 범위에서 포함한다.',
-        '위험 6개에는 각 항목의 짧고 검증 가능한 risk_reasons를 포함한다.',
-        'decision_trace는 일반 사용자용 근거 요약으로 input_assessment → persona_qre → risk_scoring 순서를 유지한다.',
+        '분석 경로는 evidence_extraction → safeguard_detection → direct_risk_prediction → recommendation 순서로 고정한다.',
+        '학부모 유형, 페르소나, QRE, λ, 행동 확률을 새로 추정하거나 반환하지 않는다.',
+        '구조화된 결과에 facts, safeguards 6개, risks 6개, largest_policy_gap 1개, recommended_clauses 1~3개, judgment_graph를 포함한다.',
+        '위험 6개에는 각 항목의 짧고 검증 가능한 reason과 공개 label을 포함한다.',
         hasAdminResearchAccess() ? ADMIN_CALCULATION_LOG_GUIDANCE : '',
         '내부 사고 과정이나 장문의 추론은 노출하지 않고 입력 특징값·고정 공식·산술 결과처럼 검증 가능한 계산 정보만 반환한다.',
       ].filter(Boolean).join('\n'),
@@ -3819,13 +4233,12 @@ async function requestFinalReport() {
       conversationId: activeConversation.id,
       product: currentProduct(),
       mode: 'final_report',
-      message: '현재 대응 기준 점검, 학부모 반응 유형과 QRE 값, 6가지 위험을 더 자세히 설명해줘.',
+      message: '확인한 사실, 대응 안전장치 6가지, 학교 대응 위험 6가지, 가장 큰 누락 기준, 권장 조항과 판단 근거 그래프를 더 자세히 설명해줘.',
       [compatStateKey]: buildApiCompatibleState(),
       clientGuidance: [
-        '자세한 분석은 현재 대응 기준 점검, 학부모 반응 유형, QRE λ와 학교 대응 위험 검토에 바로 쓸 수 있게 작성한다.',
-        '학부모 유형은 현재 기록에 근거한 계산용 추정임을 밝히고 성격이나 신분을 단정하지 않는다.',
-        'QRE λ는 정확한 값과 함께, 높을수록 효과가 있다고 느끼는 요구를 일관되게 반복할 가능성이 커진다는 쉬운 설명을 붙인다.',
-        '본문 설명은 간결하게 유지하되 calculation_log에는 실제 효용·확률·기여도·수식을 생략하지 않는다.',
+        '자세한 분석은 확인한 사실 → 안전장치 6가지 → 위험 6가지 → 가장 큰 누락 → 권장 조항 → 판단 근거 그래프의 순서로 작성한다.',
+        '학부모 유형, 페르소나, QRE, λ, 행동 확률을 만들거나 언급하지 않는다.',
+        '본문 설명은 간결하게 유지하되 calculation_log에는 실제 입력 특징·가중치·기여도·반사실 계산을 생략하지 않는다.',
         '학부모를 평가하거나 공격하지 않고 교육활동 침해 여부를 단정하지 않는다.',
         '이전 제품의 놀이형 훈련 어휘를 쓰지 않는다.',
         '법률 판단, 책임 인정, 행정 처분 결론은 단정하지 않는다.',
